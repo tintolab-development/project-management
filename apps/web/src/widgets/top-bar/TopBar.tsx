@@ -1,0 +1,66 @@
+import { useState } from "react"
+import { useAppStore } from "@/app/store/useAppStore"
+import { NewItemModal } from "@/features/new-item/ui/NewItemModal"
+import { BulkImportModal } from "@/features/bulk-import/ui/BulkImportModal"
+
+export const TopBar = () => {
+  const [newOpen, setNewOpen] = useState(false)
+  const [importOpen, setImportOpen] = useState(false)
+  const exportStateJson = useAppStore((s) => s.exportStateJson)
+  const resetToSample = useAppStore((s) => s.resetToSample)
+
+  const handleExportJson = () => {
+    const stamp = new Date().toISOString().replace(/[:.]/g, "-")
+    const blob = new Blob([exportStateJson()], {
+      type: "application/json;charset=utf-8",
+    })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `tdw-prototype-export-${stamp}.json`
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
+  }
+
+  const handleReset = () => resetToSample()
+
+  return (
+    <header className="topbar">
+      <div>
+        <h1 className="page-title">프로젝트 의사결정 아이템 관리시스템</h1>
+        <div className="page-subtitle">
+          원할한 프로젝트 수행을 위해 도메인 항목에 해당하는 의사결정 아이템을
+          효율적으로 관리합니다.
+        </div>
+      </div>
+
+      <div className="top-actions">
+        <button
+          type="button"
+          className="btn primary"
+          onClick={() => setNewOpen(true)}
+        >
+          새 항목 만들기
+        </button>
+        <button
+          type="button"
+          className="btn"
+          onClick={() => setImportOpen(true)}
+        >
+          엑셀 일괄등록
+        </button>
+        <button type="button" className="btn" onClick={handleExportJson}>
+          JSON보내기
+        </button>
+        <button type="button" className="btn ghost" onClick={handleReset}>
+          샘플데이터 초기화
+        </button>
+      </div>
+
+      <NewItemModal open={newOpen} onOpenChange={setNewOpen} />
+      <BulkImportModal open={importOpen} onOpenChange={setImportOpen} />
+    </header>
+  )
+}
