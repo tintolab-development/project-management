@@ -2,5 +2,19 @@
   "name": "tintolab-decision-workspace",
   "version": "1.0.0",
   "private": true,
-  "description": "프로젝트 의사결정 아이템 관리 프로토타입 (정적 사이트)"
+  "description": "Tintolab Decision Workspace — Turborepo (Vite React web)",
+  "packageManager": "pnpm@9.15.4",
+  "scripts": {
+    "prepare": "husky",
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "lint:web": "pnpm --filter @tdw/web exec eslint ."
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^15.4.3",
+    "prettier": "^3.4.2",
+    "turbo": "^2.3.3"
+  }
 }
