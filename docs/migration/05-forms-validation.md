@@ -5,22 +5,22 @@
 ## 공통
 
 - **스키마 위치:** `entities/item/model` 또는 `shared/lib/validation` 중 팀 선호에 맞게 단일 소스.
-- **에러 표시:** Shadcn `Form`, `FormField`, `FormMessage`.
+- **에러 표시:** RHF `Controller`/`formState.errors` + 프로젝트 공용 라벨·메시지 컴포넌트(CSS Modules). (shadcn `Form`은 Tailwind 전제이므로 본 스택에서는 사용하지 않음.)
 - **확정·잠금:** `disabled`일 때는 `useForm`의 `reset`으로 값 고정 또는 읽기 전용 모드로 전환하고 submit을 막습니다.
 
 ---
 
 ## 1. 새 항목 만들기 모달
 
-| 필드 | 현재 규칙 | Zod 제안 |
-|------|-----------|----------|
-| type | 필수, select | `z.enum([...])` |
-| domain | 필수 | `z.string().min(1)` |
-| priority | 필수 | `z.enum(["P0","P1","P2"])` |
-| owner | 선택 | `z.string()` |
-| dueDate | 선택 | `z.string()` + optional refine으로 날짜 형식 또는 빈 문자열 허용 |
-| title | 필수 | `z.string().trim().min(1, "제목을 입력해 주세요.")` |
-| description | 선택 | `z.string()` |
+| 필드        | 현재 규칙    | Zod 제안                                                         |
+| ----------- | ------------ | ---------------------------------------------------------------- |
+| type        | 필수, select | `z.enum([...])`                                                  |
+| domain      | 필수         | `z.string().min(1)`                                              |
+| priority    | 필수         | `z.enum(["P0","P1","P2"])`                                       |
+| owner       | 선택         | `z.string()`                                                     |
+| dueDate     | 선택         | `z.string()` + optional refine으로 날짜 형식 또는 빈 문자열 허용 |
+| title       | 필수         | `z.string().trim().min(1, "제목을 입력해 주세요.")`              |
+| description | 선택         | `z.string()`                                                     |
 
 제출 시: 기존과 같이 `getNextCode(type)`으로 code/id 생성 후 목록에 추가.
 
@@ -30,15 +30,15 @@
 
 편집 불가(확정/잠금)일 때는 폼 대신 읽기 전용 UI를 렌더링하는 것이 단순합니다.
 
-| 필드 | 현재 규칙 | Zod 제안 |
-|------|-----------|----------|
-| title | 저장 시 필수 | `z.string().trim().min(1)` |
-| domain | 필수 | `z.string().min(1)` |
-| priority | 필수 | `z.enum(["P0","P1","P2"])` |
-| status | UI에서 허용 옵션만 | `z.enum(["논의","방향합의","확정"])` + **superRefine**으로 현재 상태에서 불가한 전이 차단 |
-| owner | 선택 | `z.string()` |
-| dueDate | 선택 | 날짜 문자열 refine |
-| description, clientResponse, finalConfirmedValue | 선택 | `z.string()` |
+| 필드                                             | 현재 규칙          | Zod 제안                                                                                  |
+| ------------------------------------------------ | ------------------ | ----------------------------------------------------------------------------------------- |
+| title                                            | 저장 시 필수       | `z.string().trim().min(1)`                                                                |
+| domain                                           | 필수               | `z.string().min(1)`                                                                       |
+| priority                                         | 필수               | `z.enum(["P0","P1","P2"])`                                                                |
+| status                                           | UI에서 허용 옵션만 | `z.enum(["논의","방향합의","확정"])` + **superRefine**으로 현재 상태에서 불가한 전이 차단 |
+| owner                                            | 선택               | `z.string()`                                                                              |
+| dueDate                                          | 선택               | 날짜 문자열 refine                                                                        |
+| description, clientResponse, finalConfirmedValue | 선택               | `z.string()`                                                                              |
 
 ### 상태 전이 (현재 `getStatusOptionsForItem`과 동등)
 
@@ -64,10 +64,10 @@ Zod 예시 방향:
 
 ## 3. 코멘트 작성
 
-| 필드 | 현재 규칙 | Zod |
-|------|-----------|-----|
-| author | 필수 | `z.string().trim().min(1)` |
-| body | 필수 | `z.string().trim().min(1)` |
+| 필드   | 현재 규칙 | Zod                        |
+| ------ | --------- | -------------------------- |
+| author | 필수      | `z.string().trim().min(1)` |
+| body   | 필수      | `z.string().trim().min(1)` |
 
 ---
 
@@ -93,8 +93,8 @@ UI에서는 RHF 없이 **파일/textarea + 미리보기 테이블**만 있어도
 
 향후 모달로 바꿀 경우:
 
-| 필드 | Zod |
-|------|-----|
+| 필드 | Zod                                                         |
+| ---- | ----------------------------------------------------------- |
 | name | `z.string().trim().min(1)` + 동일 레벨에서 중복 이름 refine |
 
 ---
