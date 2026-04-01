@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tintolab Decision Workspace</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark"><img src="./seol-logo.png" alt="설해원 로고" class="brand-logo" /></div>
+        <div class="brand-copy">
+          <div class="brand-name">Tintolab Decision Workspace</div>
+          <div class="brand-sub">Issue Item management</div>
+        </div>
+      </div>
+
+      <nav class="nav">
+        <button class="nav-link active" data-view="dashboardView">Dashboard</button>
+        <button class="nav-link" data-view="workspaceView">Workspaces</button>
+        <button class="nav-link" data-view="itemsView">Items</button>
+        <button class="nav-link" data-view="itemTreeView">Item Tree</button>
+      </nav>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">프로젝트</div>
+        <div class="project-card">
+          <div class="project-name">설해원 통합플랫폼 구축</div>
+          <div class="project-meta">예약엔진 · Web · App · Admin</div>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-title">의사결정 원칙</div>
+        <ul class="principles">
+          <li>이슈아이템 초안 틴토랩작성</li>
+          <li>담당자 별 이슈아이템 확인</li>
+          <li>확정처리된 리포트 메일송부</li>
+          <li>확정처리 아이템 변경 시 일정반영</li>
+        </ul>
+      </div>
+
+      <div class="sidebar-footer">Prototype v7</div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h1 class="page-title">프로젝트 의사결정 아이템 관리시스템</h1>
+          <div class="page-subtitle">원할한 프로젝트 수행을 위해 도메인 항목에 해당하는 의사결정 아이템을 효율적으로 관리합니다.</div>
+        </div>
+
+        <div class="top-actions">
+          <button id="newItemBtn" class="btn primary">새 항목 만들기</button>
+          <button id="bulkImportBtn" class="btn">엑셀 일괄등록</button>
+          <button id="exportBtn" class="btn">JSON 내보내기</button>
+          <button id="resetBtn" class="btn ghost">샘플데이터 초기화</button>
+        </div>
+      </header>
+
+      <section id="dashboardView" class="view active">
+        <div id="dashboardStats" class="stats-grid"></div>
+
+        <div class="panel-grid">
+          <section class="panel">
+            <div class="panel-head">
+              <h3>즉시 확인할 P0 항목</h3>
+            </div>
+            <div id="urgentList" class="list-stack"></div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head">
+              <h3>도메인별 진행 현황</h3>
+            </div>
+            <div id="domainProgress"></div>
+          </section>
+        </div>
+
+        <div class="panel-grid single">
+          <section class="panel">
+            <div class="panel-head">
+              <h3>최근 변경 이력</h3>
+            </div>
+            <div id="recentHistory" class="history-list"></div>
+          </section>
+        </div>
+      </section>
+
+      <section id="workspaceView" class="view">
+        <div class="workspace-tabs">
+          <button class="workspace-tab active" data-workspace="information_request">고객정보 요청</button>
+          <button class="workspace-tab" data-workspace="decision">의사결정 체크리스트</button>
+        </div>
+        <div id="workspaceMeta" class="workspace-meta"></div>
+        <div id="workspaceBoard" class="board"></div>
+      </section>
+
+      <section id="itemsView" class="view">
+        <div class="items-layout">
+          <section class="panel list-panel">
+            <div class="panel-head">
+              <h3>Item 목록</h3>
+            </div>
+
+            <div class="filters">
+              <input id="searchInput" class="input" type="text" placeholder="제목/코드 검색" />
+              <select id="typeFilter" class="input">
+                <option value="">전체 유형</option>
+              </select>
+              <select id="domainFilter" class="input">
+                <option value="">전체 도메인</option>
+              </select>
+              <select id="statusFilter" class="input">
+                <option value="">전체 상태</option>
+              </select>
+            </div>
+
+            <div id="itemsList" class="item-list"></div>
+          </section>
+
+          <section class="panel detail-panel">
+            <div class="panel-head">
+              <h3>Item 상세</h3>
+            </div>
+            <div id="emptyDetail" class="empty-detail">왼쪽 목록에서 항목을 선택해 주세요.</div>
+
+            <div id="detailWrap" class="detail-wrap hidden">
+              <div class="detail-header">
+                <div>
+                  <div id="detailCode" class="detail-code"></div>
+                  <textarea id="detailTitle" class="detail-title-input" rows="2"></textarea>
+                </div>
+                <div id="detailPills" class="detail-pills"></div>
+              </div>
+
+              <div class="form-grid">
+                <div>
+                  <label>유형</label>
+                  <input id="detailType" class="input" disabled />
+                </div>
+                <div>
+                  <label>도메인</label>
+                  <select id="detailDomain" class="input"></select>
+                </div>
+                <div>
+                  <label>우선순위</label>
+                  <select id="detailPriority" class="input"></select>
+                </div>
+                <div>
+                  <label>상태</label>
+                  <select id="detailStatus" class="input"></select>
+                </div>
+                <div>
+                  <label>담당자</label>
+                  <input id="detailOwner" class="input" />
+                </div>
+                <div>
+                  <label>마감일</label>
+                  <input id="detailDueDate" class="input" type="date" />
+                </div>
+              </div>
+
+              <div class="form-section">
+                <label>설명</label>
+                <textarea id="detailDescription" class="textarea" rows="3"></textarea>
+              </div>
+
+              <div class="detail-split">
+                <div class="form-section">
+                  <label>고객 회신값</label>
+                  <textarea id="detailClientResponse" class="textarea" rows="6"></textarea>
+                </div>
+                <div class="form-section">
+                  <label>최종 확인값</label>
+                  <textarea id="detailFinalConfirmedValue" class="textarea" rows="6"></textarea>
+                </div>
+              </div>
+
+              <div class="detail-actions">
+                <button id="saveItemBtn" class="btn primary">저장</button>
+                <button id="lockToggleBtn" class="btn">확정 처리</button>
+              </div>
+
+              <div class="detail-split">
+                <div class="subpanel">
+                  <div class="subpanel-head">코멘트</div>
+                  <div class="comment-compose">
+                    <input id="commentAuthor" class="input" placeholder="작성자" value="틴토랩 PM" />
+                    <textarea id="commentBody" class="textarea" rows="3" placeholder="질문, 보완 요청, 회의 메모를 입력하세요."></textarea>
+                    <button id="addCommentBtn" class="btn">코멘트 추가</button>
+                  </div>
+                  <div id="commentsList" class="comments-list"></div>
+                </div>
+
+                <div class="subpanel">
+                  <div class="subpanel-head">변경 이력</div>
+                  <div id="historyList" class="history-list"></div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </section>
+
+<section id="itemTreeView" class="view">
+  <section class="panel item-tree-page">
+    <div class="panel-head tree-panel-head">
+      <div>
+        <h3>Item Tree Explorer</h3>
+        <div class="panel-sub">도메인과 아이템을 위계 구조로 펼쳐 보며, 최종확인값까지 빠르게 확인합니다.</div>
+      </div>
+    </div>
+
+    <div class="item-tree-toolbar">
+      <div class="tree-toolbar-search">
+        <input id="treeSearchInput" class="input" type="text" placeholder="이슈 검색" />
+      </div>
+
+      <div class="tree-toolbar-actions">
+        <div class="tree-toolbar-create">
+          <input id="newDomainInput" class="input" type="text" placeholder="도메인(트리) 추가" />
+          <button id="createDomainBtn" class="btn">추가</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tree-master-bar">
+      <div class="tree-master-summary">
+        <div class="tree-master-title">전체 트리</div>
+        <div id="treeSummaryText" class="tree-master-count">도메인 0개 · 아이템 0개</div>
+      </div>
+      <div class="tree-master-actions">
+        <button id="collapseAllDomainsBtn" class="btn" type="button">전체 접기</button>
+        <button id="expandAllDomainsBtn" class="btn" type="button">전체 펼치기</button>
+      </div>
+    </div>
+
+    <div class="tree-explorer-helpbar">
+      도메인 접기/펼치기 · 도메인 드래그 정렬/중첩 · 하위 도메인 생성 · 상세보기로 최종확인값 확인
+    </div>
+
+    <div id="mainTree" class="tree-outline"></div>
+  </section>
+</section>
+
+    </main>
+  </div>
+
+  <div id="modalOverlay" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-head">
+        <h3>새 항목 만들기</h3>
+        <button id="closeModalBtn" class="icon-btn">×</button>
+      </div>
+
+      <div class="form-grid">
+        <div>
+          <label>유형</label>
+          <select id="newType" class="input">
+            <option value="information_request">고객정보 요청</option>
+            <option value="decision">의사결정</option>
+            <option value="review">검토 요청</option>
+            <option value="issue">이슈</option>
+            <option value="change_request">변경 요청</option>
+          </select>
+        </div>
+        <div>
+          <label>도메인</label>
+          <select id="newDomain" class="input"></select>
+        </div>
+        <div>
+          <label>우선순위</label>
+          <select id="newPriority" class="input"></select>
+        </div>
+        <div>
+          <label>담당자</label>
+          <input id="newOwner" class="input" placeholder="예: 설해원 운영팀" />
+        </div>
+        <div>
+          <label>마감일</label>
+          <input id="newDueDate" class="input" type="date" />
+        </div>
+      </div>
+
+      <div class="form-section">
+        <label>제목</label>
+        <input id="newTitle" class="input" placeholder="예: PMS 책임경계 확정" />
+      </div>
+
+      <div class="form-section">
+        <label>설명</label>
+        <textarea id="newDescription" class="textarea" rows="3" placeholder="무엇을 확인/결정해야 하는지 적어 주세요."></textarea>
+      </div>
+
+      <div class="modal-actions">
+        <button id="createItemBtn" class="btn primary">생성</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="importOverlay" class="modal-overlay hidden">
+    <div class="modal import-modal">
+      <div class="modal-head">
+        <h3>엑셀 일괄등록</h3>
+        <button id="closeImportModalBtn" class="icon-btn">×</button>
+      </div>
+
+      <div class="import-help">
+        <div class="import-help-title">사용 방법</div>
+        <ul class="import-help-list">
+          <li><strong>방법 1</strong> : 엑셀에서 헤더 포함 행을 복사해서 오른쪽 칸에 그대로 붙여넣기</li>
+          <li><strong>방법 2</strong> : 엑셀에서 <strong>CSV UTF-8</strong>로 저장 후 업로드</li>
+          <li><strong>code</strong> 가 기존 항목과 같으면 <strong>업데이트</strong>, 없으면 <strong>신규 생성</strong></li>
+          <li><strong>확정</strong> 항목은 보호를 위해 일괄업데이트에서 자동 건너뜀</li>
+        </ul>
+        <div class="import-columns">
+          지원 컬럼: code, type, domain, title, description, priority, status, owner, dueDate, clientResponse, finalConfirmedValue
+        </div>
+        <div class="import-columns muted">
+          한글 헤더도 지원: 코드, 유형, 도메인, 제목, 설명, 우선순위, 상태, 담당자, 마감일, 고객회신값, 최종확인값
+        </div>
+        <div class="import-columns muted">
+          상태값은 반드시 아래 3개 중 하나로만 사용: 논의 / 방향합의 / 확정
+        </div>
+      </div>
+
+      <div class="import-grid">
+        <section class="subpanel">
+          <div class="subpanel-head">CSV 업로드</div>
+          <input id="importFileInput" class="input" type="file" accept=".csv,.txt" />
+          <div class="muted">엑셀 저장 시 가능한 경우 CSV UTF-8 권장</div>
+          <div class="import-inline-actions">
+            <button id="downloadTemplateBtn" class="btn">템플릿 CSV 다운로드</button>
+          </div>
+        </section>
+
+        <section class="subpanel">
+          <div class="subpanel-head">엑셀 복사/붙여넣기</div>
+          <textarea id="excelPasteArea" class="textarea" rows="12" placeholder="엑셀에서 헤더 포함 행을 복사해서 그대로 붙여넣으세요."></textarea>
+        </section>
+      </div>
+
+      <div class="modal-actions import-modal-actions">
+        <button id="importPreviewBtn" class="btn">미리보기</button>
+        <button id="importExecuteBtn" class="btn primary" disabled>일괄등록 실행</button>
+      </div>
+
+      <div id="importPreview" class="import-preview">
+        <div class="muted">미리보기를 실행하면 등록/업데이트/건너뜀 결과가 표시됩니다.</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
