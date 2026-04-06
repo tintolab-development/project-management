@@ -23,6 +23,8 @@ export type Item = {
   clientResponse: string
   finalConfirmedValue: string
   isLocked: boolean
+  /** 같은 status 컬럼 내 칸반 정렬(오름차순). */
+  boardRank: number
   createdAt: string
   updatedAt: string
 }

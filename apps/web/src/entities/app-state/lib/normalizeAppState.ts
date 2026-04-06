@@ -12,6 +12,47 @@ import { normalizeItemType } from "@/shared/lib/itemType"
 import { normalizePriority } from "@/shared/lib/priority"
 import { normalizeStatusValue } from "@/shared/lib/status"
 import { normalizeTextValue } from "@/shared/lib/text"
+import {
+  STATUS_VALUES,
+  type ItemStatus,
+} from "@/shared/constants/labels"
+
+const parseWorkspaceColumnOrder = (
+  raw: unknown,
+  fallback: ItemStatus[],
+): ItemStatus[] => {
+  if (!Array.isArray(raw)) return fallback
+  const allowed = new Set<ItemStatus>(STATUS_VALUES)
+  const mapped = raw
+    .map((x) => String(x))
+    .filter((x): x is ItemStatus => allowed.has(x as ItemStatus))
+  if (mapped.length !== STATUS_VALUES.length) return fallback
+  if (new Set(mapped).size !== mapped.length) return fallback
+  return mapped
+}
+
+/** status별로 boardRank를 0..n-1로 정규화(누락·중복·간격 흡수). */
+export const normalizeWorkspaceBoardRanks = (items: Item[]): Item[] => {
+  const byStatus = new Map<ItemStatus, Item[]>()
+  for (const s of STATUS_VALUES) byStatus.set(s, [])
+  for (const item of items) {
+    const list = byStatus.get(item.status)
+    if (list) list.push(item)
+  }
+  const rankById = new Map<string, number>()
+  for (const status of STATUS_VALUES) {
+    const group = byStatus.get(status) ?? []
+    const sorted = [...group].sort((a, b) => {
+      const ra = Number.isFinite(a.boardRank) ? a.boardRank : Number.MAX_SAFE_INTEGER
+      const rb = Number.isFinite(b.boardRank) ? b.boardRank : Number.MAX_SAFE_INTEGER
+      if (ra !== rb) return ra - rb
+      if (a.code === b.code) return a.title.localeCompare(b.title, "ko")
+      return a.code > b.code ? 1 : -1
+    })
+    sorted.forEach((item, idx) => rankById.set(item.id, idx))
+  }
+  return items.map((i) => ({ ...i, boardRank: rankById.get(i.id) ?? 0 }))
+}
 
 const normalizeRawItem = (item: unknown, workingDomains: Domain[]): Item => {
   const i = item as Record<string, unknown>
@@ -35,9 +76,13 @@ const normalizeRawItem = (item: unknown, workingDomains: Domain[]): Item => {
       i?.finalConfirmedValue ?? i?.agreedValue ?? "",
     ),
     isLocked: nextStatus === "확정" || Boolean(i?.isLocked),
+    boardRank:
+      typeof i?.boardRank === "number" && Number.isFinite(i.boardRank)
+        ? i.boardRank
+        : 0,
     createdAt: normalizeTextValue(i?.createdAt) || now,
     updatedAt: normalizeTextValue(i?.updatedAt) || now,
-  } as Item
+  }
 }
 
 const normalizeComment = (c: unknown): Comment => {
@@ -91,6 +136,10 @@ export const normalizeAppState = (raw: unknown): AppState => {
     statusFilter: normalizeTextValue(uiRaw.statusFilter ?? ""),
     priorityFilter: normalizeTextValue(uiRaw.priorityFilter ?? ""),
     dueDateFilter: normalizeTextValue(uiRaw.dueDateFilter ?? ""),
+    workspaceColumnOrder: parseWorkspaceColumnOrder(
+      uiRaw.workspaceColumnOrder,
+      seed.ui.workspaceColumnOrder,
+    ),
   }
 
   const project: ProjectState = {
@@ -140,11 +189,13 @@ export const normalizeAppState = (raw: unknown): AppState => {
     ui.treeManageDomainId = workingDomains[0]?.id ?? ""
   }
 
+  const itemsWithRanks = normalizeWorkspaceBoardRanks(items)
+
   return {
     ui,
     project,
     domains: workingDomains,
-    items,
+    items: itemsWithRanks,
     comments,
     history,
   }
