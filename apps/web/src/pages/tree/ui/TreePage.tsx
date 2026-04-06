@@ -13,6 +13,8 @@ import { normalizeKey } from "@/shared/lib/text"
 import { itemMatchesSearch } from "@/shared/lib/itemSearch"
 import { STATUS_LABELS, STATUS_STYLE } from "@/shared/constants/labels"
 import { Button } from "@/shared/ui/button"
+import { Heading, Text, textVariants } from "@/shared/ui/typography"
+import { Card } from "@/shared/ui/card"
 
 type DropPos = "before" | "after" | "inside" | null
 
@@ -149,14 +151,16 @@ export const TreePage = () => {
     !key && domains.every((domain) => !expandedIds.has(domain.id))
 
   return (
-    <section className="panel item-tree-page" aria-label="아이템 트리">
+    <Card variant="panel" className="item-tree-page" aria-label="아이템 트리">
       <div className="panel-head tree-panel-head">
         <div>
-          <h3>Item Tree Explorer</h3>
-          <div className="panel-sub">
+          <Heading as="h3" variant="panel">
+            Item Tree Explorer
+          </Heading>
+          <Text as="div" variant="panelSub">
             도메인과 아이템을 위계 구조로 펼쳐 보며, 최종확인값까지 빠르게
             확인합니다.
-          </div>
+          </Text>
         </div>
       </div>
 
@@ -207,10 +211,12 @@ export const TreePage = () => {
 
       <div className="tree-master-bar">
         <div className="tree-master-summary">
-          <div className="tree-master-title">전체 트리</div>
-          <div className="tree-master-count">
+          <Text as="div" variant="treeMasterTitle">
+            전체 트리
+          </Text>
+          <Text as="div" variant="treeMasterCount">
             도메인 {domains.length}개 · 아이템 {items.length}개
-          </div>
+          </Text>
         </div>
         <div className="tree-master-actions">
           <Button
@@ -232,10 +238,10 @@ export const TreePage = () => {
         </div>
       </div>
 
-      <div className="tree-explorer-helpbar">
+      <Text as="div" variant="treeHelpBar">
         도메인 접기/펼치기 · 도메인 드래그 정렬/중첩 · 하위 도메인 생성 · 상세보기로
         최종확인값 확인
-      </div>
+      </Text>
 
       <div
         className={clsx("tree-outline", allCollapsed && "all-collapsed")}
@@ -341,7 +347,7 @@ export const TreePage = () => {
           }}
         />
       </div>
-    </section>
+    </Card>
   )
 }
 
@@ -505,9 +511,13 @@ const TreeDomainBranch = ({
           onDrop={(e) => onItemRowDrop(item.domain, e)}
         >
           <div className="tree-item-main">
-            <div className="tree-item-code">{item.code}</div>
+            <Text as="div" variant="treeCode">
+              {item.code}
+            </Text>
             <div className="tree-item-meta">
-              <div className="tree-item-title">{item.title}</div>
+              <Text as="div" variant="treeTitle">
+                {item.title}
+              </Text>
               <span
                 className={clsx(
                   "pill",
@@ -545,15 +555,17 @@ const TreeDomainBranch = ({
         </div>
         {isPreviewOpen ? (
           <div className="tree-item-preview">
-            <div className="tree-preview-label">최종확인값</div>
-            <div
-              className={clsx(
-                "tree-preview-value",
-                !finalValue && "tree-preview-empty",
-              )}
+            <Text as="div" variant="treePreviewLabel">
+              최종확인값
+            </Text>
+            <Text
+              as="div"
+              variant={
+                finalValue ? "treePreviewValue" : "treePreviewPlaceholder"
+              }
             >
               {finalValue || "아직 최종 확인값이 입력되지 않았습니다."}
-            </div>
+            </Text>
             <div className="tree-preview-actions">
             <Button
               type="button"
@@ -580,7 +592,9 @@ const TreeDomainBranch = ({
         {itemHtml}
       </>
     ) : (
-      <div className="tree-empty">아이템이 없습니다.</div>
+      <Text as="div" variant="treeEmpty">
+        아이템이 없습니다.
+      </Text>
     )
 
   return (
@@ -644,7 +658,10 @@ const TreeDomainBranch = ({
           <Button
             type="button"
             variant="ghost"
-            className="tree-domain-link"
+            className={clsx(
+              "tree-domain-link",
+              textVariants({ variant: "treeDomainButton" }),
+            )}
             onClick={() => onToggleDomain(node.domain.id)}
           >
             {node.domain.name}

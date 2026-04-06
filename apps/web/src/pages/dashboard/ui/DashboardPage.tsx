@@ -6,6 +6,14 @@ import {
   STATUS_STYLE,
   TYPE_LABELS,
 } from "@/shared/constants/labels"
+import { Card } from "@/shared/ui/card"
+import {
+  Heading,
+  StatLabel,
+  StatSub,
+  StatValue,
+  Text,
+} from "@/shared/ui/typography"
 import { formatDateTime } from "@/shared/lib/formatDateTime"
 import { getDomainMap, walkDomainsFlat } from "@/entities/domain/lib/domainTree"
 
@@ -17,6 +25,9 @@ const getStatusDoneCount = (items: { status: string }[]) =>
   items.filter(
     (item) => item.status === "방향합의" || item.status === "확정",
   ).length
+
+const urgentCardInteractiveClass =
+  "cursor-pointer outline-none transition-colors hover:bg-accent/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
 
 export const DashboardPage = () => {
   const navigate = useNavigate()
@@ -62,43 +73,50 @@ export const DashboardPage = () => {
     <section aria-label="대시보드">
       <div className="stats-grid">
         {stats.map((stat) => (
-          <div key={stat.label} className="stat-card">
-            <div className="stat-label">{stat.label}</div>
-            <div className="stat-value">{stat.value}</div>
-            <div className="stat-sub">{stat.sub}</div>
-          </div>
+          <Card key={stat.label} variant="stat">
+            <StatLabel>{stat.label}</StatLabel>
+            <StatValue>{stat.value}</StatValue>
+            <StatSub>{stat.sub}</StatSub>
+          </Card>
         ))}
       </div>
 
       <div className="panel-grid">
-        <section className="panel">
+        <Card variant="panel">
           <div className="panel-head">
-            <h3>즉시 확인할 P0 항목</h3>
+            <Heading as="h3" variant="panel">
+              즉시 확인할 P0 항목
+            </Heading>
           </div>
           <div className="list-stack">
             {urgent.length === 0 ? (
-              <div className="muted">표시할 항목이 없습니다.</div>
+              <Text variant="muted" as="div">
+                표시할 항목이 없습니다.
+              </Text>
             ) : (
               urgent.map((item) => (
-                <div
+                <Card
                   key={item.id}
+                  variant="compact"
                   role="button"
                   tabIndex={0}
-                  className="urgent-card"
+                  className={urgentCardInteractiveClass}
                   onClick={() => handleOpenItem(item.id)}
                   onKeyDown={handleKeyOpenItem(item.id)}
                   aria-label={`${item.code} ${item.title} 상세 열기`}
                 >
-                  <div className="card-top">
+                  <div className="flex items-start justify-between gap-2.5">
                     <div>
-                      <div className="card-title">
+                      <Text as="div" variant="cardTitle">
                         {item.code} · {item.title}
-                      </div>
-                      <div className="card-desc">{item.description}</div>
+                      </Text>
+                      <Text as="div" variant="cardDescription">
+                        {item.description}
+                      </Text>
                     </div>
                     {pill(item.priority, "danger")}
                   </div>
-                  <div className="card-meta">
+                  <div className="mt-2.5 flex flex-wrap gap-2">
                     {pill(TYPE_LABELS[item.type], "dark")}
                     {pill(getDomainLabel(item.domain), "primary")}
                     {pill(
@@ -107,15 +125,17 @@ export const DashboardPage = () => {
                     )}
                     {pill(`담당: ${item.owner || "-"}`, "dark")}
                   </div>
-                </div>
+                </Card>
               ))
             )}
           </div>
-        </section>
+        </Card>
 
-        <section className="panel">
+        <Card variant="panel">
           <div className="panel-head">
-            <h3>도메인별 진행 현황</h3>
+            <Heading as="h3" variant="panel">
+              도메인별 진행 현황
+            </Heading>
           </div>
           <div id="domainProgress">
             <table className="progress-table">
@@ -130,7 +150,11 @@ export const DashboardPage = () => {
               <tbody>
                 {domains.length === 0 ? (
                   <tr>
-                    <td colSpan={4}>등록된 도메인이 없습니다.</td>
+                    <td colSpan={4}>
+                      <Text as="span" variant="muted">
+                        등록된 도메인이 없습니다.
+                      </Text>
+                    </td>
                   </tr>
                 ) : (
                   walkDomainsFlat(domains).map((domain) => {
@@ -159,13 +183,15 @@ export const DashboardPage = () => {
               </tbody>
             </table>
           </div>
-        </section>
+        </Card>
       </div>
 
       <div className="panel-grid single">
-        <section className="panel">
+        <Card variant="panel">
           <div className="panel-head">
-            <h3>최근 변경 이력</h3>
+            <Heading as="h3" variant="panel">
+              최근 변경 이력
+            </Heading>
           </div>
           <div className="history-list">
             {[...history]
@@ -176,19 +202,27 @@ export const DashboardPage = () => {
               )
               .slice(0, 8)
               .map((h) => (
-                <div key={h.id} className="history-row">
+                <Card key={h.id} variant="history">
                   <div>
-                    <strong>{h.summary}</strong>
+                    <Text as="div" variant="emphasis">
+                      {h.summary}
+                    </Text>
                   </div>
-                  <div>{h.actor}</div>
-                  <div className="time">{formatDateTime(h.createdAt)}</div>
-                </div>
+                  <Text as="div" variant="small">
+                    {h.actor}
+                  </Text>
+                  <Text as="div" variant="caption" className="mt-1">
+                    {formatDateTime(h.createdAt)}
+                  </Text>
+                </Card>
               ))}
             {history.length === 0 ? (
-              <div className="muted">이력이 없습니다.</div>
+              <Text variant="muted" as="div">
+                이력이 없습니다.
+              </Text>
             ) : null}
           </div>
-        </section>
+        </Card>
       </div>
     </section>
   )

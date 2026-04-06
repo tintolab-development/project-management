@@ -16,7 +16,17 @@ import {
 } from "@/entities/domain/lib/domainTree"
 import { itemMatchesSearch } from "@/shared/lib/itemSearch"
 import { formatDateTime } from "@/shared/lib/formatDateTime"
+import { ItemsFiltersRow } from "./filters/ItemsFiltersRow"
 import { Button } from "@/shared/ui/button"
+import { Card } from "@/shared/ui/card"
+import {
+  FormLabel,
+  Heading,
+  Text,
+} from "@/shared/ui/typography"
+
+const listItemCardInteractiveClass =
+  "cursor-pointer outline-none transition-colors hover:bg-accent/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
 
 type DetailForm = {
   title: string
@@ -45,14 +55,12 @@ export const ItemsPage = () => {
   const typeFilter = useAppStore((s) => s.ui.typeFilter)
   const domainFilter = useAppStore((s) => s.ui.domainFilter)
   const statusFilter = useAppStore((s) => s.ui.statusFilter)
+  const priorityFilter = useAppStore((s) => s.ui.priorityFilter)
+  const dueDateFilter = useAppStore((s) => s.ui.dueDateFilter)
   const selectedItemId = useAppStore((s) => s.ui.selectedItemId)
   const comments = useAppStore((s) => s.comments)
   const history = useAppStore((s) => s.history)
 
-  const setItemsQuery = useAppStore((s) => s.setItemsQuery)
-  const setTypeFilter = useAppStore((s) => s.setTypeFilter)
-  const setDomainFilter = useAppStore((s) => s.setDomainFilter)
-  const setStatusFilter = useAppStore((s) => s.setStatusFilter)
   const selectItem = useAppStore((s) => s.selectItem)
   const getSortedItems = useAppStore((s) => s.getSortedItems)
   const saveSelectedItem = useAppStore((s) => s.saveSelectedItem)
@@ -74,10 +82,21 @@ export const ItemsPage = () => {
         itemMatchesSearch(item, itemsQuery, domainLabel) &&
         (!typeFilter || item.type === typeFilter) &&
         (!domainFilter || item.domain === domainFilter) &&
-        (!statusFilter || item.status === statusFilter)
+        (!statusFilter || item.status === statusFilter) &&
+        (!priorityFilter || item.priority === priorityFilter) &&
+        (!dueDateFilter || item.dueDate === dueDateFilter)
       )
     })
-  }, [sorted, itemsQuery, typeFilter, domainFilter, statusFilter, domainMap])
+  }, [
+    sorted,
+    itemsQuery,
+    typeFilter,
+    domainFilter,
+    statusFilter,
+    priorityFilter,
+    dueDateFilter,
+    domainMap,
+  ])
 
   useEffect(() => {
     if (!filtered.length) {
@@ -189,72 +208,26 @@ export const ItemsPage = () => {
 
   return (
     <section className="items-layout" aria-label="아이템 목록 및 상세">
-      <section className="panel list-panel">
+      <Card variant="panel" className="list-panel">
         <div className="panel-head">
-          <h3>Item 목록</h3>
+          <Heading as="h3" variant="panel">
+            Item 목록
+          </Heading>
         </div>
 
-        <div className="filters">
-          <input
-            className="input"
-            type="search"
-            placeholder="제목/코드 검색"
-            aria-label="제목 또는 코드 검색"
-            value={itemsQuery}
-            onChange={(e) => setItemsQuery(e.target.value)}
-          />
-          <select
-            className="input"
-            aria-label="유형 필터"
-            value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
-          >
-            <option value="">전체 유형</option>
-            {(Object.keys(TYPE_LABELS) as (keyof typeof TYPE_LABELS)[]).map(
-              (key) => (
-                <option key={key} value={key}>
-                  {TYPE_LABELS[key]}
-                </option>
-              ),
-            )}
-          </select>
-          <select
-            className="input"
-            aria-label="도메인 필터"
-            value={domainFilter}
-            onChange={(e) => setDomainFilter(e.target.value)}
-          >
-            <option value="">전체 도메인</option>
-            {walkDomainsFlat(domains).map((d) => (
-              <option key={d.id} value={d.id}>
-                {getDomainOptionLabel(domains, d.id)}
-              </option>
-            ))}
-          </select>
-          <select
-            className="input"
-            aria-label="상태 필터"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="">전체 상태</option>
-            {STATUS_VALUES.map((st) => (
-              <option key={st} value={st}>
-                {STATUS_LABELS[st]}
-              </option>
-            ))}
-          </select>
-        </div>
+        <ItemsFiltersRow domains={domains} />
 
         <div className="item-list">
           {filtered.map((row) => (
-            <div
+            <Card
               key={row.id}
+              variant="compact"
               role="button"
               tabIndex={0}
               className={clsx(
-                "list-item",
-                row.id === selectedItemId && "active",
+                listItemCardInteractiveClass,
+                row.id === selectedItemId &&
+                  "border-primary shadow-[0_0_0_3px_rgba(31,94,255,0.08)]",
               )}
               onClick={() => selectItem(row.id)}
               onKeyDown={(e) => {
@@ -268,8 +241,12 @@ export const ItemsPage = () => {
               <div className="list-top">
                 <div className="list-main">
                   <div className="list-code">{row.code}</div>
-                  <div className="list-title">{row.title}</div>
-                  <div className="list-desc">{row.description}</div>
+                  <Text as="div" variant="listTitle">
+                    {row.title}
+                  </Text>
+                  <Text as="div" variant="listDescription">
+                    {row.description}
+                  </Text>
                 </div>
                 <span
                   className={clsx(
@@ -298,23 +275,29 @@ export const ItemsPage = () => {
                   {STATUS_LABELS[row.status]}
                 </span>
               </div>
-            </div>
+            </Card>
           ))}
         </div>
-      </section>
+      </Card>
 
-      <section className="panel detail-panel">
+      <Card variant="panel" className="detail-panel">
         <div className="panel-head">
-          <h3>Item 상세</h3>
+          <Heading as="h3" variant="panel">
+            Item 상세
+          </Heading>
         </div>
 
         {!selected ? (
-          <div className="empty-detail">왼쪽 목록에서 항목을 선택해 주세요.</div>
+          <Text as="div" variant="emptyDetail">
+            왼쪽 목록에서 항목을 선택해 주세요.
+          </Text>
         ) : (
           <form className="detail-wrap" onSubmit={onSave}>
             <div className="detail-header">
               <div>
-                <div className="detail-code">{selected.code}</div>
+                <Text as="div" variant="detailCode">
+                  {selected.code}
+                </Text>
                 <textarea
                   className="detail-title-input"
                   rows={2}
@@ -354,8 +337,9 @@ export const ItemsPage = () => {
 
             <div className="form-grid">
               <div>
-                <label>유형</label>
+                <FormLabel htmlFor="detail-type">유형</FormLabel>
                 <input
+                  id="detail-type"
                   className="input"
                   disabled
                   value={TYPE_LABELS[selected.type]}
@@ -363,7 +347,7 @@ export const ItemsPage = () => {
                 />
               </div>
               <div>
-                <label htmlFor="detail-domain">도메인</label>
+                <FormLabel htmlFor="detail-domain">도메인</FormLabel>
                 <select
                   id="detail-domain"
                   className="input"
@@ -378,7 +362,7 @@ export const ItemsPage = () => {
                 </select>
               </div>
               <div>
-                <label htmlFor="detail-priority">우선순위</label>
+                <FormLabel htmlFor="detail-priority">우선순위</FormLabel>
                 <select
                   id="detail-priority"
                   className="input"
@@ -393,7 +377,7 @@ export const ItemsPage = () => {
                 </select>
               </div>
               <div>
-                <label htmlFor="detail-status">상태</label>
+                <FormLabel htmlFor="detail-status">상태</FormLabel>
                 <select
                   id="detail-status"
                   className="input"
@@ -408,7 +392,7 @@ export const ItemsPage = () => {
                 </select>
               </div>
               <div>
-                <label htmlFor="detail-owner">담당자</label>
+                <FormLabel htmlFor="detail-owner">담당자</FormLabel>
                 <input
                   id="detail-owner"
                   className="input"
@@ -417,7 +401,7 @@ export const ItemsPage = () => {
                 />
               </div>
               <div>
-                <label htmlFor="detail-due">마감일</label>
+                <FormLabel htmlFor="detail-due">마감일</FormLabel>
                 <input
                   id="detail-due"
                   className="input"
@@ -429,7 +413,7 @@ export const ItemsPage = () => {
             </div>
 
             <div className="form-section">
-              <label htmlFor="detail-desc">설명</label>
+              <FormLabel htmlFor="detail-desc">설명</FormLabel>
               <textarea
                 id="detail-desc"
                 className="textarea"
@@ -441,7 +425,7 @@ export const ItemsPage = () => {
 
             <div className="detail-split">
               <div className="form-section">
-                <label htmlFor="detail-client">고객 회신값</label>
+                <FormLabel htmlFor="detail-client">고객 회신값</FormLabel>
                 <textarea
                   id="detail-client"
                   className="textarea"
@@ -451,7 +435,7 @@ export const ItemsPage = () => {
                 />
               </div>
               <div className="form-section">
-                <label htmlFor="detail-final">최종 확인값</label>
+                <FormLabel htmlFor="detail-final">최종 확인값</FormLabel>
                 <textarea
                   id="detail-final"
                   className="textarea"
@@ -482,8 +466,10 @@ export const ItemsPage = () => {
             </div>
 
             <div className="detail-split">
-              <div className="subpanel">
-                <div className="subpanel-head">코멘트</div>
+              <Card variant="subpanel">
+                <Text as="div" variant="subpanelHead">
+                  코멘트
+                </Text>
                 <CommentSection
                   key={selected.id}
                   defaultAuthor={commentAuthor}
@@ -492,33 +478,45 @@ export const ItemsPage = () => {
                 <div className="comments-list">
                   {itemComments.map((c) => (
                     <div key={c.id} className="comment-row">
-                      <div className="comment-author">{c.author}</div>
-                      <div className="comment-meta">
+                      <Text as="div" variant="commentAuthor">
+                        {c.author}
+                      </Text>
+                      <Text as="div" variant="commentMeta">
                         {formatDateTime(c.createdAt)}
-                      </div>
-                      <div>{c.body}</div>
+                      </Text>
+                      <Text as="div" variant="body">
+                        {c.body}
+                      </Text>
                     </div>
                   ))}
                 </div>
-              </div>
-              <div className="subpanel">
-                <div className="subpanel-head">변경 이력</div>
+              </Card>
+              <Card variant="subpanel">
+                <Text as="div" variant="subpanelHead">
+                  변경 이력
+                </Text>
                 <div className="history-list">
                   {itemHistory.map((h) => (
-                    <div key={h.id} className="history-row">
+                    <Card key={h.id} variant="history">
                       <div>
-                        <strong>{h.summary}</strong>
+                        <Text as="div" variant="emphasis">
+                          {h.summary}
+                        </Text>
                       </div>
-                      <div>{h.actor}</div>
-                      <div className="time">{formatDateTime(h.createdAt)}</div>
-                    </div>
+                      <Text as="div" variant="small">
+                        {h.actor}
+                      </Text>
+                      <Text as="div" variant="caption" className="mt-1">
+                        {formatDateTime(h.createdAt)}
+                      </Text>
+                    </Card>
                   ))}
                 </div>
-              </div>
+              </Card>
             </div>
           </form>
         )}
-      </section>
+      </Card>
     </section>
   )
 }

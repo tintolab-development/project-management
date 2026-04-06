@@ -1,6 +1,8 @@
 import { useNavigate } from "react-router-dom"
 import clsx from "clsx"
 import { Button } from "@/shared/ui/button"
+import { Card } from "@/shared/ui/card"
+import { Text } from "@/shared/ui/typography"
 import { useAppStore } from "@/app/store/useAppStore"
 import { STATUS_LABELS, STATUS_STYLE, TYPE_LABELS } from "@/shared/constants/labels"
 import { STATUS_VALUES } from "@/shared/constants/labels"
@@ -66,7 +68,9 @@ export const WorkspacesPage = () => {
           의사결정 체크리스트
         </Button>
       </div>
-      <div className="workspace-meta">{meta}</div>
+      <Text as="div" variant="workspaceMeta">
+        {meta}
+      </Text>
       <div className="board">
         {STATUS_VALUES.map((status) => {
           const columnItems = workspaceItems.filter(
@@ -75,23 +79,32 @@ export const WorkspacesPage = () => {
           return (
             <div key={status} className="board-column">
               <div className="board-column-head">
-                <span>{STATUS_LABELS[status]}</span>
-                <span>{columnItems.length}</span>
+                <Text as="span" variant="boardColumnHead">
+                  {STATUS_LABELS[status]}
+                </Text>
+                <Text as="span" variant="boardColumnHead">
+                  {columnItems.length}
+                </Text>
               </div>
               {columnItems.map((item) => (
-                <div
+                <Card
                   key={item.id}
+                  variant="compact"
                   role="button"
                   tabIndex={0}
-                  className="board-card"
+                  className="mb-2.5 cursor-pointer outline-none transition-colors last:mb-0 hover:bg-accent/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   onClick={() => handleOpenItem(item.id)}
                   onKeyDown={handleKeyOpen(item.id)}
                   aria-label={`${item.code} ${item.title} 상세 열기`}
                 >
-                  <div className="card-title">{item.code}</div>
-                  <div className="card-desc">
-                    <strong>{item.title}</strong>
-                  </div>
+                  <Text as="div" variant="listTitle" className="mb-1.5">
+                    {item.code}
+                  </Text>
+                  <Text as="div" variant="cardDescription">
+                    <Text as="span" variant="emphasis">
+                      {item.title}
+                    </Text>
+                  </Text>
                   <div className="card-meta">
                     <span
                       className={clsx(
@@ -106,7 +119,7 @@ export const WorkspacesPage = () => {
                     </span>
                     <span className="pill dark">{TYPE_LABELS[item.type]}</span>
                   </div>
-                </div>
+                </Card>
               ))}
             </div>
           )
