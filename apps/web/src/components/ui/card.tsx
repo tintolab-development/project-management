@@ -10,17 +10,17 @@ const cardVariants = cva(
     variants: {
       variant: {
         default:
-          "gap-4 rounded-xl bg-card px-[var(--pad-widget-x)] py-[var(--pad-widget-y)] text-sm ring-1 ring-foreground/10 has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:gap-3 data-[size=sm]:py-[var(--pad-widget-y)] data-[size=sm]:has-data-[slot=card-footer]:pb-0",
+          "gap-4 rounded-xl bg-card px-[var(--pad-widget-x)] py-[var(--pad-widget-y)] text-sm has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:gap-3 data-[size=sm]:py-[var(--pad-widget-y)] data-[size=sm]:has-data-[slot=card-footer]:pb-0",
         panel:
-          "gap-0 rounded-lg bg-card px-[var(--pad-widget-x)] py-[var(--pad-widget-y)] text-sm shadow-app ring-1 ring-border/60",
+          "gap-0 rounded-lg bg-card px-[var(--pad-widget-x)] py-[var(--pad-widget-y)] text-sm shadow-app",
         stat:
-          "gap-0 rounded-lg bg-card px-[var(--pad-widget-x)] py-[var(--pad-widget-y)] text-sm shadow-app ring-1 ring-border/60",
+          "gap-0 rounded-lg bg-card px-[var(--pad-widget-x)] py-[var(--pad-widget-y)] text-sm shadow-app",
         compact:
-          "gap-0 rounded-app-md border border-border bg-background px-[var(--pad-widget-x)] py-[var(--pad-widget-y)] text-sm shadow-none ring-0",
+          "gap-0 rounded-app-md bg-background px-[var(--pad-widget-x)] py-[var(--pad-widget-y)] text-sm shadow-none",
         history:
           "gap-0 rounded-r-xl rounded-l-none border-0 border-l-[3px] border-l-[var(--border-history)] bg-surface-subtle px-[var(--pad-widget-x)] py-[var(--pad-widget-y)] text-sm shadow-none ring-0",
         subpanel:
-          "gap-0 rounded-2xl border border-border bg-surface-subtle px-[var(--pad-widget-x)] py-[var(--pad-widget-y)] text-sm shadow-none ring-0",
+          "gap-0 rounded-2xl bg-surface-subtle px-[var(--pad-widget-x)] py-[var(--pad-widget-y)] text-sm shadow-none",
       },
     },
     defaultVariants: {
@@ -121,7 +121,7 @@ function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card-footer"
       className={cn(
-        "flex items-center rounded-b-xl px-0 py-0 group-data-[variant=default]/card:border-t group-data-[variant=default]/card:bg-muted/50 group-data-[variant=default]/card:px-0 group-data-[variant=default]/card:py-[var(--space-4)] group-data-[variant=default]/card:group-data-[size=sm]/card:py-[var(--space-3)]",
+        "flex items-center rounded-b-xl px-0 py-0 group-data-[variant=default]/card:bg-muted/50 group-data-[variant=default]/card:px-0 group-data-[variant=default]/card:py-[var(--space-4)] group-data-[variant=default]/card:group-data-[size=sm]/card:py-[var(--space-3)]",
         className,
       )}
       {...props}

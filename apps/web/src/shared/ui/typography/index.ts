@@ -13,6 +13,7 @@ export {
   type FormLabelProps,
   type HeadingProps,
   type OverlineProps,
+  type StatAppearance,
   type StatLabelProps,
   type StatSubProps,
   type StatValueProps,
