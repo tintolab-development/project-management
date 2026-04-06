@@ -1,8 +1,11 @@
 import { useState } from "react"
 import { Button } from "@/shared/ui/button"
+import { Heading, Text } from "@/shared/ui/typography"
 import { useAppStore } from "@/app/store/useAppStore"
 import { NewItemModal } from "@/features/new-item/ui/NewItemModal"
 import { BulkImportModal } from "@/features/bulk-import/ui/BulkImportModal"
+
+import styles from "./TopBar.module.css"
 
 export const TopBar = () => {
   const [newOpen, setNewOpen] = useState(false)
@@ -28,16 +31,18 @@ export const TopBar = () => {
   const handleReset = () => resetToSample()
 
   return (
-    <header className="topbar">
+    <header className={styles.root}>
       <div>
-        <h1 className="page-title">프로젝트 의사결정 아이템 관리시스템</h1>
-        <div className="page-subtitle">
+        <Heading as="h1" variant="display">
+          프로젝트 의사결정 아이템 관리시스템
+        </Heading>
+        <Text variant="lead" className={styles.leadSpacing} as="div">
           원할한 프로젝트 수행을 위해 도메인 항목에 해당하는 의사결정 아이템을
           효율적으로 관리합니다.
-        </div>
+        </Text>
       </div>
 
-      <div className="top-actions">
+      <div className={styles.actions}>
         <Button
           type="button"
           appearance="fill"

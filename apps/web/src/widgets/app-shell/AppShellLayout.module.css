@@ -1,0 +1,17 @@
+.shellWrapper {
+  display: flex;
+  align-items: stretch;
+  min-height: 100vh;
+  min-height: 100svh;
+  width: 100%;
+}
+
+.main {
+  padding: 24px 24px 30px;
+}
+
+@media (max-width: 1100px) {
+  .shellWrapper [data-slot="sidebar"] {
+    display: none;
+  }
+}

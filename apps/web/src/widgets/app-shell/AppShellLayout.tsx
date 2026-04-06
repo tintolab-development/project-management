@@ -1,13 +1,21 @@
+import type { CSSProperties } from "react"
 import { Outlet } from "react-router-dom"
-import { AppSidebar } from "@/widgets/app-sidebar/AppSidebar"
+import { SidebarInset, SidebarProvider } from "@/shared/ui/sidebar"
+import { AppSidebar } from "@/widgets/app-sidebar"
 import { TopBar } from "@/widgets/top-bar/TopBar"
 
+import styles from "./AppShellLayout.module.css"
+
+const sidebarLayoutStyle = {
+  "--sidebar-width": "280px",
+} as CSSProperties
+
 export const AppShellLayout = () => (
-  <div className="app-shell">
+  <SidebarProvider className={styles.shellWrapper} style={sidebarLayoutStyle}>
     <AppSidebar />
-    <main className="main">
+    <SidebarInset className={styles.main}>
       <TopBar />
       <Outlet />
-    </main>
-  </div>
+    </SidebarInset>
+  </SidebarProvider>
 )
