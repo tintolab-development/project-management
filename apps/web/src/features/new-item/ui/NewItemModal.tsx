@@ -2,6 +2,11 @@ import * as Dialog from "@radix-ui/react-dialog"
 import { useNavigate } from "react-router-dom"
 import { useState } from "react"
 import { Button } from "@/shared/ui/button"
+import {
+  FormLabel,
+  Heading,
+  modalCloseIconClassName,
+} from "@/shared/ui/typography"
 import { useAppStore } from "@/app/store/useAppStore"
 import { PRIORITY_LABELS, TYPE_LABELS } from "@/shared/constants/labels"
 import type { ItemType } from "@/entities/item/model/types"
@@ -66,14 +71,16 @@ export const NewItemModal = ({ open, onOpenChange }: Props) => {
         <Dialog.Content className="modal" aria-describedby={undefined}>
           <div className="modal-head">
             <Dialog.Title asChild>
-              <h3>새 항목 만들기</h3>
+              <Heading as="h3" variant="modal">
+                새 항목 만들기
+              </Heading>
             </Dialog.Title>
             <Dialog.Close asChild>
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="border-none bg-transparent text-[28px] leading-none"
+                className={modalCloseIconClassName}
                 aria-label="닫기"
               >
                 ×
@@ -83,7 +90,7 @@ export const NewItemModal = ({ open, onOpenChange }: Props) => {
 
           <div className="form-grid">
             <div>
-              <label htmlFor="new-type">유형</label>
+              <FormLabel htmlFor="new-type">유형</FormLabel>
               <select
                 id="new-type"
                 className="input"
@@ -98,7 +105,7 @@ export const NewItemModal = ({ open, onOpenChange }: Props) => {
               </select>
             </div>
             <div>
-              <label htmlFor="new-domain">도메인</label>
+              <FormLabel htmlFor="new-domain">도메인</FormLabel>
               <select
                 id="new-domain"
                 className="input"
@@ -113,7 +120,7 @@ export const NewItemModal = ({ open, onOpenChange }: Props) => {
               </select>
             </div>
             <div>
-              <label htmlFor="new-priority">우선순위</label>
+              <FormLabel htmlFor="new-priority">우선순위</FormLabel>
               <select
                 id="new-priority"
                 className="input"
@@ -132,7 +139,7 @@ export const NewItemModal = ({ open, onOpenChange }: Props) => {
               </select>
             </div>
             <div>
-              <label htmlFor="new-owner">담당자</label>
+              <FormLabel htmlFor="new-owner">담당자</FormLabel>
               <input
                 id="new-owner"
                 className="input"
@@ -142,7 +149,7 @@ export const NewItemModal = ({ open, onOpenChange }: Props) => {
               />
             </div>
             <div>
-              <label htmlFor="new-due">마감일</label>
+              <FormLabel htmlFor="new-due">마감일</FormLabel>
               <input
                 id="new-due"
                 className="input"
@@ -154,7 +161,7 @@ export const NewItemModal = ({ open, onOpenChange }: Props) => {
           </div>
 
           <div className="form-section">
-            <label htmlFor="new-title">제목</label>
+            <FormLabel htmlFor="new-title">제목</FormLabel>
             <input
               id="new-title"
               className="input"
@@ -165,7 +172,7 @@ export const NewItemModal = ({ open, onOpenChange }: Props) => {
           </div>
 
           <div className="form-section">
-            <label htmlFor="new-desc">설명</label>
+            <FormLabel htmlFor="new-desc">설명</FormLabel>
             <textarea
               id="new-desc"
               className="textarea"
