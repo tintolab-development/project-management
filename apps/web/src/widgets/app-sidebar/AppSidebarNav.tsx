@@ -1,4 +1,6 @@
 import { NavLink, useMatch } from "react-router-dom"
+import { useAppStore } from "@/app/store/useAppStore"
+import { buildWorkspacesPath } from "@/shared/config/workspaceRoute"
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -22,7 +24,10 @@ export function AppSidebarNav({ items }: Props) {
         <SidebarGroupContent>
           <SidebarMenu className={styles.navMenu}>
             {items.map((item) => (
-              <AppSidebarNavRow key={item.to + String(item.end ?? false)} item={item} />
+              <AppSidebarNavRow
+                key={item.to + String(item.end ?? false)}
+                item={item}
+              />
             ))}
           </SidebarMenu>
         </SidebarGroupContent>
@@ -33,11 +38,16 @@ export function AppSidebarNav({ items }: Props) {
 
 function AppSidebarNavRow({ item }: { item: AppSidebarNavItem }) {
   const match = useMatch({ path: item.to, end: item.end ?? false })
+  const activeWorkspace = useAppStore((s) => s.ui.activeWorkspace)
+  const to =
+    item.to === "/workspaces"
+      ? buildWorkspacesPath(activeWorkspace)
+      : item.to
 
   return (
     <SidebarMenuItem>
       <SidebarMenuButton
-        render={<NavLink to={item.to} end={item.end} />}
+        render={<NavLink to={to} end={item.end} />}
         isActive={!!match}
         className={styles.navMenuButton}
         size="lg"

@@ -1,6 +1,9 @@
 .root {
   background: var(--sidebar-bg);
-  color: var(--sidebar-text);
+  color: #000;
+  font-family: var(--font-login-title);
+  font-style: normal;
+  line-height: normal;
   padding: 24px;
   display: flex;
   flex-direction: column;
@@ -39,11 +42,18 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  padding-top: 18px;
 }
 
 .section {
   border-top: 1px solid var(--sidebar-divider);
   padding-top: 18px;
+}
+
+/* 프로젝트: 로고 바로 아래, 구분선은 블록 하단 */
+.projectSection {
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--sidebar-divider);
 }
 
 .sectionHeading {
@@ -57,27 +67,29 @@
   padding: 14px;
 }
 
-.footer {
-  margin-top: auto;
-  padding-top: 18px;
-  border-top: 1px solid var(--sidebar-footer-border);
+.footerMeta {
+  padding-top: 14px;
 }
 
 /* shadcn Sidebar slot resets — spacing comes from .root gap */
 .headerSlot {
   padding: 0;
+  flex-shrink: 0;
 }
 
 .footerSlot {
   padding: 0;
   margin-top: auto;
+  flex-shrink: 0;
 }
 
 .contentSlot {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 0;
+  flex: 1 1 0;
+  min-height: 0;
 }
 
 .navGroup {
@@ -97,10 +109,14 @@
   background: transparent;
   padding: 12px 14px;
   box-shadow: none;
+  color: #000;
+  font-family: inherit;
+  font-style: normal;
+  line-height: normal;
 }
 
 .navMenuButton:hover,
 .navMenuButton[data-active] {
   background: var(--sidebar-nav-hover-bg);
-  color: var(--sidebar-nav-link);
+  color: #000;
 }

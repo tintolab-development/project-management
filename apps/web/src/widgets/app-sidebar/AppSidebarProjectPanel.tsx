@@ -7,8 +7,8 @@ export function AppSidebarProjectPanel() {
   const project = useAppStore((s) => s.project)
 
   return (
-    <div className={styles.section}>
-      <Overline tone="sidebar" className={styles.sectionHeading}>
+    <div className={styles.projectSection}>
+      <Overline tone="sidebarCategory" className={styles.sectionHeading}>
         프로젝트
       </Overline>
       <div className={styles.projectCard}>

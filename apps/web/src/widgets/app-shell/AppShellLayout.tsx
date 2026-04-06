@@ -7,7 +7,7 @@ import { TopBar } from "@/widgets/top-bar/TopBar"
 import styles from "./AppShellLayout.module.css"
 
 const sidebarLayoutStyle = {
-  "--sidebar-width": "280px",
+  "--sidebar-width": "300px",
 } as CSSProperties
 
 export const AppShellLayout = () => (

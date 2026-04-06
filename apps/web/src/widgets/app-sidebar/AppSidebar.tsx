@@ -25,12 +25,12 @@ export function AppSidebar() {
         <AppSidebarBrand />
       </SidebarHeader>
       <SidebarContent className={styles.contentSlot}>
-        <AppSidebarNav items={APP_SIDEBAR_NAV} />
         <AppSidebarProjectPanel />
-        <AppSidebarPrinciples />
+        <AppSidebarNav items={APP_SIDEBAR_NAV} />
       </SidebarContent>
       <SidebarFooter className={styles.footerSlot}>
-        <Text as="div" variant="sidebarFooter" className={styles.footer}>
+        <AppSidebarPrinciples />
+        <Text as="div" variant="sidebarFooter" className={styles.footerMeta}>
           Prototype v7
         </Text>
       </SidebarFooter>

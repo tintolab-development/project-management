@@ -12,7 +12,7 @@ const PRINCIPLES = [
 export function AppSidebarPrinciples() {
   return (
     <div className={styles.section}>
-      <Overline tone="sidebar" className={styles.sectionHeading}>
+      <Overline tone="sidebarCategory" className={styles.sectionHeading}>
         의사결정 원칙
       </Overline>
       <Text as="ul" variant="sidebarList">
