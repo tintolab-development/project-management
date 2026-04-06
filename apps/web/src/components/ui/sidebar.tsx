@@ -25,8 +25,8 @@ import { PanelLeftIcon } from "lucide-react"
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
-const SIDEBAR_WIDTH = "16rem"
-const SIDEBAR_WIDTH_MOBILE = "18rem"
+const SIDEBAR_WIDTH = "300px"
+const SIDEBAR_WIDTH_MOBILE = "300px"
 const SIDEBAR_WIDTH_ICON = "3rem"
 const SIDEBAR_KEYBOARD_SHORTCUT = "b"
 
@@ -167,7 +167,7 @@ function Sidebar({
       <div
         data-slot="sidebar"
         className={cn(
-          "flex min-h-svh w-(--sidebar-width) shrink-0 flex-col self-stretch bg-sidebar text-sidebar-foreground",
+          "flex h-svh max-h-svh w-(--sidebar-width) shrink-0 flex-col overflow-hidden bg-sidebar text-sidebar-foreground",
           className
         )}
         {...props}
