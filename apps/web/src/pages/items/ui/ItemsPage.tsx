@@ -16,6 +16,7 @@ import {
 } from "@/entities/domain/lib/domainTree"
 import { itemMatchesSearch } from "@/shared/lib/itemSearch"
 import { formatDateTime } from "@/shared/lib/formatDateTime"
+import { Button } from "@/shared/ui/button"
 
 type DetailForm = {
   title: string
@@ -462,20 +463,22 @@ export const ItemsPage = () => {
             </div>
 
             <div className="detail-actions">
-              <button
+              <Button
                 type="submit"
-                className="btn primary"
+                appearance="fill"
+                dimension="hug"
                 disabled={locked}
               >
                 저장
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
-                className="btn"
+                appearance="outline"
+                dimension="hug"
                 onClick={() => toggleLockSelectedItem()}
               >
                 {locked ? "확정 해제" : "확정 처리"}
-              </button>
+              </Button>
             </div>
 
             <div className="detail-split">
@@ -552,9 +555,14 @@ const CommentSection = ({
         aria-label="코멘트 내용"
         {...register("body")}
       />
-      <button type="button" className="btn" onClick={onAdd}>
+      <Button
+        type="button"
+        appearance="outline"
+        dimension="hug"
+        onClick={onAdd}
+      >
         코멘트 추가
-      </button>
+      </Button>
     </div>
   )
 }
