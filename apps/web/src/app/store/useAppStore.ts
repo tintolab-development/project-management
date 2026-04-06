@@ -74,6 +74,8 @@ export type AppStore = AppState & {
   setTypeFilter: (v: string) => void
   setDomainFilter: (v: string) => void
   setStatusFilter: (v: string) => void
+  setPriorityFilter: (v: string) => void
+  setDueDateFilter: (v: string) => void
   selectItem: (id: string | null) => void
   toggleDomainExpanded: (domainId: string) => void
   setTreeExpandAll: (expand: boolean) => void
@@ -158,6 +160,12 @@ export const useAppStore = create<AppStore>()(
 
       setStatusFilter: (statusFilter) =>
         set((s) => ({ ui: { ...s.ui, statusFilter } })),
+
+      setPriorityFilter: (priorityFilter) =>
+        set((s) => ({ ui: { ...s.ui, priorityFilter } })),
+
+      setDueDateFilter: (dueDateFilter) =>
+        set((s) => ({ ui: { ...s.ui, dueDateFilter } })),
 
       selectItem: (selectedItemId) => set((s) => ({ ui: { ...s.ui, selectedItemId } })),
 
