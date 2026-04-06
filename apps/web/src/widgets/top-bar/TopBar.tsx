@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { Button } from "@/shared/ui/button"
 import { useAppStore } from "@/app/store/useAppStore"
 import { NewItemModal } from "@/features/new-item/ui/NewItemModal"
 import { BulkImportModal } from "@/features/bulk-import/ui/BulkImportModal"
@@ -37,26 +38,33 @@ export const TopBar = () => {
       </div>
 
       <div className="top-actions">
-        <button
+        <Button
           type="button"
-          className="btn primary"
+          appearance="fill"
+          dimension="hug"
           onClick={() => setNewOpen(true)}
         >
           새 항목 만들기
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
-          className="btn"
+          appearance="outline"
+          dimension="hug"
           onClick={() => setImportOpen(true)}
         >
           엑셀 일괄등록
-        </button>
-        <button type="button" className="btn" onClick={handleExportJson}>
+        </Button>
+        <Button
+          type="button"
+          appearance="outline"
+          dimension="hug"
+          onClick={handleExportJson}
+        >
           JSON보내기
-        </button>
-        <button type="button" className="btn ghost" onClick={handleReset}>
+        </Button>
+        <Button type="button" variant="ghost" onClick={handleReset}>
           샘플데이터 초기화
-        </button>
+        </Button>
       </div>
 
       <NewItemModal open={newOpen} onOpenChange={setNewOpen} />
