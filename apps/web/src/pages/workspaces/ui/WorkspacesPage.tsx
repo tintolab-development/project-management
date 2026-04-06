@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import { useAppStore } from "@/app/store/useAppStore"
 import { getDomainMap } from "@/entities/domain/lib/domainTree"
+import { sortItemsForGlobalList } from "@/entities/item/lib/sortItemsByBoard"
 import {
   filterItemsByWorkspaceSelections,
   hasWorkspaceFiltersActive,
@@ -22,11 +23,14 @@ export const WorkspacesPage = () => {
   const [searchParams, setSearchParams] = useSearchParams()
   const activeWorkspace = useAppStore((s) => s.ui.activeWorkspace)
   const setActiveWorkspace = useAppStore((s) => s.setActiveWorkspace)
-  const getSortedItems = useAppStore((s) => s.getSortedItems)
   const domains = useAppStore((s) => s.domains)
   const selectItem = useAppStore((s) => s.selectItem)
+  const itemsRaw = useAppStore((s) => s.items)
 
-  const items = getSortedItems()
+  const items = useMemo(
+    () => sortItemsForGlobalList(itemsRaw),
+    [itemsRaw],
+  )
   const domainMap = getDomainMap(domains)
   const getDomainLabel = (id: string) => domainMap.get(id)?.name || id || "-"
 

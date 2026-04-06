@@ -23,7 +23,10 @@ import { STORAGE_KEY } from "@/shared/config/storage"
 import type { ImportRowResult } from "@/features/bulk-import/lib/prepareImport"
 import { normalizeItemType } from "@/shared/lib/itemType"
 import type { ItemStatus } from "@/shared/constants/labels"
-import { sortItemsByBoardRank } from "@/entities/item/lib/sortItemsByBoard"
+import {
+  sortItemsByBoardRank,
+  sortItemsForGlobalList,
+} from "@/entities/item/lib/sortItemsByBoard"
 
 const nowIso = () => new Date().toISOString()
 
@@ -58,12 +61,6 @@ const getNextCode = (items: Item[], type: ItemType) => {
   const next = (nums.length ? Math.max(...nums) : 0) + 1
   return `${prefix}-${String(next).padStart(3, "0")}`
 }
-
-const sortItems = (items: Item[]) =>
-  [...items].sort((a, b) => {
-    if (a.code === b.code) return a.title.localeCompare(b.title, "ko")
-    return a.code > b.code ? 1 : -1
-  })
 
 export type ItemDetailPatch = {
   title: string
@@ -158,7 +155,7 @@ export const useAppStore = create<AppStore>()(
     (set, get) => ({
       ...initial,
 
-      getSortedItems: () => sortItems(get().items),
+      getSortedItems: () => sortItemsForGlobalList(get().items),
 
       getItemById: (id) => get().items.find((item) => item.id === id),
 

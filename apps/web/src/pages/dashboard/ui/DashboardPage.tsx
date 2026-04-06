@@ -1,5 +1,7 @@
+import { useMemo } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAppStore } from "@/app/store/useAppStore"
+import { sortItemsForGlobalList } from "@/entities/item/lib/sortItemsByBoard"
 import { Card } from "@/shared/ui/card"
 import { ItemBoardCard } from "@/entities/item/ui/ItemBoardCard"
 import { DomainProgressTable } from "@/shared/ui/domain-progress-table"
@@ -24,12 +26,15 @@ const getStatusDoneCount = (items: { status: string }[]) =>
 
 export const DashboardPage = () => {
   const navigate = useNavigate()
-  const getSortedItems = useAppStore((s) => s.getSortedItems)
   const domains = useAppStore((s) => s.domains)
   const history = useAppStore((s) => s.history)
   const selectItem = useAppStore((s) => s.selectItem)
+  const itemsRaw = useAppStore((s) => s.items)
 
-  const items = getSortedItems()
+  const items = useMemo(
+    () => sortItemsForGlobalList(itemsRaw),
+    [itemsRaw],
+  )
   const domainMap = getDomainMap(domains)
   const getDomainLabel = (id: string) => domainMap.get(id)?.name || id || "-"
 
