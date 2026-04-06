@@ -67,10 +67,14 @@ export function FilterDateField({
             aria-hidden
           />
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
+        <PopoverContent
+          className="w-auto min-w-[17.5rem] p-0 sm:min-w-[18.5rem]"
+          align="start"
+        >
           <Calendar
             mode="single"
             locale={ko}
+            showWeekNumber
             selected={selected}
             defaultMonth={selected}
             onSelect={(d) => {

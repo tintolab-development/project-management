@@ -12,7 +12,12 @@ import {
 import { normalizeKey } from "@/shared/lib/text"
 import { itemMatchesSearch } from "@/shared/lib/itemSearch"
 import { STATUS_LABELS, STATUS_STYLE } from "@/shared/constants/labels"
+import { Input } from "@/components/ui/input"
 import { Button } from "@/shared/ui/button"
+import { Pill, pillToneFromLegacyClass } from "@/shared/ui/pill"
+import { panelHeadStyles } from "@/shared/ui/page-chrome"
+
+import "./tree-explorer.css"
 import { Heading, Text, textVariants } from "@/shared/ui/typography"
 import { Card } from "@/shared/ui/card"
 
@@ -152,7 +157,7 @@ export const TreePage = () => {
 
   return (
     <Card variant="panel" className="item-tree-page" aria-label="아이템 트리">
-      <div className="panel-head tree-panel-head">
+      <div className={clsx(panelHeadStyles.panelHead, "tree-panel-head")}>
         <div>
           <Heading as="h3" variant="panel">
             Item Tree Explorer
@@ -166,8 +171,7 @@ export const TreePage = () => {
 
       <div className="item-tree-toolbar">
         <div className="tree-toolbar-search">
-          <input
-            className="input"
+          <Input
             type="search"
             placeholder="이슈 검색"
             aria-label="트리에서 이슈 검색"
@@ -177,9 +181,8 @@ export const TreePage = () => {
         </div>
         <div className="tree-toolbar-actions">
           <div className="tree-toolbar-create">
-            <input
+            <Input
               id="newDomainInput"
-              className="input"
               type="text"
               placeholder="도메인(트리) 추가"
               aria-label="새 도메인 이름"
@@ -518,14 +521,9 @@ const TreeDomainBranch = ({
               <Text as="div" variant="treeTitle">
                 {item.title}
               </Text>
-              <span
-                className={clsx(
-                  "pill",
-                  STATUS_STYLE[item.status] || "dark",
-                )}
-              >
+              <Pill tone={pillToneFromLegacyClass(STATUS_STYLE[item.status] || "dark")}>
                 {STATUS_LABELS[item.status]}
-              </span>
+              </Pill>
             </div>
           </div>
           <div className="tree-item-actions">

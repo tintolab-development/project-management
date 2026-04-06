@@ -195,15 +195,6 @@ export function EventCalendar({
                   const widthPct = (seg.span / 7) * 100
                   const topPx = seg.lane * (LANE_PX + LANE_GAP_PX)
                   const ev = seg.event
-                  const badge = ev.badge
-                  const badgeOffset = badge?.dayOffsetInSegment ?? 0
-                  const badgeLeftPct =
-                    seg.span > 0
-                      ? Math.min(
-                          92,
-                          Math.max(8, ((0.5 + badgeOffset) / seg.span) * 100),
-                        )
-                      : 50
 
                   return (
                     <Tooltip
@@ -228,18 +219,6 @@ export function EventCalendar({
                             <span className={cn(styles.face, ev.barClassName)}>
                               {ev.title}
                             </span>
-                            {badge ? (
-                              <span
-                                className={styles.badge}
-                                style={{
-                                  left: `${badgeLeftPct}%`,
-                                  top: "50%",
-                                  transform: "translate(-50%, -50%)",
-                                }}
-                              >
-                                {badge.label}
-                              </span>
-                            ) : null}
                           </button>
                         }
                       />

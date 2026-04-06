@@ -1,0 +1,135 @@
+.page {
+  display: flex;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg);
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.widget {
+  box-sizing: border-box;
+  display: flex;
+  width: 560px;
+  max-width: min(560px, calc(100vw - 32px));
+  min-height: 578px;
+  max-height: min(578px, calc(100vh - 32px));
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 80px 40px !important;
+  border-radius: 32px !important;
+  background: var(--WT) !important;
+  box-shadow: var(--shadow-login-widget) !important;
+}
+
+.header {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0 0 50px;
+  margin: 0;
+  text-align: center;
+  /* 제목 하단 50px + 위젯 gap 10px = 피그마 타이틀~ID 60px */
+}
+
+.content {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.fieldInput {
+  box-sizing: border-box;
+  width: 100%;
+  height: 60px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--line-strong);
+  background-color: var(--panel);
+  font-size: var(--font-size-base);
+  line-height: 1.4;
+}
+
+.fieldInput:focus-visible {
+  outline: none;
+  border-color: var(--palette-primary);
+  box-shadow: var(--shadow-focus-ring);
+}
+
+.fieldInput[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+
+/* DS Button `appearance="fill"` 기본(검정)을 로그인 브랜드색으로 덮어씀 */
+.submit {
+  width: 100%;
+  height: 60px !important;
+  min-height: 60px;
+  padding: 10px 16px !important;
+  border-radius: 8px !important;
+  border-color: transparent !important;
+  background-color: var(--brand-color-RD, #a91b2e) !important;
+  color: #ffffff !important;
+}
+
+.submit:hover:not(:disabled) {
+  filter: brightness(0.92);
+}
+
+.submit:focus-visible {
+  box-shadow:
+    0 0 0 2px var(--WT),
+    0 0 0 4px var(--brand-color-RD, #a91b2e) !important;
+}
+
+.submit:disabled {
+  opacity: 0.55;
+}
+
+.devAdminFill {
+  align-self: center;
+  height: auto !important;
+  min-height: 40px;
+  padding: 8px 16px !important;
+  border-radius: 8px !important;
+  border-color: transparent !important;
+  background-color: var(--default-BK) !important;
+  font-size: var(--font-size-sm);
+  color: #ffffff !important;
+}
+
+.devAdminFill:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.rootError {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--danger);
+}
+
+.fieldError {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--danger);
+}

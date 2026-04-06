@@ -12,6 +12,9 @@ export const headingVariants = cva(
         panel: "text-lg font-semibold",
         subpanel: "text-base font-semibold",
         modal: "text-lg font-semibold",
+        /** 로그인 위젯 타이틀: 36px / 700 / 150% / #333 / Pretendard */
+        loginHero:
+          "text-center font-bold leading-[150%] text-[#333] [font-family:var(--font-login-title)] text-[36px]",
       },
     },
     defaultVariants: {
@@ -75,13 +78,15 @@ export const textVariants = cva("", {
       small: "text-sm text-foreground",
       caption: "text-xs text-muted-foreground",
       lead: "text-base leading-relaxed text-muted-foreground",
-      formLabel: "mb-2 block text-sm text-muted-foreground",
+      /** 폼 라벨: 16px / 500 / 150% / -0.32px / Pretendard / default-BK */
+      formLabel:
+        "mb-2 block text-[16px] font-medium leading-[150%] tracking-[-0.32px] text-[var(--default-BK)] [font-family:var(--font-login-title)]",
       cardTitle: "mb-1.5 font-bold text-card-foreground",
-      cardDescription: "text-[13px] leading-[1.55] text-muted-foreground",
+      cardDescription: "text-app-sm text-muted-foreground",
       detailCode:
         "mb-2 text-xs font-bold uppercase tracking-widest text-muted-foreground",
       listTitle: "mb-1.5 font-bold text-foreground",
-      listDescription: "text-[13px] leading-[1.55] text-muted-foreground",
+      listDescription: "text-app-sm text-muted-foreground",
       treeCode: "whitespace-nowrap text-xs text-muted-foreground",
       treeTitle:
         "min-w-0 max-w-full whitespace-normal leading-[1.45] text-foreground",
@@ -98,20 +103,20 @@ export const textVariants = cva("", {
       importColumns: "text-sm leading-relaxed text-muted-foreground",
       workspaceMeta: "mb-4 text-muted-foreground",
       boardColumnHead: "font-bold text-foreground",
-      statLabel: "mb-2.5 text-[13px] text-muted-foreground",
+      statLabel: "mb-2.5 text-app-sm text-muted-foreground",
       statSub: "mt-2 text-xs text-muted-foreground",
       commentAuthor: "mb-1.5 font-bold text-foreground",
       commentMeta: "mb-1.5 text-xs text-muted-foreground",
       emptyDetail: "px-2.5 py-8 text-center text-muted-foreground",
-      sidebarBrandName: "text-[15px] font-bold text-[var(--sidebar-text)]",
+      sidebarBrandName: "text-app-md font-bold text-[var(--sidebar-text)]",
       sidebarBrandSub: "mt-1 text-xs text-[var(--sidebar-muted)]",
       sidebarNav: "text-[var(--sidebar-nav-link)]",
       sidebarProjectName: "mb-2 font-bold text-[var(--sidebar-text)]",
-      sidebarProjectMeta: "text-[13px] leading-normal text-[var(--sidebar-muted)]",
+      sidebarProjectMeta: "text-app-sm leading-normal text-[var(--sidebar-muted)]",
       sidebarFooter:
-        "text-[11px] tracking-widest text-[var(--sidebar-footer-text)] uppercase",
+        "text-app-2xs tracking-widest text-[var(--sidebar-footer-text)] uppercase",
       sidebarList:
-        "m-0 list-disc space-y-0 pl-[18px] text-sm leading-[1.8] text-[var(--sidebar-principles)]",
+        "m-0 list-disc space-y-0 pl-app-7 text-sm leading-[var(--leading-sidebar-list)] text-[var(--sidebar-principles)]",
       treeDomainButton:
         "min-w-0 text-left font-bold text-foreground",
       subpanelHead: "mb-3 font-bold text-foreground",
@@ -167,7 +172,7 @@ export function StatValue({ className, ...props }: StatValueProps) {
   return (
     <div
       className={cn(
-        "text-[28px] font-bold tracking-tight text-card-foreground tabular-nums",
+        "text-app-stat font-bold tracking-tight text-card-foreground tabular-nums",
         className,
       )}
       {...props}
@@ -199,4 +204,4 @@ export function StatSub({ className, ...props }: StatSubProps) {
 
 /** Shared class for modal close icon buttons (×). */
 export const modalCloseIconClassName =
-  "border-none bg-transparent text-[28px] leading-none font-light"
+  "border-none bg-transparent text-app-stat leading-none font-light"

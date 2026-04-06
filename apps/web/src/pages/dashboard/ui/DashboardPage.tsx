@@ -1,12 +1,14 @@
 import { useNavigate } from "react-router-dom"
-import clsx from "clsx"
 import { useAppStore } from "@/app/store/useAppStore"
+import { useAuthSessionStore } from "@/features/auth"
 import {
   STATUS_LABELS,
   STATUS_STYLE,
   TYPE_LABELS,
 } from "@/shared/constants/labels"
 import { Card } from "@/shared/ui/card"
+import { DomainProgressTable } from "@/shared/ui/domain-progress-table"
+import { Pill, pillToneFromLegacyClass } from "@/shared/ui/pill"
 import {
   Heading,
   StatLabel,
@@ -16,10 +18,9 @@ import {
 } from "@/shared/ui/typography"
 import { formatDateTime } from "@/shared/lib/formatDateTime"
 import { getDomainMap, walkDomainsFlat } from "@/entities/domain/lib/domainTree"
+import { panelHeadStyles } from "@/shared/ui/page-chrome"
 
-const pill = (text: string, style: string) => (
-  <span className={clsx("pill", style)}>{text}</span>
-)
+import styles from "./DashboardPage.module.css"
 
 const getStatusDoneCount = (items: { status: string }[]) =>
   items.filter(
@@ -31,6 +32,8 @@ const urgentCardInteractiveClass =
 
 export const DashboardPage = () => {
   const navigate = useNavigate()
+  const authUser = useAuthSessionStore((s) => s.user)
+  const assignedProjects = authUser?.assignedProjects ?? []
   const getSortedItems = useAppStore((s) => s.getSortedItems)
   const domains = useAppStore((s) => s.domains)
   const history = useAppStore((s) => s.history)
@@ -58,6 +61,20 @@ export const DashboardPage = () => {
     .filter((item) => item.priority === "P0" && item.status !== "확정")
     .slice(0, 6)
 
+  const domainProgressRows =
+    domains.length === 0
+      ? []
+      : walkDomainsFlat(domains).map((domain) => {
+          const domainItems = items.filter((item) => item.domain === domain.id)
+          const done = getStatusDoneCount(domainItems)
+          return {
+            id: domain.id,
+            label: domain.name,
+            completed: done,
+            total: domainItems.length,
+          }
+        })
+
   const handleOpenItem = (itemId: string) => {
     selectItem(itemId)
     navigate("/items")
@@ -71,7 +88,22 @@ export const DashboardPage = () => {
 
   return (
     <section aria-label="대시보드">
-      <div className="stats-grid">
+      {assignedProjects.length > 0 ? (
+        <Card variant="subpanel" className={styles.assignedBanner}>
+          <Text as="div" variant="small" className="text-muted-foreground">
+            할당된 프로젝트
+          </Text>
+          <div className={styles.assignedPills}>
+            {assignedProjects.map((p) => (
+              <Pill key={p.id} tone="primary">
+                {p.name}
+              </Pill>
+            ))}
+          </div>
+        </Card>
+      ) : null}
+
+      <div className={styles.statsGrid}>
         {stats.map((stat) => (
           <Card key={stat.label} variant="stat">
             <StatLabel>{stat.label}</StatLabel>
@@ -81,14 +113,14 @@ export const DashboardPage = () => {
         ))}
       </div>
 
-      <div className="panel-grid">
+      <div className={styles.panelGrid}>
         <Card variant="panel">
-          <div className="panel-head">
+          <div className={panelHeadStyles.panelHead}>
             <Heading as="h3" variant="panel">
               즉시 확인할 P0 항목
             </Heading>
           </div>
-          <div className="list-stack">
+          <div className={styles.listStack}>
             {urgent.length === 0 ? (
               <Text variant="muted" as="div">
                 표시할 항목이 없습니다.
@@ -114,16 +146,19 @@ export const DashboardPage = () => {
                         {item.description}
                       </Text>
                     </div>
-                    {pill(item.priority, "danger")}
+                    <Pill tone="danger">{item.priority}</Pill>
                   </div>
                   <div className="mt-2.5 flex flex-wrap gap-2">
-                    {pill(TYPE_LABELS[item.type], "dark")}
-                    {pill(getDomainLabel(item.domain), "primary")}
-                    {pill(
-                      STATUS_LABELS[item.status] || item.status,
-                      STATUS_STYLE[item.status] || "dark",
-                    )}
-                    {pill(`담당: ${item.owner || "-"}`, "dark")}
+                    <Pill tone="dark">{TYPE_LABELS[item.type]}</Pill>
+                    <Pill tone="primary">{getDomainLabel(item.domain)}</Pill>
+                    <Pill
+                      tone={pillToneFromLegacyClass(
+                        STATUS_STYLE[item.status] || "dark",
+                      )}
+                    >
+                      {STATUS_LABELS[item.status] || item.status}
+                    </Pill>
+                    <Pill tone="dark">담당: {item.owner || "-"}</Pill>
                   </div>
                 </Card>
               ))
@@ -132,68 +167,25 @@ export const DashboardPage = () => {
         </Card>
 
         <Card variant="panel">
-          <div className="panel-head">
+          <div className={panelHeadStyles.panelHead}>
             <Heading as="h3" variant="panel">
               도메인별 진행 현황
             </Heading>
           </div>
           <div id="domainProgress">
-            <table className="progress-table">
-              <thead>
-                <tr>
-                  <th>도메인</th>
-                  <th>진행</th>
-                  <th>바</th>
-                  <th>완료율</th>
-                </tr>
-              </thead>
-              <tbody>
-                {domains.length === 0 ? (
-                  <tr>
-                    <td colSpan={4}>
-                      <Text as="span" variant="muted">
-                        등록된 도메인이 없습니다.
-                      </Text>
-                    </td>
-                  </tr>
-                ) : (
-                  walkDomainsFlat(domains).map((domain) => {
-                    const domainItems = items.filter(
-                      (item) => item.domain === domain.id,
-                    )
-                    const done = getStatusDoneCount(domainItems)
-                    const t = domainItems.length
-                    const ratio = t === 0 ? 0 : Math.round((done / t) * 100)
-                    return (
-                      <tr key={domain.id}>
-                        <td>{domain.name}</td>
-                        <td>
-                          {done} / {t}
-                        </td>
-                        <td>
-                          <div className="bar-wrap">
-                            <div className="bar" style={{ width: `${ratio}%` }} />
-                          </div>
-                        </td>
-                        <td>{ratio}%</td>
-                      </tr>
-                    )
-                  })
-                )}
-              </tbody>
-            </table>
+            <DomainProgressTable rows={domainProgressRows} />
           </div>
         </Card>
       </div>
 
-      <div className="panel-grid single">
+      <div className={styles.panelGridSingle}>
         <Card variant="panel">
-          <div className="panel-head">
+          <div className={panelHeadStyles.panelHead}>
             <Heading as="h3" variant="panel">
               최근 변경 이력
             </Heading>
           </div>
-          <div className="history-list">
+          <div className={styles.historyList}>
             {[...history]
               .sort(
                 (a, b) =>

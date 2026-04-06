@@ -1,6 +1,10 @@
 import * as Dialog from "@radix-ui/react-dialog"
 import { useNavigate } from "react-router-dom"
 import { useState } from "react"
+import clsx from "clsx"
+import { Input, inputControlClassName } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { formStackStyles } from "@/shared/ui/form-stack"
 import { Button } from "@/shared/ui/button"
 import {
   FormLabel,
@@ -88,12 +92,12 @@ export const NewItemModal = ({ open, onOpenChange }: Props) => {
             </Dialog.Close>
           </div>
 
-          <div className="form-grid">
+          <div className={formStackStyles.formGrid}>
             <div>
               <FormLabel htmlFor="new-type">유형</FormLabel>
               <select
                 id="new-type"
-                className="input"
+                className={clsx(inputControlClassName)}
                 value={type}
                 onChange={(e) => setType(e.target.value as ItemType)}
               >
@@ -108,7 +112,7 @@ export const NewItemModal = ({ open, onOpenChange }: Props) => {
               <FormLabel htmlFor="new-domain">도메인</FormLabel>
               <select
                 id="new-domain"
-                className="input"
+                className={clsx(inputControlClassName)}
                 value={domain}
                 onChange={(e) => setDomain(e.target.value)}
               >
@@ -123,7 +127,7 @@ export const NewItemModal = ({ open, onOpenChange }: Props) => {
               <FormLabel htmlFor="new-priority">우선순위</FormLabel>
               <select
                 id="new-priority"
-                className="input"
+                className={clsx(inputControlClassName)}
                 value={priority}
                 onChange={(e) =>
                   setPriority(e.target.value as Item["priority"])
@@ -140,9 +144,8 @@ export const NewItemModal = ({ open, onOpenChange }: Props) => {
             </div>
             <div>
               <FormLabel htmlFor="new-owner">담당자</FormLabel>
-              <input
+              <Input
                 id="new-owner"
-                className="input"
                 placeholder="예: 설해원 운영팀"
                 value={owner}
                 onChange={(e) => setOwner(e.target.value)}
@@ -150,9 +153,8 @@ export const NewItemModal = ({ open, onOpenChange }: Props) => {
             </div>
             <div>
               <FormLabel htmlFor="new-due">마감일</FormLabel>
-              <input
+              <Input
                 id="new-due"
-                className="input"
                 type="date"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
@@ -160,22 +162,20 @@ export const NewItemModal = ({ open, onOpenChange }: Props) => {
             </div>
           </div>
 
-          <div className="form-section">
+          <div className={formStackStyles.formSection}>
             <FormLabel htmlFor="new-title">제목</FormLabel>
-            <input
+            <Input
               id="new-title"
-              className="input"
               placeholder="예: PMS 책임경계 확정"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
           </div>
 
-          <div className="form-section">
+          <div className={formStackStyles.formSection}>
             <FormLabel htmlFor="new-desc">설명</FormLabel>
-            <textarea
+            <Textarea
               id="new-desc"
-              className="textarea"
               rows={3}
               placeholder="무엇을 확인/결정해야 하는지 적어 주세요."
               value={description}

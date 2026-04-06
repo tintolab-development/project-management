@@ -1,17 +1,22 @@
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 import { Button } from "@/shared/ui/button"
 import { Heading, Text } from "@/shared/ui/typography"
 import { useAppStore } from "@/app/store/useAppStore"
+import { logoutRequest, useAuthSessionStore } from "@/features/auth"
 import { NewItemModal } from "@/features/new-item/ui/NewItemModal"
 import { BulkImportModal } from "@/features/bulk-import/ui/BulkImportModal"
 
 import styles from "./TopBar.module.css"
 
 export const TopBar = () => {
+  const navigate = useNavigate()
   const [newOpen, setNewOpen] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
   const exportStateJson = useAppStore((s) => s.exportStateJson)
   const resetToSample = useAppStore((s) => s.resetToSample)
+  const authUser = useAuthSessionStore((s) => s.user)
+  const setSession = useAuthSessionStore((s) => s.setSession)
 
   const handleExportJson = () => {
     const stamp = new Date().toISOString().replace(/[:.]/g, "-")
@@ -30,6 +35,16 @@ export const TopBar = () => {
 
   const handleReset = () => resetToSample()
 
+  const handleLogout = async () => {
+    try {
+      await logoutRequest()
+    } catch {
+      /* 목 API 실패해도 클라이언트 세션은 제거 */
+    }
+    setSession(null)
+    navigate("/login", { replace: true })
+  }
+
   return (
     <header className={styles.root}>
       <div>
@@ -43,6 +58,11 @@ export const TopBar = () => {
       </div>
 
       <div className={styles.actions}>
+        {import.meta.env.DEV && authUser ? (
+          <Text variant="small" as="span" className="self-center text-muted-foreground">
+            {authUser.displayName}
+          </Text>
+        ) : null}
         <Button
           type="button"
           appearance="fill"
@@ -70,6 +90,11 @@ export const TopBar = () => {
         <Button type="button" variant="ghost" onClick={handleReset}>
           샘플데이터 초기화
         </Button>
+        {import.meta.env.DEV ? (
+          <Button type="button" variant="ghost" onClick={handleLogout}>
+            로그아웃
+          </Button>
+        ) : null}
       </div>
 
       <NewItemModal open={newOpen} onOpenChange={setNewOpen} />

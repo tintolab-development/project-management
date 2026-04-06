@@ -10,17 +10,17 @@ const cardVariants = cva(
     variants: {
       variant: {
         default:
-          "gap-4 rounded-xl bg-card py-4 text-sm ring-1 ring-foreground/10 has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:gap-3 data-[size=sm]:py-3 data-[size=sm]:has-data-[slot=card-footer]:pb-0",
+          "gap-4 rounded-xl bg-card px-[var(--pad-widget-x)] py-[var(--pad-widget-y)] text-sm ring-1 ring-foreground/10 has-data-[slot=card-footer]:pb-0 has-[>img:first-child]:pt-0 data-[size=sm]:gap-3 data-[size=sm]:py-[var(--pad-widget-y)] data-[size=sm]:has-data-[slot=card-footer]:pb-0",
         panel:
-          "gap-0 rounded-[18px] bg-card p-[18px] text-sm shadow-app ring-1 ring-border/60",
+          "gap-0 rounded-lg bg-card px-[var(--pad-widget-x)] py-[var(--pad-widget-y)] text-sm shadow-app ring-1 ring-border/60",
         stat:
-          "gap-0 rounded-[18px] bg-card p-[18px] text-sm shadow-app ring-1 ring-border/60",
+          "gap-0 rounded-lg bg-card px-[var(--pad-widget-x)] py-[var(--pad-widget-y)] text-sm shadow-app ring-1 ring-border/60",
         compact:
-          "gap-0 rounded-[14px] border border-border bg-background p-3.5 text-sm shadow-none ring-0",
+          "gap-0 rounded-app-md border border-border bg-background px-[var(--pad-widget-x)] py-[var(--pad-widget-y)] text-sm shadow-none ring-0",
         history:
-          "gap-0 rounded-r-xl rounded-l-none border-0 border-l-[3px] border-l-[var(--border-history)] bg-[var(--surface-subtle)] px-3 py-2.5 text-sm shadow-none ring-0",
+          "gap-0 rounded-r-xl rounded-l-none border-0 border-l-[3px] border-l-[var(--border-history)] bg-surface-subtle px-[var(--pad-widget-x)] py-[var(--pad-widget-y)] text-sm shadow-none ring-0",
         subpanel:
-          "gap-0 rounded-2xl border border-border bg-[#fbfcff] p-3.5 text-sm shadow-none ring-0",
+          "gap-0 rounded-2xl border border-border bg-surface-subtle px-[var(--pad-widget-x)] py-[var(--pad-widget-y)] text-sm shadow-none ring-0",
       },
     },
     defaultVariants: {
@@ -49,8 +49,8 @@ function Card({ className, variant = "default", size = "default", ...props }: Ca
   )
 }
 
-const cardSlotPxReset =
-  "px-0 group-data-[variant=default]/card:px-4 group-data-[variant=default]/card:group-data-[size=sm]/card:px-3"
+/** 루트 카드에 --pad-widget-x 가 있으므로 슬롯 가로 패딩은 중복 방지 */
+const cardSlotPxReset = "px-0"
 
 function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
@@ -121,7 +121,7 @@ function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card-footer"
       className={cn(
-        "flex items-center rounded-b-xl px-0 py-0 group-data-[variant=default]/card:border-t group-data-[variant=default]/card:bg-muted/50 group-data-[variant=default]/card:p-4 group-data-[variant=default]/card:group-data-[size=sm]/card:p-3",
+        "flex items-center rounded-b-xl px-0 py-0 group-data-[variant=default]/card:border-t group-data-[variant=default]/card:bg-muted/50 group-data-[variant=default]/card:px-0 group-data-[variant=default]/card:py-[var(--space-4)] group-data-[variant=default]/card:group-data-[size=sm]/card:py-[var(--space-3)]",
         className,
       )}
       {...props}

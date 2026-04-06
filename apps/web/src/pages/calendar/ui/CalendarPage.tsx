@@ -6,6 +6,8 @@ import {
   type EventCalendarItem,
 } from "@/shared/ui/event-calendar"
 
+import styles from "./CalendarPage.module.css"
+
 function marchDay(day: number) {
   return new Date(2026, 2, day)
 }
@@ -20,7 +22,6 @@ export function CalendarPage() {
         title: "D-001 | 판매 기능 재고의 authoritative source 확정",
         start: marchDay(6),
         end: marchDay(11),
-        badge: { label: "히", dayOffsetInSegment: 1 },
         preview: {
           itemCode: "아이템코드",
           itemName: "아이템명",
@@ -53,12 +54,12 @@ export function CalendarPage() {
   )
 
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-6 p-6">
+    <div className={styles.root}>
       <header>
         <Heading as="h1" variant="display" className="mb-2">
           캘린더
         </Heading>
-        <p className="text-sm text-muted-foreground">
+        <p className={styles.intro}>
           주 단위로 겹치는 일정은 자동으로 층(lane)을 나눕니다. 막대에 마우스를 올리면
           상세 미리보기가 열립니다.
         </p>

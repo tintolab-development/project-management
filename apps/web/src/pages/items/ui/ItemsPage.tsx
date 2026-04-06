@@ -19,11 +19,18 @@ import { formatDateTime } from "@/shared/lib/formatDateTime"
 import { ItemsFiltersRow } from "./filters/ItemsFiltersRow"
 import { Button } from "@/shared/ui/button"
 import { Card } from "@/shared/ui/card"
+import { Input, inputControlClassName } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Pill, pillToneFromLegacyClass } from "@/shared/ui/pill"
+import { panelHeadStyles } from "@/shared/ui/page-chrome"
+import { formStackStyles } from "@/shared/ui/form-stack"
 import {
   FormLabel,
   Heading,
   Text,
 } from "@/shared/ui/typography"
+
+import pageStyles from "./ItemsPage.module.css"
 
 const listItemCardInteractiveClass =
   "cursor-pointer outline-none transition-colors hover:bg-accent/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
@@ -207,9 +214,9 @@ export const ItemsPage = () => {
   const statusOptions = getStatusOptionsForItem(selected)
 
   return (
-    <section className="items-layout" aria-label="아이템 목록 및 상세">
-      <Card variant="panel" className="list-panel">
-        <div className="panel-head">
+    <section className={pageStyles.itemsLayout} aria-label="아이템 목록 및 상세">
+      <Card variant="panel" className={pageStyles.listPanel}>
+        <div className={panelHeadStyles.panelHead}>
           <Heading as="h3" variant="panel">
             Item 목록
           </Heading>
@@ -217,7 +224,7 @@ export const ItemsPage = () => {
 
         <ItemsFiltersRow domains={domains} />
 
-        <div className="item-list">
+        <div className={pageStyles.itemList}>
           {filtered.map((row) => (
             <Card
               key={row.id}
@@ -227,7 +234,7 @@ export const ItemsPage = () => {
               className={clsx(
                 listItemCardInteractiveClass,
                 row.id === selectedItemId &&
-                  "border-primary shadow-[0_0_0_3px_rgba(31,94,255,0.08)]",
+                  "border-primary shadow-app-focus",
               )}
               onClick={() => selectItem(row.id)}
               onKeyDown={(e) => {
@@ -238,9 +245,9 @@ export const ItemsPage = () => {
               aria-current={row.id === selectedItemId ? "true" : undefined}
               aria-label={`${row.code} ${row.title}`}
             >
-              <div className="list-top">
-                <div className="list-main">
-                  <div className="list-code">{row.code}</div>
+              <div className={pageStyles.listTop}>
+                <div className={pageStyles.listMain}>
+                  <div className={pageStyles.listCode}>{row.code}</div>
                   <Text as="div" variant="listTitle">
                     {row.title}
                   </Text>
@@ -248,40 +255,32 @@ export const ItemsPage = () => {
                     {row.description}
                   </Text>
                 </div>
-                <span
-                  className={clsx(
-                    "pill",
+                <Pill
+                  tone={
                     row.priority === "P0"
                       ? "danger"
                       : row.priority === "P1"
                         ? "warn"
-                        : "dark",
-                  )}
+                        : "dark"
+                  }
                 >
                   {row.priority}
-                </span>
+                </Pill>
               </div>
-              <div className="list-meta">
-                <span className="pill dark">{TYPE_LABELS[row.type]}</span>
-                <span className="pill primary">
-                  {getDomainLabel(row.domain)}
-                </span>
-                <span
-                  className={clsx(
-                    "pill",
-                    STATUS_STYLE[row.status] || "dark",
-                  )}
-                >
+              <div className={pageStyles.listMeta}>
+                <Pill tone="dark">{TYPE_LABELS[row.type]}</Pill>
+                <Pill tone="primary">{getDomainLabel(row.domain)}</Pill>
+                <Pill tone={pillToneFromLegacyClass(STATUS_STYLE[row.status] || "dark")}>
                   {STATUS_LABELS[row.status]}
-                </span>
+                </Pill>
               </div>
             </Card>
           ))}
         </div>
       </Card>
 
-      <Card variant="panel" className="detail-panel">
-        <div className="panel-head">
+      <Card variant="panel" className={pageStyles.detailPanel}>
+        <div className={panelHeadStyles.panelHead}>
           <Heading as="h3" variant="panel">
             Item 상세
           </Heading>
@@ -292,14 +291,14 @@ export const ItemsPage = () => {
             왼쪽 목록에서 항목을 선택해 주세요.
           </Text>
         ) : (
-          <form className="detail-wrap" onSubmit={onSave}>
-            <div className="detail-header">
+          <form className={pageStyles.detailWrap} onSubmit={onSave}>
+            <div className={pageStyles.detailHeader}>
               <div>
                 <Text as="div" variant="detailCode">
                   {selected.code}
                 </Text>
-                <textarea
-                  className="detail-title-input"
+                <Textarea
+                  className="min-h-0 resize-none border-0 bg-transparent p-0 text-app-lg font-bold text-foreground shadow-none focus-visible:ring-0 aria-invalid:ring-0"
                   rows={2}
                   disabled={locked}
                   aria-label="제목"
@@ -308,39 +307,34 @@ export const ItemsPage = () => {
                   onInput={handleDetailTitleInput}
                 />
               </div>
-              <div className="detail-pills">
-                <span
-                  className={clsx(
-                    "pill",
+              <div className={pageStyles.detailPills}>
+                <Pill
+                  tone={
                     selected.priority === "P0"
                       ? "danger"
                       : selected.priority === "P1"
                         ? "warn"
-                        : "dark",
-                  )}
+                        : "dark"
+                  }
                 >
                   {selected.priority}
-                </span>
-                <span className="pill primary">
-                  {getDomainLabel(selected.domain)}
-                </span>
-                <span
-                  className={clsx(
-                    "pill",
+                </Pill>
+                <Pill tone="primary">{getDomainLabel(selected.domain)}</Pill>
+                <Pill
+                  tone={pillToneFromLegacyClass(
                     STATUS_STYLE[selected.status] || "dark",
                   )}
                 >
                   {STATUS_LABELS[selected.status]}
-                </span>
+                </Pill>
               </div>
             </div>
 
-            <div className="form-grid">
+            <div className={formStackStyles.formGrid}>
               <div>
                 <FormLabel htmlFor="detail-type">유형</FormLabel>
-                <input
+                <Input
                   id="detail-type"
-                  className="input"
                   disabled
                   value={TYPE_LABELS[selected.type]}
                   readOnly
@@ -350,7 +344,7 @@ export const ItemsPage = () => {
                 <FormLabel htmlFor="detail-domain">도메인</FormLabel>
                 <select
                   id="detail-domain"
-                  className="input"
+                  className={clsx(inputControlClassName)}
                   disabled={locked}
                   {...register("domain")}
                 >
@@ -365,7 +359,7 @@ export const ItemsPage = () => {
                 <FormLabel htmlFor="detail-priority">우선순위</FormLabel>
                 <select
                   id="detail-priority"
-                  className="input"
+                  className={clsx(inputControlClassName)}
                   disabled={locked}
                   {...register("priority")}
                 >
@@ -380,7 +374,7 @@ export const ItemsPage = () => {
                 <FormLabel htmlFor="detail-status">상태</FormLabel>
                 <select
                   id="detail-status"
-                  className="input"
+                  className={clsx(inputControlClassName)}
                   disabled={locked}
                   {...register("status")}
                 >
@@ -393,18 +387,16 @@ export const ItemsPage = () => {
               </div>
               <div>
                 <FormLabel htmlFor="detail-owner">담당자</FormLabel>
-                <input
+                <Input
                   id="detail-owner"
-                  className="input"
                   disabled={locked}
                   {...register("owner")}
                 />
               </div>
               <div>
                 <FormLabel htmlFor="detail-due">마감일</FormLabel>
-                <input
+                <Input
                   id="detail-due"
-                  className="input"
                   type="date"
                   disabled={locked}
                   {...register("dueDate")}
@@ -412,33 +404,30 @@ export const ItemsPage = () => {
               </div>
             </div>
 
-            <div className="form-section">
+            <div className={formStackStyles.formSection}>
               <FormLabel htmlFor="detail-desc">설명</FormLabel>
-              <textarea
+              <Textarea
                 id="detail-desc"
-                className="textarea"
                 rows={3}
                 disabled={locked}
                 {...register("description")}
               />
             </div>
 
-            <div className="detail-split">
-              <div className="form-section">
+            <div className={pageStyles.detailSplit}>
+              <div className={formStackStyles.formSection}>
                 <FormLabel htmlFor="detail-client">고객 회신값</FormLabel>
-                <textarea
+                <Textarea
                   id="detail-client"
-                  className="textarea"
                   rows={6}
                   disabled={locked}
                   {...register("clientResponse")}
                 />
               </div>
-              <div className="form-section">
+              <div className={formStackStyles.formSection}>
                 <FormLabel htmlFor="detail-final">최종 확인값</FormLabel>
-                <textarea
+                <Textarea
                   id="detail-final"
-                  className="textarea"
                   rows={6}
                   disabled={locked}
                   {...register("finalConfirmedValue")}
@@ -446,7 +435,7 @@ export const ItemsPage = () => {
               </div>
             </div>
 
-            <div className="detail-actions">
+            <div className={pageStyles.detailActions}>
               <Button
                 type="submit"
                 appearance="fill"
@@ -465,7 +454,7 @@ export const ItemsPage = () => {
               </Button>
             </div>
 
-            <div className="detail-split">
+            <div className={pageStyles.detailSplit}>
               <Card variant="subpanel">
                 <Text as="div" variant="subpanelHead">
                   코멘트
@@ -475,9 +464,9 @@ export const ItemsPage = () => {
                   defaultAuthor={commentAuthor}
                   addComment={addComment}
                 />
-                <div className="comments-list">
+                <div className={pageStyles.commentsList}>
                   {itemComments.map((c) => (
-                    <div key={c.id} className="comment-row">
+                    <div key={c.id} className={pageStyles.commentRow}>
                       <Text as="div" variant="commentAuthor">
                         {c.author}
                       </Text>
@@ -495,7 +484,7 @@ export const ItemsPage = () => {
                 <Text as="div" variant="subpanelHead">
                   변경 이력
                 </Text>
-                <div className="history-list">
+                <div className={pageStyles.historyList}>
                   {itemHistory.map((h) => (
                     <Card key={h.id} variant="history">
                       <div>
@@ -539,15 +528,13 @@ const CommentSection = ({
   })
 
   return (
-    <div className="comment-compose">
-      <input
-        className="input"
+    <div className={pageStyles.commentCompose}>
+      <Input
         placeholder="작성자"
         aria-label="코멘트 작성자"
         {...register("author")}
       />
-      <textarea
-        className="textarea"
+      <Textarea
         rows={3}
         placeholder="질문, 보완 요청, 회의 메모를 입력하세요."
         aria-label="코멘트 내용"

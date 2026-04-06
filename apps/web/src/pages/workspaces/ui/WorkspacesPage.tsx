@@ -2,7 +2,10 @@ import { useNavigate } from "react-router-dom"
 import clsx from "clsx"
 import { Button } from "@/shared/ui/button"
 import { Card } from "@/shared/ui/card"
+import { Pill, pillToneFromLegacyClass } from "@/shared/ui/pill"
 import { Text } from "@/shared/ui/typography"
+
+import styles from "./WorkspacesPage.module.css"
 import { useAppStore } from "@/app/store/useAppStore"
 import { STATUS_LABELS, STATUS_STYLE, TYPE_LABELS } from "@/shared/constants/labels"
 import { STATUS_VALUES } from "@/shared/constants/labels"
@@ -40,15 +43,15 @@ export const WorkspacesPage = () => {
 
   return (
     <section aria-label="워크스페이스">
-      <div className="workspace-tabs" role="tablist" aria-label="워크스페이스 유형">
+      <div className={styles.workspaceTabs} role="tablist" aria-label="워크스페이스 유형">
         <Button
           type="button"
           variant="ghost"
           role="tab"
           aria-selected={activeWorkspace === "information_request"}
           className={clsx(
-            "workspace-tab",
-            activeWorkspace === "information_request" && "active",
+            styles.workspaceTab,
+            activeWorkspace === "information_request" && styles.workspaceTabActive,
           )}
           onClick={() => setActiveWorkspace("information_request")}
         >
@@ -60,8 +63,8 @@ export const WorkspacesPage = () => {
           role="tab"
           aria-selected={activeWorkspace === "decision"}
           className={clsx(
-            "workspace-tab",
-            activeWorkspace === "decision" && "active",
+            styles.workspaceTab,
+            activeWorkspace === "decision" && styles.workspaceTabActive,
           )}
           onClick={() => setActiveWorkspace("decision")}
         >
@@ -71,14 +74,14 @@ export const WorkspacesPage = () => {
       <Text as="div" variant="workspaceMeta">
         {meta}
       </Text>
-      <div className="board">
+      <div className={styles.board}>
         {STATUS_VALUES.map((status) => {
           const columnItems = workspaceItems.filter(
             (item) => item.status === status,
           )
           return (
-            <div key={status} className="board-column">
-              <div className="board-column-head">
+            <div key={status} className={styles.boardColumn}>
+              <div className={styles.boardColumnHead}>
                 <Text as="span" variant="boardColumnHead">
                   {STATUS_LABELS[status]}
                 </Text>
@@ -105,19 +108,12 @@ export const WorkspacesPage = () => {
                       {item.title}
                     </Text>
                   </Text>
-                  <div className="card-meta">
-                    <span
-                      className={clsx(
-                        "pill",
-                        STATUS_STYLE[item.status] || "dark",
-                      )}
-                    >
+                  <div className={styles.cardMeta}>
+                    <Pill tone={pillToneFromLegacyClass(STATUS_STYLE[item.status] || "dark")}>
                       {STATUS_LABELS[item.status]}
-                    </span>
-                    <span className="pill primary">
-                      {getDomainLabel(item.domain)}
-                    </span>
-                    <span className="pill dark">{TYPE_LABELS[item.type]}</span>
+                    </Pill>
+                    <Pill tone="primary">{getDomainLabel(item.domain)}</Pill>
+                    <Pill tone="dark">{TYPE_LABELS[item.type]}</Pill>
                   </div>
                 </Card>
               ))}

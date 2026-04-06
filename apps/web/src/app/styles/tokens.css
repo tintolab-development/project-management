@@ -1,6 +1,8 @@
 :root {
   /* Brand / action */
   --palette-primary: #1f5eff;
+  /* Login primary CTA (Figma: brand-color-RD) */
+  --brand-color-RD: #a91b2e;
   --primary: var(--palette-primary);
   --primary-soft: #e8efff;
   --text-on-primary: #ffffff;
@@ -8,10 +10,16 @@
   /* Text */
   --text: #142033;
   --text-muted: #6f7d92;
+  /* Form label / placeholder (Figma) */
+  --default-BK: #3d3d3d;
+  --gray-999999: #999;
 
   /* Surfaces */
   --bg: #f5f7fb;
   --panel: #ffffff;
+  /* Figma WT — 로그인 카드 배경 */
+  --WT: #ffffff;
+  --shadow-login-widget: 0 8px 32px 0 rgba(48, 0, 6, 0.12);
   --surface-subtle: #fbfcff;
   --surface-muted: #f3f4f6;
   --surface-disabled: #f3f6fb;
@@ -98,4 +106,40 @@
 
   --radius: 18px;
   --radius-sm: 12px;
+  /* Inner radii (cards, list rows, subpanels) */
+  --radius-md: 14px;
+  --radius-inner: 16px;
+
+  /* Spacing scale (legacy layout rhythm from global.css) */
+  --space-1: 6px;
+  --space-2: 8px;
+  --space-3: 10px;
+  --space-3-5: 11px;
+  --space-4: 12px;
+  --space-5: 14px;
+  --space-6: 16px;
+  --space-7: 18px;
+  --space-8: 24px;
+  --space-9: 28px;
+
+  /**
+   * 카드·위젯 내부 여백 — Card 전 변형(default/panel/stat/subpanel/compact/history) 공통
+   * 수치 변경: spacing 스케일 또는 이 매핑만 조정
+   */
+  --pad-widget-y: var(--space-8);
+  --pad-widget-x: var(--space-7);
+
+  /* UI copy (Pretendard stack; login title, 폼 라벨·플레이스홀더 등) */
+  --font-login-title: Pretendard, "Segoe UI", "Malgun Gothic", sans-serif;
+
+  /* Typography scale */
+  --font-size-2xs: 11px;
+  --font-size-xs: 12px;
+  --font-size-sm: 13px;
+  --font-size-base: 14px;
+  --font-size-md: 15px;
+  --font-size-lg: 24px;
+  --font-size-stat: 28px;
+  --leading-snug: 1.55;
+  --leading-sidebar-list: 1.8;
 }

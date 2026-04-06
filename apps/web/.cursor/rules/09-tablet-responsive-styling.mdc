@@ -1,0 +1,20 @@
+---
+description: Always account for tablet breakpoints when implementing or changing layout, spacing, typography, and responsive behavior—not only mobile and desktop.
+alwaysApply: true
+---
+
+# Tablet-First Responsive Styling
+
+When you add or change styles (CSS Modules, Tailwind, global CSS, or layout in TSX), **treat tablet widths as a required part of the responsive story**, not an afterthought.
+
+## Expectations
+
+- **Do not** optimize only for phone and large desktop. Verify how the UI behaves between them (typical tablet / small laptop widths, ~768px–1024px and nearby ranges used in this project).
+- **Layouts:** grids, sidebars, split panes, toolbars, filter rows, and data tables should reflow, stack, or collapse sensibly at tablet sizes—no horizontal overflow, clipped controls, or unusable touch targets unless already specified.
+- **Spacing and type:** adjust gaps, padding, and font scale where tablet would otherwise feel cramped or oversized compared to mobile and desktop.
+- **Tailwind / breakpoints:** when using responsive prefixes (`sm:`, `md:`, `lg:`, etc.), include rules that explicitly address the tablet band; avoid jumps that only look correct at the smallest and largest breakpoints.
+- **CSS Modules / media queries:** add or extend `@media` blocks so tablet is covered; prefer project token and breakpoint conventions from `tailwind.config.js` and existing modules when present.
+
+## Delivery check
+
+Before considering styling done, mentally (or briefly in the PR note) confirm: **mobile → tablet → desktop** all read as intentional, with no broken intermediate width.

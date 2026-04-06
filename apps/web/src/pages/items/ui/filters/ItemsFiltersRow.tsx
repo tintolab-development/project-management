@@ -1,5 +1,6 @@
 import { useAppStore } from "@/app/store/useAppStore"
 import type { Domain } from "@/entities/domain/model/types"
+import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 
 import { ItemClassificationFilter } from "./ItemClassificationFilter"
@@ -30,8 +31,8 @@ export function ItemsFiltersRow({ domains }: ItemsFiltersRowProps) {
 
   return (
     <div className={styles.row}>
-      <input
-        className={cn("input", styles.search)}
+      <Input
+        className={cn(styles.search)}
         type="search"
         placeholder="제목/코드 검색"
         aria-label="제목 또는 코드 검색"

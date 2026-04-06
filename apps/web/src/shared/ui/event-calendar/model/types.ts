@@ -10,10 +10,6 @@ export type EventCalendarItem = {
   end: Date
   barClassName?: string
   trackClassName?: string
-  badge?: {
-    label: string
-    dayOffsetInSegment?: number
-  }
   preview?: {
     itemCode?: string
     itemName?: string

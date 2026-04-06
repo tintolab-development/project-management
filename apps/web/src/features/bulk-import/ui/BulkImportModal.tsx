@@ -1,7 +1,11 @@
 import * as Dialog from "@radix-ui/react-dialog"
 import { useState } from "react"
 import clsx from "clsx"
+import { Input, inputControlClassName } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { formStackStyles } from "@/shared/ui/form-stack"
 import { Button } from "@/shared/ui/button"
+import { Pill, type PillTone } from "@/shared/ui/pill"
 import {
   FormLabel,
   Heading,
@@ -23,12 +27,15 @@ type Props = {
   onOpenChange: (open: boolean) => void
 }
 
-const actionPillClass = (action: ImportRowResult["action"]) => {
-  if (action === "create") return "pill success"
-  if (action === "update") return "pill primary"
-  if (action === "skip") return "pill warn"
-  return "pill danger"
+const importActionTone = (action: ImportRowResult["action"]): PillTone => {
+  if (action === "create") return "success"
+  if (action === "update") return "primary"
+  if (action === "skip") return "warn"
+  return "danger"
 }
+
+const countTone = (n: number, active: PillTone, idle: PillTone = "dark") =>
+  n ? active : idle
 
 export const BulkImportModal = ({ open, onOpenChange }: Props) => {
   const items = useAppStore((s) => s.items)
@@ -159,7 +166,7 @@ export const BulkImportModal = ({ open, onOpenChange }: Props) => {
               헤더 예: type, domain, title, description, priority, status, owner,
               dueDate, clientResponse, finalConfirmedValue, code
             </Text>
-            <div className="import-template-action" style={{ marginTop: 10 }}>
+            <div className="import-template-action mt-app-3">
               <Button
                 type="button"
                 appearance="outline"
@@ -175,24 +182,26 @@ export const BulkImportModal = ({ open, onOpenChange }: Props) => {
           <div className="import-grid">
             <div>
               <FormLabel htmlFor="import-file">CSV 파일</FormLabel>
-              <input
+              <Input
                 id="import-file"
                 type="file"
                 accept=".csv,.txt"
-                className="input"
+                className={clsx(
+                  inputControlClassName,
+                  "cursor-pointer py-1 file:mr-3 file:cursor-pointer",
+                )}
                 onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
               />
               {fileName ? (
-                <Text variant="muted" as="div" style={{ marginTop: 8 }}>
+                <Text variant="muted" as="div" className="mt-app-2">
                   선택됨: {fileName}
                 </Text>
               ) : null}
 
-              <div className="form-section" style={{ marginTop: 14 }}>
+              <div className={clsx(formStackStyles.formSection, "mt-app-5")}>
                 <FormLabel htmlFor="import-paste">엑셀 붙여넣기</FormLabel>
-                <textarea
+                <Textarea
                   id="import-paste"
-                  className="textarea"
                   rows={12}
                   placeholder="엑셀에서 복사한 영역을 붙여넣으세요."
                   value={paste}
@@ -233,21 +242,21 @@ export const BulkImportModal = ({ open, onOpenChange }: Props) => {
               ) : (
                 <>
                   <div className="import-summary">
-                    <span className={clsx("pill", parsed.actionableCount ? "success" : "dark")}>
+                    <Pill tone={countTone(parsed.actionableCount, "success")}>
                       실행 가능 {parsed.actionableCount}
-                    </span>
-                    <span className={clsx("pill", parsed.createCount ? "success" : "dark")}>
+                    </Pill>
+                    <Pill tone={countTone(parsed.createCount, "success")}>
                       신규 {parsed.createCount}
-                    </span>
-                    <span className={clsx("pill", parsed.updateCount ? "primary" : "dark")}>
+                    </Pill>
+                    <Pill tone={countTone(parsed.updateCount, "primary")}>
                       업데이트 {parsed.updateCount}
-                    </span>
-                    <span className={clsx("pill", parsed.skipCount ? "warn" : "dark")}>
+                    </Pill>
+                    <Pill tone={countTone(parsed.skipCount, "warn")}>
                       건너뜀 {parsed.skipCount}
-                    </span>
-                    <span className={clsx("pill", parsed.errorCount ? "danger" : "dark")}>
+                    </Pill>
+                    <Pill tone={countTone(parsed.errorCount, "danger")}>
                       오류 {parsed.errorCount}
-                    </span>
+                    </Pill>
                   </div>
                   <table className="import-table">
                     <thead>
@@ -276,7 +285,7 @@ export const BulkImportModal = ({ open, onOpenChange }: Props) => {
                           <tr key={`${row.rowNo}-${row.code}`}>
                             <td>{row.rowNo}</td>
                             <td>
-                              <span className={actionPillClass(row.action)}>
+                              <Pill tone={importActionTone(row.action)}>
                                 {row.action === "create"
                                   ? "신규"
                                   : row.action === "update"
@@ -284,7 +293,7 @@ export const BulkImportModal = ({ open, onOpenChange }: Props) => {
                                     : row.action === "skip"
                                       ? "건너뜀"
                                       : "오류"}
-                              </span>
+                              </Pill>
                             </td>
                             <td>{row.code || "-"}</td>
                             <td>
@@ -315,7 +324,7 @@ export const BulkImportModal = ({ open, onOpenChange }: Props) => {
                     </tbody>
                   </table>
                   {parsed.results.length > 50 ? (
-                    <Text variant="muted" as="div" style={{ marginTop: 10 }}>
+                    <Text variant="muted" as="div" className="mt-app-3">
                       미리보기는 처음 50행까지만 표시했습니다.
                     </Text>
                   ) : null}

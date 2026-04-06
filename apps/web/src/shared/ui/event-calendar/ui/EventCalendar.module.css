@@ -128,34 +128,17 @@
   font-size: 0.6875rem;
   font-weight: 500;
   line-height: 1.2;
-  color: #fff;
+  color: var(--text-on-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.badge {
-  position: absolute;
-  z-index: 2;
-  display: flex;
-  width: 1.125rem;
-  height: 1.125rem;
-  align-items: center;
-  justify-content: center;
-  border-radius: 9999px;
-  background: #facc15;
-  font-size: 0.625rem;
-  font-weight: 700;
-  color: #422006;
-  pointer-events: none;
-  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.08);
-}
-
 /* defaults when barClassName / trackClassName omitted */
 .track {
-  background: rgba(248, 113, 113, 0.38);
+  background: color-mix(in srgb, var(--danger) 38%, transparent);
 }
 
 .face {
-  background: hsl(0 72% 51%);
+  background: var(--danger);
 }
