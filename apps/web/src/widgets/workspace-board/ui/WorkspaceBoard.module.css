@@ -97,8 +97,44 @@
   align-items: flex-start;
 }
 
-.sortableCardRowDragging {
-  opacity: 0.55;
+/* DragOverlay로 미리보기를 보여 주므로 원본 행은 자리 표시만 */
+.sortableCardRowPlaceholder {
+  border-radius: 10px;
+  outline: 2px dashed color-mix(in srgb, var(--muted-foreground) 35%, transparent);
+  outline-offset: 2px;
+  background: color-mix(in srgb, var(--muted) 35%, transparent);
+}
+
+.dragOverlayRoot {
+  pointer-events: none;
+  touch-action: none;
+  width: min(100vw - 32px, 420px);
+  cursor: grabbing;
+}
+
+.dragOverlayRow {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  box-shadow: var(--shadow);
+  border-radius: 10px;
+}
+
+.dragOverlayHandle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  margin-top: 2px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--muted) 55%, transparent);
+  color: var(--muted-foreground, #737373);
+}
+
+.dragOverlayCard {
+  box-shadow: none;
 }
 
 .cardDragHandle {

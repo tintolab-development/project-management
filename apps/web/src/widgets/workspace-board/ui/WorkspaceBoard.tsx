@@ -1,8 +1,10 @@
 import {
   DndContext,
+  DragOverlay,
   type CollisionDetection,
   type DragEndEvent,
   type DragOverEvent,
+  type DragStartEvent,
   KeyboardSensor,
   PointerSensor,
   closestCenter,
@@ -23,7 +25,7 @@ import {
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { GripVertical } from "lucide-react"
-import { useCallback, useMemo, useRef } from "react"
+import { useCallback, useMemo, useRef, useState } from "react"
 
 import { useAppStore } from "@/app/store/useAppStore"
 import { ItemBoardCard } from "@/entities/item/ui/ItemBoardCard"
@@ -50,6 +52,12 @@ export type WorkspaceBoardProps = {
 
 const isItemStatus = (v: string): v is ItemStatus =>
   (STATUS_VALUES as readonly string[]).includes(v)
+
+type WorkspaceOverHint = {
+  kind?: string
+  status?: ItemStatus
+  overId: string
+}
 
 function SortableWorkspaceCard({
   item,
@@ -80,16 +88,21 @@ function SortableWorkspaceCard({
       data: { kind: "card" as const, status: item.status },
     })
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  }
+  const style = isDragging
+    ? { transition: undefined }
+    : {
+        transform: CSS.Transform.toString(transform),
+        transition,
+      }
 
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className={cn(styles.sortableCardRow, isDragging && styles.sortableCardRowDragging)}
+      className={cn(
+        styles.sortableCardRow,
+        isDragging && styles.sortableCardRowPlaceholder,
+      )}
     >
       <button
         type="button"
@@ -226,11 +239,25 @@ export function WorkspaceBoard({
     [workspaceItems],
   )
 
-  const overHintRef = useRef<{
-    kind?: string
-    status?: ItemStatus
-    overId: string
-  } | null>(null)
+  const overHintRef = useRef<WorkspaceOverHint | null>(null)
+  /** `over`에 status가 있을 때만 갱신 — drag end 시 `over`가 비어도 마지막 열/카드 힌트로 보강 */
+  const lastResolvedHintRef = useRef<WorkspaceOverHint | null>(null)
+  const [overlayCard, setOverlayCard] = useState<Item | null>(null)
+
+  const applyOverHints = useCallback((over: DragOverEvent["over"]) => {
+    if (!over) return
+    const k = over.data.current?.kind as string | undefined
+    let status: ItemStatus | undefined
+    if (k === "columnDrop") status = over.data.current?.status as ItemStatus
+    else if (k === "column" && isItemStatus(String(over.id)))
+      status = over.id as ItemStatus
+    else if (k === "card") status = over.data.current?.status as ItemStatus
+    const hint: WorkspaceOverHint = { kind: k, status, overId: String(over.id) }
+    overHintRef.current = hint
+    if (status !== undefined) {
+      lastResolvedHintRef.current = hint
+    }
+  }, [])
 
   /**
    * 컬럼 전체가 useSortable(setNodeRef)로 감싸져 있으면, 카드 드래그 시 충돌이
@@ -295,31 +322,44 @@ export function WorkspaceBoard({
     })
   }, [syncMutation])
 
-  const handleDragStart = useCallback(() => {
+  const handleDragStart = useCallback((event: DragStartEvent) => {
     overHintRef.current = null
+    lastResolvedHintRef.current = null
+    const activeKind = event.active.data.current?.kind as string | undefined
+    if (activeKind !== "card") return
+    const itemId = String(event.active.id)
+    const item = useAppStore.getState().getItemById(itemId)
+    if (item) setOverlayCard(item)
   }, [])
 
-  const handleDragOver = useCallback((event: DragOverEvent) => {
-    const { over } = event
-    if (!over) return
-    const k = over.data.current?.kind as string | undefined
-    let status: ItemStatus | undefined
-    if (k === "columnDrop") status = over.data.current?.status as ItemStatus
-    else if (k === "column" && isItemStatus(String(over.id)))
-      status = over.id as ItemStatus
-    else if (k === "card") status = over.data.current?.status as ItemStatus
-    overHintRef.current = { kind: k, status, overId: String(over.id) }
-  }, [])
+  const handleDragOver = useCallback(
+    (event: DragOverEvent) => {
+      applyOverHints(event.over)
+    },
+    [applyOverHints],
+  )
+
+  const handleDragMove = useCallback(
+    (event: { over: DragOverEvent["over"] }) => {
+      applyOverHints(event.over)
+    },
+    [applyOverHints],
+  )
 
   const handleDragCancel = useCallback(() => {
     overHintRef.current = null
+    lastResolvedHintRef.current = null
+    setOverlayCard(null)
   }, [])
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
       if (dndDisabled) return
       const savedHint = overHintRef.current
+      const savedLastResolved = lastResolvedHintRef.current
       overHintRef.current = null
+      lastResolvedHintRef.current = null
+      setOverlayCard(null)
 
       const { active, over } = event
       const activeKind = active.data.current?.kind as string | undefined
@@ -366,6 +406,12 @@ export function WorkspaceBoard({
         targetStatus = savedHint.status
         beforeCardId =
           savedHint.kind === "card" ? savedHint.overId : null
+      }
+
+      if (targetStatus === undefined && savedLastResolved?.status) {
+        targetStatus = savedLastResolved.status
+        beforeCardId =
+          savedLastResolved.kind === "card" ? savedLastResolved.overId : null
       }
 
       /**
@@ -489,6 +535,7 @@ export function WorkspaceBoard({
         sensors={sensors}
         collisionDetection={collisionDetection}
         onDragStart={handleDragStart}
+        onDragMove={handleDragMove}
         onDragOver={handleDragOver}
         onDragCancel={handleDragCancel}
         onDragEnd={handleDragEnd}
@@ -520,6 +567,28 @@ export function WorkspaceBoard({
             })}
           </div>
         </SortableContext>
+        <DragOverlay adjustScale={false} dropAnimation={null}>
+          {overlayCard ? (
+            <div className={styles.dragOverlayRoot}>
+              <div className={styles.dragOverlayRow}>
+                <div
+                  className={styles.dragOverlayHandle}
+                  aria-hidden
+                >
+                  <GripVertical className="size-4" aria-hidden />
+                </div>
+                <div className={styles.cardGrow}>
+                  <ItemBoardCard
+                    item={overlayCard}
+                    getDomainLabel={getDomainLabel}
+                    onOpen={() => {}}
+                    className={styles.dragOverlayCard}
+                  />
+                </div>
+              </div>
+            </div>
+          ) : null}
+        </DragOverlay>
       </DndContext>
     </>
   )
