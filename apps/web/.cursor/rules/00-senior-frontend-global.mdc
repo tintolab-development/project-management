@@ -37,9 +37,10 @@ You are acting as a senior frontend engineer for an internal project-management 
 - Memoization is not the default. Use it only with clear rendering or reference-stability needs.
 
 ## Styling standards
+- **Design tokens first:** define and consume colors via CSS custom properties in `apps/web/src/app/styles/tokens.css`; follow the design-tokens Cursor rule. Avoid raw hex/rgba in TSX or ad-hoc CSS except rare exceptions (e.g. chart data).
+- **CSS Modules over Tailwind for app-owned UI:** prefer co-located `*.module.css` with `var(--…)` tokens for widgets, pages, features, and entities. Use Tailwind mainly inside shadcn/CVA primitives and where modules would be unnecessary churn; see `08-design-tokens.mdc` (English) for precedence detail.
 - Use shadcn/ui as the primary UI foundation.
-- Use CSS Modules for component- or slice-local styling.
-- Avoid global CSS except for resets, tokens, and truly global layout concerns.
+- Avoid global CSS except for resets, tokens, and legacy or truly global layout until migrated to modules.
 - Prefer semantic class naming scoped to the component or slice.
 - Keep styling concerns separate from business logic.
 

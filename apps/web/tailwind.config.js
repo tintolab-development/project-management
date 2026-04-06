@@ -40,6 +40,20 @@ export default {
           DEFAULT: "var(--card)",
           foreground: "var(--card-foreground)",
         },
+        surface: {
+          subtle: "var(--surface-subtle)",
+          muted: "var(--surface-muted-tint)",
+          wash: "var(--surface-tint-wash)",
+          dropzone: "var(--surface-dropzone)",
+        },
+        history: {
+          border: "var(--border-history)",
+        },
+      },
+      boxShadow: {
+        app: "var(--shadow)",
+        "app-modal": "var(--shadow-modal)",
+        "app-focus": "var(--shadow-focus-ring)",
       },
       borderRadius: {
         lg: "var(--radius)",
