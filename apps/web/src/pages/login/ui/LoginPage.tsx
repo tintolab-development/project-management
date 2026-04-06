@@ -60,7 +60,7 @@ export const LoginPage = () => {
 
   return (
     <div className={styles.page}>
-      <Card variant="panel" className={cn(styles.widget, "!ring-0")}>
+      <Card variant="panel" className={styles.widget}>
         <CardHeader className={styles.header}>
           <Heading as="h1" variant="loginHero">
             로그인

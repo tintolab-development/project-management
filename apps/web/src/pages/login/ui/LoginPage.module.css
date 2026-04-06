@@ -80,7 +80,7 @@
   border-color: var(--danger);
 }
 
-/* DS Button `appearance="fill"` 기본(검정)을 로그인 브랜드색으로 덮어씀 */
+/* DS primary(fill) — 토큰과 동일한 중립 primary */
 .submit {
   width: 100%;
   height: 60px !important;
@@ -88,8 +88,8 @@
   padding: 10px 16px !important;
   border-radius: 8px !important;
   border-color: transparent !important;
-  background-color: var(--brand-color-RD, #a91b2e) !important;
-  color: #ffffff !important;
+  background-color: var(--primary) !important;
+  color: var(--text-on-primary) !important;
 }
 
 .submit:hover:not(:disabled) {
@@ -99,7 +99,7 @@
 .submit:focus-visible {
   box-shadow:
     0 0 0 2px var(--WT),
-    0 0 0 4px var(--brand-color-RD, #a91b2e) !important;
+    0 0 0 4px var(--primary) !important;
 }
 
 .submit:disabled {

@@ -55,17 +55,33 @@ export function DomainProgressTable({
     <Table className={cn("table-fixed", className)}>
       <TableHeader>
         <TableRow className="hover:bg-transparent">
-          <TableHead className="w-[28%]">{L.domain}</TableHead>
-          <TableHead className="w-[18%] text-center">{L.progress}</TableHead>
-          <TableHead className="w-[40%] text-center">{L.bar}</TableHead>
-          <TableHead className="w-[14%] text-center">{L.completion}</TableHead>
+          <TableHead className="w-[28%] px-3 py-2.5 align-middle font-normal">
+            <Text as="span" variant="dashboardTableHead">
+              {L.domain}
+            </Text>
+          </TableHead>
+          <TableHead className="w-[18%] px-3 py-2.5 text-center align-middle font-normal">
+            <Text as="span" variant="dashboardTableHead">
+              {L.progress}
+            </Text>
+          </TableHead>
+          <TableHead className="w-[40%] px-3 py-2.5 text-center align-middle font-normal">
+            <Text as="span" variant="dashboardTableHead">
+              {L.bar}
+            </Text>
+          </TableHead>
+          <TableHead className="w-[14%] px-3 py-2.5 text-center align-middle font-normal">
+            <Text as="span" variant="dashboardTableHead">
+              {L.completion}
+            </Text>
+          </TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {rows.length === 0 ? (
           <TableRow className="hover:bg-transparent">
             <TableCell colSpan={4} className="text-center">
-              <Text as="span" variant="muted">
+              <Text as="span" variant="dashboardEmpty">
                 {emptyMessage}
               </Text>
             </TableCell>
@@ -75,9 +91,15 @@ export function DomainProgressTable({
             const percent = computeProgressPercent(row.completed, row.total)
             return (
               <TableRow key={row.id}>
-                <TableCell className="font-normal">{row.label}</TableCell>
-                <TableCell className="text-center tabular-nums text-muted-foreground">
-                  {row.completed} / {row.total}
+                <TableCell className="align-middle">
+                  <Text as="span" variant="dashboardTableCell">
+                    {row.label}
+                  </Text>
+                </TableCell>
+                <TableCell className="text-center align-middle">
+                  <Text as="span" variant="dashboardTableNumeric">
+                    {row.completed} / {row.total}
+                  </Text>
                 </TableCell>
                 <TableCell className="text-center">
                   <div
@@ -87,8 +109,10 @@ export function DomainProgressTable({
                     <Progress value={percent} aria-label={`${row.label} 진행률 ${percent}%`} />
                   </div>
                 </TableCell>
-                <TableCell className="text-center tabular-nums">
-                  {percent}%
+                <TableCell className="text-center align-middle">
+                  <Text as="span" variant="dashboardTableNumeric">
+                    {percent}%
+                  </Text>
                 </TableCell>
               </TableRow>
             )

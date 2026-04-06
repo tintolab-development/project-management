@@ -10,6 +10,8 @@ export type FilterFieldShellProps = {
   controlId: string
   children: ReactNode
   className?: string
+  /** 그리드 등에서 행 너비를 균등 분배할 때 `max-width: 280px` 제한 해제 */
+  fullWidth?: boolean
 }
 
 export function FilterFieldShell({
@@ -17,9 +19,16 @@ export function FilterFieldShell({
   controlId,
   children,
   className,
+  fullWidth,
 }: FilterFieldShellProps) {
   return (
-    <div className={cn(styles.field, className)}>
+    <div
+      className={cn(
+        styles.field,
+        fullWidth && styles.fieldFullWidth,
+        className,
+      )}
+    >
       <FormLabel htmlFor={controlId} className="mb-0">
         {label}
       </FormLabel>
