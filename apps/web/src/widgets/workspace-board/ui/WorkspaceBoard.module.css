@@ -1,0 +1,134 @@
+.dndHint {
+  margin-bottom: var(--space-3);
+  color: var(--muted-foreground, #737373);
+  font-size: 0.875rem;
+}
+
+.board {
+  display: grid;
+  gap: 24px;
+  align-items: start;
+}
+
+.boardColumn {
+  display: flex;
+  flex-direction: column;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 10px;
+  padding: var(--space-4);
+  min-height: 420px;
+}
+
+.boardColumnDragging {
+  opacity: 0.85;
+}
+
+.boardColumnHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.boardColumnHeadTitles {
+  display: flex;
+  flex: 1;
+  justify-content: space-between;
+  align-items: center;
+  min-width: 0;
+}
+
+.columnDragHandle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted-foreground, #737373);
+  cursor: grab;
+  touch-action: none;
+}
+
+.columnDragHandle:active {
+  cursor: grabbing;
+}
+
+.columnDragHandle:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+/* 컬럼 헤더+카드 영역 전체를 드롭 존으로 씀(다른 컬럼 헤더에 놓아도 인식). */
+.columnDropSurface {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 200px;
+  border-radius: 8px;
+}
+
+.columnDropSurfaceActive {
+  outline: 2px dashed color-mix(in srgb, var(--primary) 45%, transparent);
+  outline-offset: 2px;
+  background: color-mix(in srgb, var(--primary) 6%, transparent);
+}
+
+.cardStack {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 10px;
+  min-height: 120px;
+}
+
+.sortableCardRow {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.sortableCardRowDragging {
+  opacity: 0.55;
+}
+
+.cardDragHandle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  margin-top: 2px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted-foreground, #737373);
+  cursor: grab;
+  touch-action: none;
+}
+
+.cardDragHandle:active {
+  cursor: grabbing;
+}
+
+.cardDragHandle:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+
+.cardGrow {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 1100px) {
+  .board {
+    grid-template-columns: 1fr !important;
+  }
+}
