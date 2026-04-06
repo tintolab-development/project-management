@@ -1,6 +1,8 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { lazy, Suspense, useState, type ReactNode } from "react"
 
+import { TooltipProvider } from "@/shared/ui/tooltip"
+
 const ReactQueryDevtools = import.meta.env.DEV
   ? lazy(() =>
       import("@tanstack/react-query-devtools").then((m) => ({
@@ -24,7 +26,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {children}
+      <TooltipProvider>{children}</TooltipProvider>
       {import.meta.env.DEV ? (
         <Suspense fallback={null}>
           <ReactQueryDevtools buttonPosition="bottom-left" initialIsOpen={false} />
