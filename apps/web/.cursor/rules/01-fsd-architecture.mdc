@@ -1,0 +1,63 @@
+---
+description: Enforce Feature-Sliced Design architecture, public API boundaries, and dependency direction for the frontend codebase.
+alwaysApply: true
+---
+
+# Feature-Sliced Design Rule
+
+This repository follows Feature-Sliced Design.
+
+## Layer model
+Use these layers when placing code:
+- `app`: app bootstrap, providers, routing, global styles, initialization
+- `pages`: route-level composition
+- `widgets`: large UI blocks composed from features/entities/shared
+- `features`: user actions and business capabilities
+- `entities`: core business entities and their local presentation/model
+- `shared`: reusable UI, lib, api client, config, constants
+
+## Dependency direction
+- Higher layers may depend on lower layers.
+- Lower layers must never depend on higher layers.
+- Imports within the same layer across slices should be avoided unless there is a deliberate and documented exception.
+- `shared` and `app` do not contain business slices.
+
+## Public API rule
+- Every slice must expose a small public API through `index.ts`.
+- External code must import from the slice public API only.
+- Do not import deep internal files from another slice.
+- If you need something internal from another slice, reconsider slice boundaries first.
+
+## Slice design
+- Organize by business/domain meaning, not by technical artifact names.
+- Avoid folders like `components`, `hooks`, or `utils` as top-level architecture.
+- Inside a slice, prefer segments such as:
+  - `ui`
+  - `model`
+  - `api`
+  - `lib`
+  - `config`
+- Only create segments that serve a clear purpose.
+
+## Placement rules
+- Reusable visual primitives belong in `shared/ui`.
+- Business-specific UI belongs in the relevant `entities`, `features`, or `widgets` slice.
+- API request clients and interceptors belong in `shared/api`.
+- Feature-specific API functions belong in that feature/entity slice if the contract is not broadly shared.
+- Route assembly belongs in `pages`.
+- App-wide providers belong in `app/providers`.
+
+## Anti-patterns
+- No deep imports across slices.
+- No page-to-page imports.
+- No feature-to-feature coupling unless explicitly justified.
+- No mega `shared/utils` dumping ground.
+- No storing business workflows in UI components.
+- No duplication of the same business rule in multiple slices.
+
+## Decision heuristic
+When implementing a task, first decide:
+1. What business capability or entity owns this logic?
+2. What is the narrowest correct layer?
+3. What should be public versus internal?
+4. Can this be composed from existing slices before creating a new one?

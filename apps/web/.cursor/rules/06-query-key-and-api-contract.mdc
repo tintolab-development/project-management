@@ -1,0 +1,13 @@
+---
+description: Keep query keys stable and isolate transport contracts from UI usage.
+alwaysApply: true
+---
+
+# Query Key and API Contract Rule
+
+- Query keys must be stable, serializable, and colocated with the owning slice.
+- Fetchers and mutations must live outside components.
+- Do not leak raw transport DTOs across the UI without intent.
+- Use mapper functions when backend contracts do not match UI needs.
+- Invalidate caches narrowly and intentionally.
+- Do not mirror server state into zustand.

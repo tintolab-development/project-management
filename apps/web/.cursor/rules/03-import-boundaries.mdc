@@ -1,0 +1,11 @@
+---
+description: Prevent deep imports and enforce slice public APIs.
+alwaysApply: true
+---
+
+# Import Boundary Rule
+
+- Never import from another slice's internal file path.
+- Import only through that slice's `index.ts` public API.
+- If a public export is missing, add it deliberately or revisit the slice boundary.
+- Treat same-layer cross-imports as an architecture smell.

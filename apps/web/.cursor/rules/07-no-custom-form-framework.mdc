@@ -1,0 +1,12 @@
+---
+description: Prevent ad hoc form frameworks and keep forms aligned with React Hook Form and Zod.
+alwaysApply: true
+---
+
+# Form Standardization Rule
+
+- Use react-hook-form for non-trivial forms.
+- Use zod as the validation source of truth.
+- Do not invent a separate internal form framework unless explicitly approved.
+- Keep schema logic, submit logic, and field UI separated when complexity grows.
+- Standardize error rendering and pending states.

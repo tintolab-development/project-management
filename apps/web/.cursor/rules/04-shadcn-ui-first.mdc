@@ -1,0 +1,14 @@
+---
+description: Prefer shadcn/ui primitives and patterns for all UI implementation and migration work.
+alwaysApply: true
+---
+
+# shadcn/ui First Rule
+
+- Use shadcn/ui as the default source of base UI primitives.
+- Before creating a custom primitive, check whether shadcn/ui already provides the component.
+- Prefer extending or composing shadcn/ui primitives over replacing them.
+- Shared reusable primitives belong in `shared/ui`.
+- Business-specific compositions belong in `entities`, `features`, or `widgets`.
+- Do not create parallel internal design-system primitives that duplicate shadcn/ui.
+- During migration, replace old primitives with shadcn/ui incrementally while preserving behavior and accessibility.
