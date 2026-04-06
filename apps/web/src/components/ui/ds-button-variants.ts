@@ -1,7 +1,7 @@
 import { cva } from "class-variance-authority"
 
 /**
- * Wireframe-aligned button styles (10px radius, #000 / #FFF).
+ * Wireframe-aligned button styles (10px radius; foreground/background from theme tokens).
  * Used when `appearance` or `dimension` is set on {@link Button}.
  * Icons: `data-icon="inline-start"` | `data-icon="inline-end"` (see [shadcn Button](https://ui.shadcn.com/docs/components/radix/button)).
  */
