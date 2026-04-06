@@ -1,6 +1,7 @@
 import * as Dialog from "@radix-ui/react-dialog"
 import { useState } from "react"
 import clsx from "clsx"
+import { Button } from "@/shared/ui/button"
 import { useAppStore } from "@/app/store/useAppStore"
 import {
   prepareImport,
@@ -92,12 +93,16 @@ export const BulkImportModal = ({ open, onOpenChange }: Props) => {
             <Dialog.Title asChild>
               <h3>엑셀 일괄등록</h3>
             </Dialog.Title>
-            <Dialog.Close
-              type="button"
-              className="icon-btn"
-              aria-label="닫기"
-            >
-              ×
+            <Dialog.Close asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="border-none bg-transparent text-[28px] leading-none"
+                aria-label="닫기"
+              >
+                ×
+              </Button>
             </Dialog.Close>
           </div>
 
@@ -125,14 +130,15 @@ export const BulkImportModal = ({ open, onOpenChange }: Props) => {
               dueDate, clientResponse, finalConfirmedValue, code
             </div>
             <div className="import-template-action" style={{ marginTop: 10 }}>
-              <button
+              <Button
                 type="button"
-                className="btn"
+                appearance="outline"
+                dimension="hug"
                 onClick={handleDownloadTemplateCsv}
                 aria-label="일괄등록용 템플릿 CSV 파일 다운로드"
               >
                 템플릿 CSV 다운로드
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -167,17 +173,23 @@ export const BulkImportModal = ({ open, onOpenChange }: Props) => {
               </div>
 
               <div className="import-inline-actions">
-                <button type="button" className="btn" onClick={handlePreview}>
-                  미리보기
-                </button>
-                <button
+                <Button
                   type="button"
-                  className="btn primary"
+                  appearance="outline"
+                  dimension="hug"
+                  onClick={handlePreview}
+                >
+                  미리보기
+                </Button>
+                <Button
+                  type="button"
+                  appearance="fill"
+                  dimension="hug"
                   disabled={!parsed || parsed.actionableCount === 0}
                   onClick={handleExecute}
                 >
                   실행
-                </button>
+                </Button>
               </div>
             </div>
 

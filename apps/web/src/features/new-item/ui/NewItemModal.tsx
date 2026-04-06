@@ -1,6 +1,7 @@
 import * as Dialog from "@radix-ui/react-dialog"
 import { useNavigate } from "react-router-dom"
 import { useState } from "react"
+import { Button } from "@/shared/ui/button"
 import { useAppStore } from "@/app/store/useAppStore"
 import { PRIORITY_LABELS, TYPE_LABELS } from "@/shared/constants/labels"
 import type { ItemType } from "@/entities/item/model/types"
@@ -67,12 +68,16 @@ export const NewItemModal = ({ open, onOpenChange }: Props) => {
             <Dialog.Title asChild>
               <h3>새 항목 만들기</h3>
             </Dialog.Title>
-            <Dialog.Close
-              type="button"
-              className="icon-btn"
-              aria-label="닫기"
-            >
-              ×
+            <Dialog.Close asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="border-none bg-transparent text-[28px] leading-none"
+                aria-label="닫기"
+              >
+                ×
+              </Button>
             </Dialog.Close>
           </div>
 
@@ -172,13 +177,14 @@ export const NewItemModal = ({ open, onOpenChange }: Props) => {
           </div>
 
           <div className="modal-actions">
-            <button
+            <Button
               type="button"
-              className="btn primary"
+              appearance="fill"
+              dimension="hug"
               onClick={handleSubmit}
             >
               생성
-            </button>
+            </Button>
           </div>
         </Dialog.Content>
       </Dialog.Portal>
