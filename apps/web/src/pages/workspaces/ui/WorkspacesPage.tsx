@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom"
 import clsx from "clsx"
+import { Button } from "@/shared/ui/button"
 import { useAppStore } from "@/app/store/useAppStore"
 import { STATUS_LABELS, STATUS_STYLE, TYPE_LABELS } from "@/shared/constants/labels"
 import { STATUS_VALUES } from "@/shared/constants/labels"
@@ -38,8 +39,9 @@ export const WorkspacesPage = () => {
   return (
     <section aria-label="워크스페이스">
       <div className="workspace-tabs" role="tablist" aria-label="워크스페이스 유형">
-        <button
+        <Button
           type="button"
+          variant="ghost"
           role="tab"
           aria-selected={activeWorkspace === "information_request"}
           className={clsx(
@@ -49,9 +51,10 @@ export const WorkspacesPage = () => {
           onClick={() => setActiveWorkspace("information_request")}
         >
           고객정보 요청
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="ghost"
           role="tab"
           aria-selected={activeWorkspace === "decision"}
           className={clsx(
@@ -61,7 +64,7 @@ export const WorkspacesPage = () => {
           onClick={() => setActiveWorkspace("decision")}
         >
           의사결정 체크리스트
-        </button>
+        </Button>
       </div>
       <div className="workspace-meta">{meta}</div>
       <div className="board">
