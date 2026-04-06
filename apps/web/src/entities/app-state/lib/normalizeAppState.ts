@@ -89,6 +89,8 @@ export const normalizeAppState = (raw: unknown): AppState => {
     typeFilter: normalizeTextValue(uiRaw.typeFilter ?? ""),
     domainFilter: normalizeTextValue(uiRaw.domainFilter ?? ""),
     statusFilter: normalizeTextValue(uiRaw.statusFilter ?? ""),
+    priorityFilter: normalizeTextValue(uiRaw.priorityFilter ?? ""),
+    dueDateFilter: normalizeTextValue(uiRaw.dueDateFilter ?? ""),
   }
 
   const project: ProjectState = {

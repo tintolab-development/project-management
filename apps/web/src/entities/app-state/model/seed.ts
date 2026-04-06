@@ -18,6 +18,8 @@ export const createSeedData = (): AppState => {
       typeFilter: "",
       domainFilter: "",
       statusFilter: "",
+      priorityFilter: "",
+      dueDateFilter: "",
     },
     project: {
       id: "PRJ-001",

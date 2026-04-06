@@ -14,6 +14,8 @@ export type UiState = {
   typeFilter: string
   domainFilter: string
   statusFilter: string
+  priorityFilter: string
+  dueDateFilter: string
 }
 
 export type ProjectState = {
