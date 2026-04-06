@@ -126,7 +126,7 @@ export type AppStore = AppState & {
   resetToSample: () => void
   setWorkspaceColumnOrder: (order: ItemStatus[]) => void
   reorderWorkspaceItemsInStatus: (status: ItemStatus, orderedIds: string[]) => void
-  /** 다른 상태 컬럼으로 카드 이동(보드 DnD). 확정·잠금 카드는 무시. */
+  /** 다른 상태 컬럼으로 카드 이동(보드 DnD). 확정→다른 상태는 허용(잠금 해제). 비확정+잠금만 무시. */
   moveWorkspaceCardToStatus: (
     itemId: string,
     targetStatus: ItemStatus,
@@ -780,7 +780,8 @@ export const useAppStore = create<AppStore>()(
       moveWorkspaceCardToStatus: (itemId, targetStatus, targetIndex) => {
         set((s) => {
           const item = s.items.find((i) => i.id === itemId)
-          if (!item || item.isLocked || item.status === "확정") return {}
+          if (!item) return {}
+          if (item.isLocked && item.status !== "확정") return {}
           if (item.status === targetStatus) return {}
 
           const sourceStatus = item.status

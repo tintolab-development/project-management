@@ -86,6 +86,11 @@
   min-height: 120px;
 }
 
+/* 카드가 없을 때도 컬럼 드롭 영역이 충분히 잡히도록 (dnd-kit pointerWithin/rect 교차) */
+.cardStack:empty {
+  min-height: 280px;
+}
+
 .sortableCardRow {
   display: flex;
   gap: 8px;

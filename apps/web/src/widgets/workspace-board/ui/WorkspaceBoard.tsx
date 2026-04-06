@@ -5,6 +5,7 @@ import {
   type DragOverEvent,
   KeyboardSensor,
   PointerSensor,
+  closestCenter,
   closestCorners,
   pointerWithin,
   rectIntersection,
@@ -36,6 +37,7 @@ import {
 import { Text } from "@/shared/ui/typography"
 import { cn } from "@/lib/utils"
 
+import { mergeVisibleReorderIntoStatusOrder } from "../lib/mergeWorkspaceVisibleReorder"
 import { useWorkspaceBoardSync } from "../model/useWorkspaceBoardSync"
 import styles from "./WorkspaceBoard.module.css"
 
@@ -60,8 +62,17 @@ function SortableWorkspaceCard({
   getDomainLabel: (domainId: string) => string
   onOpenItem: (itemId: string) => void
 }) {
-  const locked = item.isLocked || item.status === "확정"
-  const disabled = dndDisabled || locked
+  /**
+   * 확정 컬럼 카드는 잠금이어도 보드에서 다른 컬럼으로 끌어 상태 되돌리기 가능해야 함.
+   * 확정이 아닌데 잠금만 된 경우(비정상)만 드래그 막음.
+   */
+  const cannotDragCard =
+    dndDisabled || (item.isLocked && item.status !== "확정")
+  const disabled = cannotDragCard
+    ? dndDisabled
+      ? { draggable: true, droppable: true }
+      : { draggable: true, droppable: false }
+    : false
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({
       id: item.id,
@@ -85,7 +96,7 @@ function SortableWorkspaceCard({
         className={styles.cardDragHandle}
         {...listeners}
         {...attributes}
-        disabled={disabled}
+        disabled={cannotDragCard}
         aria-label={`${item.code} 순서 변경`}
       >
         <GripVertical className="size-4" aria-hidden />
@@ -210,6 +221,11 @@ export function WorkspaceBoard({
   )
   const syncMutation = useWorkspaceBoardSync()
 
+  const visibleIdSet = useMemo(
+    () => new Set(workspaceItems.map((i) => i.id)),
+    [workspaceItems],
+  )
+
   const overHintRef = useRef<{
     kind?: string
     status?: ItemStatus
@@ -233,7 +249,19 @@ export function WorkspaceBoard({
         const scoped = { ...args, droppableContainers: containers }
         const fromPointer = pointerWithin(scoped)
         if (fromPointer.length > 0) return fromPointer
-        return rectIntersection(scoped)
+        const fromRect = rectIntersection(scoped)
+        if (fromRect.length > 0) return fromRect
+        /**
+         * 카드가 0개인 컬럼은 드롭 면적이 거의 없어 pointer/rect 충돌이 비는 경우가 많다.
+         * 컬럼 드롭 존만 모아 포인터에 가장 가까운 컬럼을 고른다.
+         */
+        const columnDrops = containers.filter(
+          (c) => c.data.current?.kind === "columnDrop",
+        )
+        if (columnDrops.length > 0) {
+          return closestCenter({ ...args, droppableContainers: columnDrops })
+        }
+        return []
       }
 
       if (activeKind === "column") {
@@ -312,7 +340,8 @@ export function WorkspaceBoard({
       const itemId = String(active.id)
       const store = useAppStore.getState()
       const activeItem = store.getItemById(itemId)
-      if (!activeItem || activeItem.isLocked || activeItem.status === "확정") return
+      if (!activeItem) return
+      if (activeItem.isLocked && activeItem.status !== "확정") return
 
       const sourceStatus = activeItem.status
 
@@ -339,23 +368,80 @@ export function WorkspaceBoard({
           savedHint.kind === "card" ? savedHint.overId : null
       }
 
+      /**
+       * 드롭 순간 포인터가 다시 출발 컬럼(카드·컬럼 빈 영역) 위에 있으면 `over`만 보면
+       * 같은 컬럼으로 오인됨. 직전 dragOver(savedHint)가 다른 컬럼이면 그쪽으로 이동 처리.
+       * (예: 방향합의 → 확정)
+       */
+      if (
+        targetStatus === sourceStatus &&
+        savedHint?.status &&
+        savedHint.status !== sourceStatus &&
+        over &&
+        active.id !== over.id
+      ) {
+        const ok = over.data.current?.kind as string | undefined
+        let overStatus: ItemStatus | undefined
+        if (ok === "columnDrop")
+          overStatus = over.data.current?.status as ItemStatus
+        else if (ok === "card")
+          overStatus = over.data.current?.status as ItemStatus
+        if (overStatus === sourceStatus) {
+          targetStatus = savedHint.status
+          beforeCardId =
+            savedHint.kind === "card" ? savedHint.overId : null
+        }
+      }
+
       if (!targetStatus) return
 
       if (targetStatus === sourceStatus) {
-        if (over?.data.current?.kind !== "card") return
-        const overId = String(over.id)
-        if (overId === itemId) return
         const columnItems = [...workspaceItems]
           .filter((i) => i.status === sourceStatus)
           .sort(sortItemsByBoardRank)
         const ids = columnItems.map((i) => i.id)
-        const oldIndex = ids.indexOf(itemId)
-        const newIndex = ids.indexOf(overId)
-        if (oldIndex < 0 || newIndex < 0) return
-        reorderWorkspaceItemsInStatus(
+
+        let newVisibleOrder: string[] | null = null
+
+        if (over?.data.current?.kind === "card" && String(over.id) !== itemId) {
+          const overId = String(over.id)
+          const oldIndex = ids.indexOf(itemId)
+          const newIndex = ids.indexOf(overId)
+          if (oldIndex < 0 || newIndex < 0) return
+          newVisibleOrder = arrayMove(ids, oldIndex, newIndex)
+        } else if (over?.data.current?.kind === "columnDrop") {
+          const without = ids.filter((id) => id !== itemId)
+          newVisibleOrder = [...without, itemId]
+        } else if (
+          !over &&
+          savedHint?.status === sourceStatus &&
+          savedHint.kind === "columnDrop"
+        ) {
+          const without = ids.filter((id) => id !== itemId)
+          newVisibleOrder = [...without, itemId]
+        } else if (
+          !over &&
+          savedHint?.status === sourceStatus &&
+          savedHint.kind === "card" &&
+          savedHint.overId !== itemId
+        ) {
+          const overId = savedHint.overId
+          const oldIndex = ids.indexOf(itemId)
+          const newIndex = ids.indexOf(overId)
+          if (oldIndex >= 0 && newIndex >= 0) {
+            newVisibleOrder = arrayMove(ids, oldIndex, newIndex)
+          }
+        }
+
+        if (!newVisibleOrder) return
+
+        const merged = mergeVisibleReorderIntoStatusOrder(
+          store.items,
           sourceStatus,
-          arrayMove(ids, oldIndex, newIndex),
+          visibleIdSet,
+          newVisibleOrder,
         )
+        reorderWorkspaceItemsInStatus(sourceStatus, merged)
         commitAndSync()
         return
       }
@@ -368,6 +454,12 @@ export function WorkspaceBoard({
       if (beforeCardId) {
         const ix = targetPeers.findIndex((i) => i.id === beforeCardId)
         if (ix >= 0) targetIndex = ix
+      } else {
+        let lastVisibleIx = -1
+        for (let i = 0; i < targetPeers.length; i += 1) {
+          if (visibleIdSet.has(targetPeers[i].id)) lastVisibleIx = i
+        }
+        targetIndex = lastVisibleIx + 1
       }
 
       moveWorkspaceCardToStatus(itemId, targetStatus, targetIndex)
@@ -380,6 +472,7 @@ export function WorkspaceBoard({
       moveWorkspaceCardToStatus,
       reorderWorkspaceItemsInStatus,
       setWorkspaceColumnOrder,
+      visibleIdSet,
       workspaceItems,
     ],
   )
