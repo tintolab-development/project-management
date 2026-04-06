@@ -1,6 +1,8 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { lazy, Suspense, useState, type ReactNode } from "react"
+import { lazy, Suspense, useEffect, useState, type ReactNode } from "react"
 
+import { useAuthSessionStore } from "@/features/auth"
+import { setHttpClientAuthTokenGetter } from "@/shared/api"
 import { TooltipProvider } from "@/shared/ui/tooltip"
 
 const ReactQueryDevtools = import.meta.env.DEV
@@ -12,6 +14,10 @@ const ReactQueryDevtools = import.meta.env.DEV
   : () => null
 
 export function AppProviders({ children }: { children: ReactNode }) {
+  useEffect(() => {
+    setHttpClientAuthTokenGetter(() => useAuthSessionStore.getState().accessToken)
+  }, [])
+
   const [queryClient] = useState(
     () =>
       new QueryClient({

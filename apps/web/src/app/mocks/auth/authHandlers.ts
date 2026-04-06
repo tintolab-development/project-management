@@ -16,12 +16,14 @@ function userPayload(u: {
   id: string
   email: string
   displayName: string
+  organization: string
   assignedProjects: { id: string; name: string }[]
 }) {
   return {
     id: u.id,
     email: u.email,
     displayName: u.displayName,
+    organization: u.organization,
     assignedProjects: u.assignedProjects,
   }
 }

@@ -10,6 +10,8 @@ export type AuthUser = {
   id: string
   email: string
   displayName: string
+  /** 회사·팀 등 표시용 소속 (구버전 세션에는 없을 수 있음) */
+  organization?: string
   assignedProjects: AssignedProject[]
 }
 

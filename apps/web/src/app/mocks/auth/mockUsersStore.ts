@@ -11,6 +11,7 @@ export type MockUserRecord = {
    */
   password: string
   displayName: string
+  organization: string
   assignedProjects: AssignedProjectRecord[]
 }
 
@@ -21,6 +22,7 @@ const seedUsers: MockUserRecord[] = [
     email: "admin@tinto.co.kr",
     password: "!Tinto0527",
     displayName: "Tintolab Admin (dev)",
+    organization: "Tintolab",
     assignedProjects: [
       { id: "proj-alpha", name: "알파 프로젝트" },
       { id: "proj-beta", name: "베타 프로젝트" },
@@ -31,6 +33,7 @@ const seedUsers: MockUserRecord[] = [
     email: "member@tinto.co.kr",
     password: "Member1234!",
     displayName: "샘플 멤버",
+    organization: "샘플 조직",
     assignedProjects: [{ id: "proj-gamma", name: "감마 프로젝트" }],
   },
 ]
