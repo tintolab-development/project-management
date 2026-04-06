@@ -181,37 +181,6 @@ button {
   flex-wrap: wrap;
 }
 
-.btn {
-  border: 1px solid var(--line-strong);
-  background: #fff;
-  color: var(--text);
-  border-radius: 12px;
-  padding: 11px 14px;
-  min-height: 44px;
-}
-
-.btn.primary {
-  background: var(--primary);
-  color: #fff;
-  border-color: var(--primary);
-}
-
-.btn.ghost {
-  background: transparent;
-}
-
-.btn:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
-.icon-btn {
-  border: none;
-  background: transparent;
-  font-size: 28px;
-  line-height: 1;
-}
-
 .view {
   display: none;
 }
@@ -857,18 +826,6 @@ button {
   box-shadow: 0 0 0 3px rgba(124, 162, 255, 0.18);
 }
 
-.btn-small {
-  min-height: 40px;
-  padding: 10px 12px;
-  border-radius: 12px;
-}
-
-.btn-dark {
-  background: rgba(255, 255, 255, 0.1);
-  color: #ecf2ff;
-  border-color: rgba(255, 255, 255, 0.14);
-}
-
 .sidebar-tree {
   margin-top: 12px;
   min-height: 0;
@@ -1359,21 +1316,6 @@ button {
   display: flex;
   gap: 6px;
   align-items: center;
-}
-
-.tree-inline-btn {
-  border: 1px solid var(--line-strong);
-  background: #fff;
-  color: var(--text);
-  border-radius: 10px;
-  padding: 7px 10px;
-  min-height: 34px;
-  font-size: 13px;
-}
-
-.tree-inline-btn:hover {
-  border-color: #bfd0ff;
-  background: #f8fbff;
 }
 
 .tree-item-title {
