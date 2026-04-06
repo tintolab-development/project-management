@@ -1,0 +1,6 @@
+export { DataTable } from "./DataTable"
+export type { DataTableProps } from "./DataTable"
+export { DataTablePagination } from "./DataTablePagination"
+export type { DataTablePaginationProps } from "./DataTablePagination"
+export { getVisiblePageIndices } from "./lib/getVisiblePageIndices"
+export type { PageIndexItem } from "./lib/getVisiblePageIndices"

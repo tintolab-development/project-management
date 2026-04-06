@@ -1,0 +1,23 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  max-width: 280px;
+  min-width: 0;
+  align-self: stretch;
+}
+
+.body {
+  display: flex;
+  min-height: 49px;
+  width: 100%;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: space-between;
+  align-self: stretch;
+  padding: 16px;
+  border-radius: var(--filter-control-radius);
+  border: 1px solid var(--filter-control-border);
+  background: var(--panel);
+}
