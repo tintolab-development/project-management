@@ -6,7 +6,8 @@ import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  /** MSW CLI 생성물 — 수정 금지, 불필요한 eslint-disable 경고 방지 */
+  globalIgnores(['dist', 'public/mockServiceWorker.js']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
