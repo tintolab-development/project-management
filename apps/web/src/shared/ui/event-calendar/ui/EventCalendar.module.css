@@ -1,89 +1,25 @@
-.root {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  border-radius: var(--radius-lg, 12px);
-  border: 1px solid hsl(var(--border) / 0.85);
-  background: hsl(var(--card));
-  overflow: hidden;
+/* shadcn Calendar(DayPicker)가 월 그리드를 담당 — 셸만 전폭 */
+.calendarShell {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
-.header {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid hsl(var(--border) / 0.85);
+.calendarShell :global([data-slot="calendar"]) {
+  max-width: 100%;
 }
 
-.monthLabel {
-  min-width: 8.5rem;
-  text-align: center;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: hsl(var(--foreground));
-}
-
-.weekdayRow {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  border-bottom: 1px solid hsl(var(--border) / 0.85);
-  background: hsl(var(--muted) / 0.35);
-}
-
-.weekdayCell {
-  padding: 0.45rem 0.35rem;
-  text-align: center;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: hsl(var(--muted-foreground));
-}
-
-.body {
-  display: flex;
-  flex-direction: column;
-}
-
-.weekRow {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-}
-
-.dayCell {
-  grid-row: 1;
-  min-height: 2.35rem;
-  padding: 0.35rem 0.45rem 0.25rem;
-  border-right: 1px solid hsl(var(--border) / 0.65);
-  border-bottom: 1px solid hsl(var(--border) / 0.65);
-}
-
-.dayCellLast {
-  border-right: none;
-}
-
-.dayNum {
-  font-size: 0.8125rem;
-  font-weight: 500;
-  color: hsl(var(--foreground));
-}
-
-.dayNumMuted {
-  font-size: 0.8125rem;
-  font-weight: 500;
-  color: hsl(var(--muted-foreground));
-  opacity: 0.55;
+.eventMetaCell {
+  padding: 0;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+  background: var(--panel);
 }
 
 .eventStrip {
-  grid-column: 1 / span 7;
-  grid-row: 2;
   position: relative;
+  box-sizing: border-box;
   padding: 0.2rem 0 0.45rem;
-  border-right: none;
-  border-bottom: 1px solid hsl(var(--border) / 0.65);
 }
 
 .eventBar {
@@ -128,17 +64,17 @@
   font-size: 0.6875rem;
   font-weight: 500;
   line-height: 1.2;
-  color: var(--text-on-primary);
+  color: var(--text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-/* defaults when barClassName / trackClassName omitted */
 .track {
-  background: color-mix(in srgb, var(--danger) 38%, transparent);
+  background: var(--danger-soft);
 }
 
 .face {
-  background: var(--danger);
+  background: color-mix(in srgb, var(--danger-soft) 70%, var(--danger) 30%);
+  color: var(--text);
 }

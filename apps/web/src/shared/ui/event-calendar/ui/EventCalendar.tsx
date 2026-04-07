@@ -1,18 +1,17 @@
-import { addMonths, format, isSameMonth, startOfMonth } from "date-fns"
-import { ko } from "date-fns/locale"
-import { ChevronLeft, ChevronRight } from "lucide-react"
-import { useMemo, useState } from "react"
+import { format, startOfDay, startOfMonth } from "date-fns"
+import { enUS, ko } from "date-fns/locale"
+import { useMemo, useState, type HTMLAttributes, type ReactNode } from "react"
+import type { CalendarWeek } from "react-day-picker"
 
+import { Calendar } from "@/components/ui/calendar"
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/shared/ui/tooltip"
-import { cn } from "@/lib/utils"
-import { Button } from "@/shared/ui/button"
 import { Text } from "@/shared/ui/typography"
+import { cn } from "@/lib/utils"
 
-import { getMonthWeeks } from "../lib/get-month-weeks"
 import { layoutWeekSegments, maxLaneIndex } from "../lib/layout-week-segments"
 import type { EventCalendarItem } from "../model/types"
 
@@ -60,9 +59,9 @@ function EventPreviewBody({ event }: { event: EventCalendarItem }) {
       )}
       {preview.tags && preview.tags.length > 0 ? (
         <div className="flex flex-wrap gap-1.5">
-          {preview.tags.map((tag) => (
+          {preview.tags.map((tag, idx) => (
             <span
-              key={tag.label}
+              key={`${tag.label}-${idx}`}
               className={cn(
                 "rounded-md px-2 py-0.5 text-[11px] font-medium",
                 tag.className ??
@@ -88,6 +87,102 @@ function EventPreviewBody({ event }: { event: EventCalendarItem }) {
   )
 }
 
+type EventCalendarWeekRowProps = {
+  week: CalendarWeek
+  events: EventCalendarItem[]
+  className?: string
+  style?: React.CSSProperties
+  children?: ReactNode
+} & Omit<HTMLAttributes<HTMLTableRowElement>, "children">
+
+function EventCalendarWeekRow({
+  week,
+  events,
+  className,
+  style,
+  children,
+  ...trProps
+}: EventCalendarWeekRowProps) {
+  const weekDates = useMemo(
+    () => week.days.map((d) => startOfDay(d.date)),
+    [week.days],
+  )
+
+  const segments = useMemo(
+    () => layoutWeekSegments(weekDates, events),
+    [weekDates, events],
+  )
+
+  const maxL = maxLaneIndex(segments)
+  const stripMin =
+    maxL < 0 ? 4 : (maxL + 1) * (LANE_PX + LANE_GAP_PX) + 4
+
+  const weekKey = week.days[0]?.isoDate ?? String(week.weekNumber)
+
+  return (
+    <>
+      <tr className={className} style={style} {...trProps}>
+        {children}
+      </tr>
+      <tr className={styles.eventMetaRow}>
+        <td className={styles.eventMetaCell} colSpan={week.days.length}>
+          <div
+            className={styles.eventStrip}
+            style={{ minHeight: stripMin }}
+          >
+            {segments.map((seg) => {
+              const leftPct = (seg.startCol / 7) * 100
+              const widthPct = (seg.span / 7) * 100
+              const topPx = seg.lane * (LANE_PX + LANE_GAP_PX)
+              const ev = seg.event
+
+              return (
+                <Tooltip
+                  key={`${ev.id}-${weekKey}-${seg.startCol}`}
+                >
+                  <TooltipTrigger
+                    delay={180}
+                    closeOnClick={false}
+                    render={
+                      <button
+                        type="button"
+                        className={styles.eventBar}
+                        style={{
+                          left: `${leftPct}%`,
+                          width: `${widthPct}%`,
+                          top: topPx,
+                        }}
+                      >
+                        <span
+                          className={cn(styles.track, ev.trackClassName)}
+                        />
+                        <span className={cn(styles.face, ev.barClassName)}>
+                          {ev.title}
+                        </span>
+                      </button>
+                    }
+                  />
+                  <TooltipContent
+                    side="top"
+                    sideOffset={10}
+                    align="start"
+                    className={cn(
+                      "z-50 max-w-none border border-border bg-card p-0 text-card-foreground shadow-lg",
+                      "[&>svg]:hidden",
+                    )}
+                  >
+                    <EventPreviewBody event={ev} />
+                  </TooltipContent>
+                </Tooltip>
+              )
+            })}
+          </div>
+        </td>
+      </tr>
+    </>
+  )
+}
+
 export function EventCalendar({
   month: controlledMonth,
   defaultMonth,
@@ -104,7 +199,7 @@ export function EventCalendar({
     ? startOfMonth(controlledMonth)
     : innerMonth
 
-  const setMonth = (next: Date) => {
+  const handleMonthChange = (next: Date) => {
     const normalized = startOfMonth(next)
     onMonthChange?.(normalized)
     if (controlledMonth === undefined) {
@@ -112,135 +207,47 @@ export function EventCalendar({
     }
   }
 
-  const weeks = useMemo(
-    () => getMonthWeeks(viewMonth, weekStartsOn),
-    [viewMonth, weekStartsOn],
+  const components = useMemo(
+    () => ({
+      Week: (
+        props: {
+          week: CalendarWeek
+          className?: string
+          style?: React.CSSProperties
+          children?: ReactNode
+        } & Omit<HTMLAttributes<HTMLTableRowElement>, "children">,
+      ) => <EventCalendarWeekRow {...props} events={events} />,
+    }),
+    [events],
   )
 
-  const weekdaySeed = weeks[0]?.[0] ?? viewMonth
-
-  const monthTitle = format(viewMonth, "M월 yyyy", { locale: ko })
-
   return (
-    <div className={cn(styles.root, className)}>
-      <div className={styles.header}>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          aria-label="이전 달"
-          onClick={() => setMonth(addMonths(viewMonth, -1))}
-        >
-          <ChevronLeft className="size-4" />
-        </Button>
-        <span className={styles.monthLabel}>{monthTitle}</span>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          aria-label="다음 달"
-          onClick={() => setMonth(addMonths(viewMonth, 1))}
-        >
-          <ChevronRight className="size-4" />
-        </Button>
-      </div>
-
-      <div className={styles.weekdayRow}>
-        {Array.from({ length: 7 }, (_, i) => {
-          const d = new Date(weekdaySeed)
-          d.setDate(weekdaySeed.getDate() + i)
-          return (
-            <div key={i} className={styles.weekdayCell}>
-              {format(d, "EEE", { locale: ko })}
-            </div>
-          )
-        })}
-      </div>
-
-      <div className={styles.body}>
-        {weeks.map((week) => {
-          const segments = layoutWeekSegments(week, events)
-          const maxL = maxLaneIndex(segments)
-          const stripMin =
-            maxL < 0 ? 4 : (maxL + 1) * (LANE_PX + LANE_GAP_PX) + 4
-
-          return (
-            <div key={week[0].toISOString()} className={styles.weekRow}>
-              {week.map((day, col) => (
-                <div
-                  key={day.toISOString()}
-                  className={cn(
-                    styles.dayCell,
-                    col === 6 && styles.dayCellLast,
-                  )}
-                  style={{ gridColumn: col + 1 }}
-                >
-                  <span
-                    className={
-                      isSameMonth(day, viewMonth)
-                        ? styles.dayNum
-                        : styles.dayNumMuted
-                    }
-                  >
-                    {format(day, "d")}
-                  </span>
-                </div>
-              ))}
-              <div
-                className={styles.eventStrip}
-                style={{ minHeight: stripMin }}
-              >
-                {segments.map((seg) => {
-                  const leftPct = (seg.startCol / 7) * 100
-                  const widthPct = (seg.span / 7) * 100
-                  const topPx = seg.lane * (LANE_PX + LANE_GAP_PX)
-                  const ev = seg.event
-
-                  return (
-                    <Tooltip
-                      key={`${ev.id}-${week[0].toISOString()}-${seg.startCol}`}
-                    >
-                      <TooltipTrigger
-                        delay={180}
-                        closeOnClick={false}
-                        render={
-                          <button
-                            type="button"
-                            className={styles.eventBar}
-                            style={{
-                              left: `${leftPct}%`,
-                              width: `${widthPct}%`,
-                              top: topPx,
-                            }}
-                          >
-                            <span
-                              className={cn(styles.track, ev.trackClassName)}
-                            />
-                            <span className={cn(styles.face, ev.barClassName)}>
-                              {ev.title}
-                            </span>
-                          </button>
-                        }
-                      />
-                      <TooltipContent
-                        side="top"
-                        sideOffset={10}
-                        align="start"
-                        className={cn(
-                          "z-50 max-w-none border border-border bg-card p-0 text-card-foreground shadow-lg",
-                          "[&>svg]:hidden",
-                        )}
-                      >
-                        <EventPreviewBody event={ev} />
-                      </TooltipContent>
-                    </Tooltip>
-                  )
-                })}
-              </div>
-            </div>
-          )
-        })}
-      </div>
+    <div className={cn(styles.calendarShell, className)}>
+      <Calendar
+        month={viewMonth}
+        onMonthChange={handleMonthChange}
+        weekStartsOn={weekStartsOn}
+        locale={enUS}
+        showOutsideDays
+        captionLayout="label"
+        formatters={{
+          formatCaption: (date) => format(date, "M월 yyyy", { locale: ko }),
+        }}
+        modifiersClassNames={{
+          today:
+            "!bg-primary !text-primary-foreground rounded-full font-medium shadow-none",
+        }}
+        components={components}
+        className={cn(
+          "w-full min-w-0 rounded-lg border bg-background p-2 shadow-none",
+        )}
+        classNames={{
+          root: "w-full min-w-0",
+          months: "w-full",
+          month: "w-full gap-3",
+          month_grid: "w-full table-fixed border-collapse",
+        }}
+      />
     </div>
   )
 }

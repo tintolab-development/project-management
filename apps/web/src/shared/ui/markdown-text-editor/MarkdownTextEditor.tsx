@@ -1,12 +1,12 @@
 import "@toast-ui/editor/dist/toastui-editor.css"
 
-import type { EditorProps } from "@toast-ui/react-editor"
 import { Editor as ToastEditor } from "@toast-ui/react-editor"
+import type { EditorProps } from "@toast-ui/react-editor"
 import {
   forwardRef,
   useCallback,
-  useEffect,
   useImperativeHandle,
+  useLayoutEffect,
   useRef,
   type RefObject,
 } from "react"
@@ -25,6 +25,7 @@ export type MarkdownTextEditorProps = {
   value?: string
   defaultValue?: string
   onChange?: (markdown: string) => void
+  onBlur?: () => void
   placeholder?: string
   disabled?: boolean
   className?: string
@@ -41,12 +42,28 @@ export type MarkdownTextEditorProps = {
   "aria-describedby"?: string
 }
 
+const normalizeMarkdownForCompare = (md: string) =>
+  md.replace(/\r\n/g, "\n").trimEnd()
+
+const markdownMatchesProp = (editorMd: string, propMd: string) =>
+  normalizeMarkdownForCompare(editorMd) === normalizeMarkdownForCompare(propMd)
+
 const emitMarkdown = (
   ref: RefObject<InstanceType<typeof ToastEditor> | null>,
   onChange?: (markdown: string) => void,
 ) => {
   const md = ref.current?.getInstance()?.getMarkdown() ?? ""
   onChange?.(md)
+}
+
+const applyPropMarkdownToInstance = (
+  inst: { getMarkdown: () => string; setMarkdown: (md: string) => void } | null | undefined,
+  next: string,
+) => {
+  if (!inst) return
+  const current = inst.getMarkdown()
+  if (markdownMatchesProp(current, next)) return
+  inst.setMarkdown(next)
 }
 
 export const MarkdownTextEditor = forwardRef<
@@ -57,6 +74,7 @@ export const MarkdownTextEditor = forwardRef<
     value,
     defaultValue = "",
     onChange,
+    onBlur,
     placeholder,
     disabled = false,
     className,
@@ -77,20 +95,40 @@ export const MarkdownTextEditor = forwardRef<
   const editorRef = useRef<InstanceType<typeof ToastEditor>>(null)
   const isControlled = value !== undefined
   const initialMarkdown = isControlled ? (value ?? "") : defaultValue
+  const controlledMarkdown = value ?? ""
 
-  useEffect(() => {
+  const syncControlledValue = useCallback(() => {
     if (!isControlled) return
     const inst = editorRef.current?.getInstance()
-    if (!inst) return
-    const next = value ?? ""
-    if (inst.getMarkdown() !== next) {
-      inst.setMarkdown(next)
-    }
-  }, [isControlled, value])
+    applyPropMarkdownToInstance(inst, controlledMarkdown)
+  }, [isControlled, controlledMarkdown])
+
+  useLayoutEffect(() => {
+    syncControlledValue()
+  }, [syncControlledValue])
+
+  const handleLoad = useCallback(
+    (inst: { getMarkdown: () => string; setMarkdown: (md: string, cursorToEnd?: boolean) => void }) => {
+      if (isControlled) {
+        applyPropMarkdownToInstance(inst, controlledMarkdown)
+      }
+      /* 첫 페인트에서 툴바 폭이 0이면 Toast가 버튼을 전부 드롭다운으로 보냄 → 레이아웃 확정 후 재계산 */
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          window.dispatchEvent(new Event("resize"))
+        })
+      })
+    },
+    [controlledMarkdown, isControlled],
+  )
 
   const handleChange = useCallback(() => {
-    emitMarkdown(editorRef, onChange)
+    queueMicrotask(() => emitMarkdown(editorRef, onChange))
   }, [onChange])
+
+  const handleBlur = useCallback(() => {
+    onBlur?.()
+  }, [onBlur])
 
   useImperativeHandle(ref, () => ({
     getMarkdown: () => editorRef.current?.getInstance()?.getMarkdown() ?? "",
@@ -122,8 +160,12 @@ export const MarkdownTextEditor = forwardRef<
         usageStatistics={false}
         {...(height !== undefined ? { height } : {})}
         minHeight={minHeight}
-        toolbarItems={toolbarItems}
-        onChange={disabled ? undefined : handleChange}
+        {...(toolbarItems != null
+          ? { toolbarItems }
+          : {})}
+        onChange={disabled || !onChange ? undefined : handleChange}
+        onLoad={disabled ? undefined : handleLoad}
+        onBlur={disabled || !onBlur ? undefined : handleBlur}
       />
     </div>
   )

@@ -1,0 +1,88 @@
+/**
+ * DS 모달 본문 — Radix Dialog.Content에 `className="modal"`만 쓸 때
+ * 유틸/플렉스 상속으로 `flex-direction: row`가 끼어들면 필드·액션이 한 줄로 붙어 겹칠 수 있음.
+ * `data-slot` + `!important`로 세로 스택을 고정한다.
+ */
+.body {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  flex: 0 1 auto;
+  min-height: 0;
+  gap: var(--modal-body-section-gap);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--filter-field-label-input-gap, 8px);
+  margin: 0;
+  width: 100%;
+  min-width: 0;
+  flex: 0 0 auto;
+  box-sizing: border-box;
+}
+
+.field > label {
+  margin-bottom: 0;
+}
+
+.actions {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  flex: 0 0 auto;
+  gap: var(--space-2);
+}
+
+/**
+ * 모달 단일행 인풋 — `Input` 기본 `min-height` + 세로 패딩이 겹치면 캐럿·플레이스홀더가 위로 붙음
+ */
+.singleLineField {
+  box-sizing: border-box !important;
+  height: var(--filter-control-height) !important;
+  min-height: var(--filter-control-height) !important;
+  max-height: var(--filter-control-height) !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  line-height: calc(var(--filter-control-height) - 2px) !important;
+}
+
+.body :global([data-slot="input"])::placeholder {
+  font-size: var(--font-size-base) !important;
+  line-height: inherit !important;
+}
+
+/**
+ * `.input-field-cq`가 flex 열이면 래퍼가 인풋보다 세로로 커져
+ * 보이는 필드보다 위를 눌러야 포커스가 잡히는 것처럼 느껴질 수 있음.
+ * 모달 단일행 인풋만 래퍼를 필터 컨트롤 높이에 맞춤.
+ */
+.body :global(.input-field-cq):has(.singleLineField[data-slot="input"]) {
+  display: block;
+  box-sizing: border-box;
+  height: var(--filter-control-height);
+  min-height: var(--filter-control-height);
+  max-height: var(--filter-control-height);
+  overflow: hidden;
+}
+
+.body
+  :global(.input-field-cq):has(.singleLineField[data-slot="input"])
+  :global([data-slot="input"]) {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: none !important;
+}

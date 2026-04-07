@@ -1,26 +1,35 @@
 .field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  width: 100%;
-  max-width: 280px;
+  gap: var(--filter-field-label-input-gap, 8px);
+  box-sizing: border-box;
+  width: var(--filter-field-max-width);
+  max-width: 100%;
   min-width: 0;
-  align-self: stretch;
+  justify-self: start;
+  align-self: flex-start;
 }
 
+/** 그리드·플렉스에서 열 전체를 쓸 때만 사용 */
 .fieldFullWidth {
+  width: 100%;
   max-width: none;
+  min-width: 0;
+  justify-self: stretch;
+  align-self: stretch;
 }
 
 .body {
   display: flex;
-  min-height: 49px;
+  height: var(--filter-control-height);
+  min-height: var(--filter-control-height);
+  max-height: var(--filter-control-height);
   width: 100%;
   box-sizing: border-box;
   align-items: center;
   justify-content: space-between;
   align-self: stretch;
-  padding: 16px;
+  padding: 0 16px;
   border-radius: var(--filter-control-radius);
   border: 1px solid var(--filter-control-border);
   background: var(--panel);

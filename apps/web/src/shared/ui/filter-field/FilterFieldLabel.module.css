@@ -1,0 +1,19 @@
+/**
+ * 필터 라벨 공통 타이포 — 토큰: `--filter-field-label-*`, 본문: `var(--font-login-title)`(Pretendard 스택)
+ * `FilterFieldShell` 기본 라벨 및 Tasks 필터 패널·태스크 생성 메타 라벨에서 공유
+ */
+.filterFieldLabel {
+  margin: 0;
+  box-sizing: border-box;
+  font-family: var(--font-login-title);
+  font-size: var(--filter-field-label-size);
+  font-style: normal;
+  font-weight: var(--filter-field-label-weight);
+  line-height: var(--filter-field-label-line-height);
+  color: var(--filter-field-label-fg);
+}
+
+/** `FilterFieldShell` 바깥(메타 그리드 등)에서 컨트롤 위 간격 — `--filter-field-label-input-gap` */
+.filterFieldLabelGapBelow {
+  margin-bottom: var(--filter-field-label-input-gap, 8px);
+}

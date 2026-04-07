@@ -1,0 +1,80 @@
+/**
+ * shadcn SelectContent / SelectItem에 가까운 필터 드롭다운 패널
+ * @see https://ui.shadcn.com/docs/components/radix/select
+ */
+
+.optionList {
+  display: flex;
+  max-height: min(18rem, 50vh);
+  flex-direction: column;
+  padding: 4px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  outline: none;
+}
+
+/**
+ * 트리거(`FilterFieldShell` `.body` padding 0 16px)와 맞춤:
+ * `.optionList` 좌 4px + 행 좌 12px = 텍스트 시작 16px.
+ * 선택 체크는 shadcn SelectItem처럼 오른쪽 고정(왼쪽 빈 칸 없음).
+ */
+.optionRow {
+  position: relative;
+  display: flex;
+  width: 100%;
+  align-items: center;
+  border-radius: min(var(--radius-md), 6px);
+  padding: 6px 32px 6px 12px;
+  text-align: left;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 400;
+  border: none;
+  background: transparent;
+  color: var(--foreground, var(--text));
+  cursor: default;
+  -webkit-user-select: none;
+  user-select: none;
+  outline: none;
+}
+
+.optionRow:hover {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.optionRow:focus-visible {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.optionRow[aria-selected="true"] {
+  font-weight: 500;
+}
+
+.optionIndicator {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  left: auto;
+  display: flex;
+  height: 16px;
+  width: 16px;
+  align-items: center;
+  justify-content: center;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.optionLabel {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.popoverFooter {
+  border-top: 1px solid var(--border);
+  padding: 8px;
+}

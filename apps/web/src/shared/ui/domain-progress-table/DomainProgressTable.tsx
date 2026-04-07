@@ -31,14 +31,14 @@ export type DomainProgressTableProps = {
   className?: string
   emptyMessage?: string
   labels?: DomainProgressTableLabels
-  /** 진행 바 열 최대 너비(px 기준 tailwind max-w) */
+  /** 진행현황(프로그레스 바) 래퍼 최대 너비(기본 max-w-full로 열 너비에 맞춤) */
   barMaxWidthClassName?: string
 }
 
 const defaultLabels: Required<DomainProgressTableLabels> = {
   domain: "도메인",
   progress: "진행",
-  bar: "바",
+  bar: "진행현황",
   completion: "완료율",
 }
 
@@ -47,7 +47,7 @@ export function DomainProgressTable({
   className,
   emptyMessage = "등록된 도메인이 없습니다.",
   labels,
-  barMaxWidthClassName = "max-w-[200px]",
+  barMaxWidthClassName = "max-w-full",
 }: DomainProgressTableProps) {
   const L = { ...defaultLabels, ...labels }
 
@@ -55,22 +55,22 @@ export function DomainProgressTable({
     <Table className={cn("table-fixed", className)}>
       <TableHeader>
         <TableRow className="hover:bg-transparent">
-          <TableHead className="w-[28%] px-3 py-2.5 align-middle font-normal">
+          <TableHead className="w-[30%] px-3 py-2.5 text-center align-middle font-normal">
             <Text as="span" variant="dashboardTableHead">
               {L.domain}
             </Text>
           </TableHead>
-          <TableHead className="w-[18%] px-3 py-2.5 text-center align-middle font-normal">
+          <TableHead className="w-[17%] px-3 py-2.5 text-center align-middle font-normal">
             <Text as="span" variant="dashboardTableHead">
               {L.progress}
             </Text>
           </TableHead>
-          <TableHead className="w-[40%] px-3 py-2.5 text-center align-middle font-normal">
+          <TableHead className="w-[35%] px-3 py-2.5 text-center align-middle font-normal">
             <Text as="span" variant="dashboardTableHead">
               {L.bar}
             </Text>
           </TableHead>
-          <TableHead className="w-[14%] px-3 py-2.5 text-center align-middle font-normal">
+          <TableHead className="w-[18%] px-3 py-2.5 text-center align-middle font-normal">
             <Text as="span" variant="dashboardTableHead">
               {L.completion}
             </Text>
@@ -91,25 +91,25 @@ export function DomainProgressTable({
             const percent = computeProgressPercent(row.completed, row.total)
             return (
               <TableRow key={row.id}>
-                <TableCell className="align-middle">
+                <TableCell className="px-3 text-center align-middle">
                   <Text as="span" variant="dashboardTableCell">
                     {row.label}
                   </Text>
                 </TableCell>
-                <TableCell className="text-center align-middle">
+                <TableCell className="px-3 text-center align-middle">
                   <Text as="span" variant="dashboardTableNumeric">
                     {row.completed} / {row.total}
                   </Text>
                 </TableCell>
-                <TableCell className="text-center">
+                <TableCell className="px-3 text-center align-middle">
                   <div
-                    className={cn("mx-auto w-full", barMaxWidthClassName)}
+                    className={cn("mx-auto w-full min-w-0", barMaxWidthClassName)}
                     title={`${percent}%`}
                   >
                     <Progress value={percent} aria-label={`${row.label} 진행률 ${percent}%`} />
                   </div>
                 </TableCell>
-                <TableCell className="text-center align-middle">
+                <TableCell className="px-3 text-center align-middle">
                   <Text as="span" variant="dashboardTableNumeric">
                     {percent}%
                   </Text>

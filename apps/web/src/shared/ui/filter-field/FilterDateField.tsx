@@ -1,9 +1,10 @@
 import { format, isValid, parseISO } from "date-fns"
 import { ko } from "date-fns/locale"
 import { CalendarIcon } from "lucide-react"
-import { useId, useState } from "react"
+import { useId, useRef, useState } from "react"
 
 import { Calendar } from "@/components/ui/calendar"
+import { buttonVariants } from "@/components/ui/button"
 import {
   Popover,
   PopoverContent,
@@ -13,6 +14,9 @@ import { Button } from "@/shared/ui/button"
 import { cn } from "@/lib/utils"
 
 import { FilterFieldShell } from "./FilterFieldShell"
+import { filterFieldLabelDomId } from "./filterFieldLabelDomId"
+
+import dateFieldStyles from "./FilterDateField.module.css"
 
 export type FilterDateFieldProps = {
   label: string
@@ -23,6 +27,9 @@ export type FilterDateFieldProps = {
   disabled?: boolean
   controlId: string
   className?: string
+  /** 그리드 열 등에서 `max-width: 280px` 제한 해제 */
+  fullWidth?: boolean
+  labelClassName?: string
 }
 
 function parseFilterDate(raw: string): Date | undefined {
@@ -39,9 +46,12 @@ export function FilterDateField({
   disabled,
   controlId,
   className,
+  fullWidth,
+  labelClassName,
 }: FilterDateFieldProps) {
   const [open, setOpen] = useState(false)
   const clearId = useId()
+  const shellBodyRef = useRef<HTMLDivElement>(null)
   const selected = parseFilterDate(value)
 
   const labelText = selected
@@ -49,34 +59,52 @@ export function FilterDateField({
     : placeholder
 
   return (
-    <FilterFieldShell label={label} controlId={controlId} className={className}>
+    <FilterFieldShell
+      ref={shellBodyRef}
+      label={label}
+      controlId={controlId}
+      className={className}
+      fullWidth={fullWidth}
+      labelClassName={labelClassName}
+      bodyClassName={dateFieldStyles.plainShellBody}
+    >
+      {/*
+       * shadcn/ui Date Picker — Popover + outline Button 트리거 + Calendar, PopoverContent `w-auto p-0`
+       * https://ui.shadcn.com/docs/components/radix/date-picker
+       */}
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger
           id={controlId}
           disabled={disabled}
           type="button"
+          aria-labelledby={filterFieldLabelDomId(controlId)}
+          aria-haspopup="dialog"
+          data-empty={selected ? undefined : true}
           className={cn(
-            "inline-flex w-full min-w-0 flex-1 items-center justify-between gap-2 border-0 bg-transparent p-0 text-left text-sm shadow-none outline-none",
-            "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+            buttonVariants({ variant: "outline", size: "default" }),
+            "h-[var(--filter-control-height)] min-h-[var(--filter-control-height)] max-h-[var(--filter-control-height)] w-full min-w-0 justify-start gap-2 px-4 text-left text-sm font-normal",
+            "rounded-[var(--filter-control-radius)] border-[var(--filter-control-border)] bg-[var(--panel)] shadow-none",
+            "data-[empty]:text-muted-foreground aria-expanded:bg-[var(--panel)]",
             !selected && "text-muted-foreground",
           )}
         >
-          <span className="min-w-0 truncate">{labelText}</span>
-          <CalendarIcon
-            className="size-4 shrink-0 text-muted-foreground"
-            aria-hidden
-          />
+          <CalendarIcon className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+          <span className="min-w-0 flex-1 truncate">{labelText}</span>
         </PopoverTrigger>
         <PopoverContent
-          className="w-auto min-w-[17.5rem] p-0 sm:min-w-[18.5rem]"
           align="start"
+          sideOffset={6}
+          anchor={shellBodyRef}
+          matchTriggerWidth
+          className="min-w-0 gap-0 overflow-hidden p-0"
         >
           <Calendar
             mode="single"
             locale={ko}
-            showWeekNumber
             selected={selected}
             defaultMonth={selected}
+            className="rounded-md border-0 bg-popover p-3 text-popover-foreground shadow-none"
+            classNames={{ root: "w-full min-w-0" }}
             onSelect={(d) => {
               if (!d) return
               onValueChange(format(d, "yyyy-MM-dd"))
