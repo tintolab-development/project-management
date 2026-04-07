@@ -22,6 +22,12 @@ import {
 
 const PRIORITY_FILTER_SET = new Set<string>(PRIORITY_VALUES)
 
+/** 예전 데모 조직명이 localStorage에 남은 경우 고객사 중립 표기로 치환 */
+const migrateSeolhaewonToClientOrg = (value: string): string => {
+  if (!value.includes("설해원")) return value
+  return value.replaceAll("설해원", "고객사")
+}
+
 const parseWorkspaceColumnOrder = (
   raw: unknown,
   fallback: ItemStatus[],
@@ -95,15 +101,19 @@ const normalizeRawItem = (item: unknown, workingDomains: Domain[]): Item => {
     code: normalizeTextValue(i?.code) || normalizeTextValue(i?.id) || "",
     type: normalizeItemType(i?.type),
     domain: resolvedDomainId,
-    title: normalizeTextValue(i?.title),
-    description: normalizeTextValue(i?.description ?? ""),
+    title: migrateSeolhaewonToClientOrg(normalizeTextValue(i?.title)),
+    description: migrateSeolhaewonToClientOrg(
+      normalizeTextValue(i?.description ?? ""),
+    ),
     priority: normalizePriority(i?.priority),
     status: nextStatus,
-    owner: normalizeTextValue(i?.owner ?? ""),
+    owner: migrateSeolhaewonToClientOrg(normalizeTextValue(i?.owner ?? "")),
     dueDate: normalizeDateInput(i?.dueDate) || "",
-    clientResponse: normalizeTextValue(i?.clientResponse ?? ""),
-    finalConfirmedValue: normalizeTextValue(
-      i?.finalConfirmedValue ?? i?.agreedValue ?? "",
+    clientResponse: migrateSeolhaewonToClientOrg(
+      normalizeTextValue(i?.clientResponse ?? ""),
+    ),
+    finalConfirmedValue: migrateSeolhaewonToClientOrg(
+      normalizeTextValue(i?.finalConfirmedValue ?? i?.agreedValue ?? ""),
     ),
     isLocked: nextStatus === "확정" || Boolean(i?.isLocked),
     boardRank:
@@ -120,8 +130,8 @@ const normalizeComment = (c: unknown): Comment => {
   return {
     id: normalizeTextValue(row.id) || uniqueId("C"),
     itemId: normalizeTextValue(row.itemId),
-    author: normalizeTextValue(row.author),
-    body: normalizeTextValue(row.body),
+    author: migrateSeolhaewonToClientOrg(normalizeTextValue(row.author)),
+    body: migrateSeolhaewonToClientOrg(normalizeTextValue(row.body)),
     createdAt: normalizeTextValue(row.createdAt) || new Date().toISOString(),
   }
 }
@@ -132,8 +142,8 @@ const normalizeHistory = (h: unknown): HistoryEntry => {
     id: normalizeTextValue(row.id) || uniqueId("H"),
     itemId: normalizeTextValue(row.itemId),
     eventType: normalizeTextValue(row.eventType),
-    summary: normalizeTextValue(row.summary),
-    actor: normalizeTextValue(row.actor),
+    summary: migrateSeolhaewonToClientOrg(normalizeTextValue(row.summary)),
+    actor: migrateSeolhaewonToClientOrg(normalizeTextValue(row.actor)),
     createdAt: normalizeTextValue(row.createdAt) || new Date().toISOString(),
   }
 }
@@ -171,7 +181,9 @@ export const normalizeAppState = (raw: unknown): AppState => {
       uiRaw.priorityFilter,
     ),
     dueDateFilter: normalizeTextValue(uiRaw.dueDateFilter ?? ""),
-    ownerFilter: normalizeTextValue(uiRaw.ownerFilter ?? ""),
+    ownerFilter: migrateSeolhaewonToClientOrg(
+      normalizeTextValue(uiRaw.ownerFilter ?? ""),
+    ),
     workspaceColumnOrder: parseWorkspaceColumnOrder(
       uiRaw.workspaceColumnOrder,
       seed.ui.workspaceColumnOrder,
@@ -200,12 +212,9 @@ export const normalizeAppState = (raw: unknown): AppState => {
     : []
 
   const validExpandedIds = new Set(workingDomains.map((domain) => domain.id))
-  const nextExpandedIds = ui.expandedDomainIds.filter((id) =>
+  ui.expandedDomainIds = ui.expandedDomainIds.filter((id) =>
     validExpandedIds.has(id),
   )
-  ui.expandedDomainIds = nextExpandedIds.length
-    ? nextExpandedIds
-    : workingDomains.map((domain) => domain.id)
 
   if (
     ui.selectedItemId !== null &&
