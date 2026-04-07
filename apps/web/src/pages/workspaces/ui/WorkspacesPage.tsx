@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import { useAppStore } from "@/app/store/useAppStore"
+import { useProjectScopedPaths } from "@/shared/lib/projectScopedPaths"
 import { getDomainMap } from "@/entities/domain/lib/domainTree"
 import { sortItemsForGlobalList } from "@/entities/item/lib/sortItemsByBoard"
 import {
@@ -20,6 +21,7 @@ import { WorkspaceFiltersRow } from "./WorkspaceFiltersRow"
 
 export const WorkspacesPage = () => {
   const navigate = useNavigate()
+  const paths = useProjectScopedPaths()
   const [searchParams, setSearchParams] = useSearchParams()
   const activeWorkspace = useAppStore((s) => s.ui.activeWorkspace)
   const setActiveWorkspace = useAppStore((s) => s.setActiveWorkspace)
@@ -74,7 +76,7 @@ export const WorkspacesPage = () => {
 
   const handleOpenItem = (itemId: string) => {
     selectItem(itemId)
-    navigate("/items")
+    navigate(paths.tasks)
   }
 
   const dndDisabled = hasWorkspaceFiltersActive(selections)
