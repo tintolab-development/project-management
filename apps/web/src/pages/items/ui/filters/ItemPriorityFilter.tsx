@@ -28,6 +28,7 @@ export function ItemPriorityFilter({
       options={options}
       value={value}
       onValueChange={onValueChange}
+      resolveDisplayLabel={(v) => PRIORITY_LABELS[v as keyof typeof PRIORITY_LABELS] ?? undefined}
     />
   )
 }

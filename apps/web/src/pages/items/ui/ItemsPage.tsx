@@ -1,51 +1,39 @@
-import { useEffect, useLayoutEffect, useMemo, useRef } from "react"
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 import { useForm, useWatch } from "react-hook-form"
-import clsx from "clsx"
+import { useNavigate } from "react-router-dom"
+
 import { useAppStore } from "@/app/store/useAppStore"
+import { useProjectScopedPaths } from "@/shared/lib/projectScopedPaths"
+import { postItemComment, syncMockAppStateFromStore } from "@/shared/api"
 import type { Item } from "@/entities/item/model/types"
 import type { ItemStatus } from "@/shared/constants/labels"
-import {
-  STATUS_LABELS,
-  STATUS_STYLE,
-  STATUS_VALUES,
-  TYPE_LABELS,
-} from "@/shared/constants/labels"
-import {
-  getDomainOptionLabel,
-  walkDomainsFlat,
-} from "@/entities/domain/lib/domainTree"
+import { STATUS_VALUES } from "@/shared/constants/labels"
+import { walkDomainsFlatForClassificationSelect } from "@/entities/domain/lib/domainTree"
 import { itemMatchesSearch } from "@/shared/lib/itemSearch"
-import { formatDateTime } from "@/shared/lib/formatDateTime"
-import { ItemsFiltersRow } from "./filters/ItemsFiltersRow"
+import { TasksFilterPanel } from "./TasksFilterPanel"
+import { ItemDetailForm, type DetailForm } from "./ItemDetailForm"
+import { TasksResultCard } from "./TasksResultCard"
+import { TasksPagination } from "./TasksPagination"
 import { Button } from "@/shared/ui/button"
 import { Card } from "@/shared/ui/card"
-import { Input, inputControlClassName } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Pill, pillToneFromLegacyClass } from "@/shared/ui/pill"
-import { panelHeadStyles } from "@/shared/ui/page-chrome"
-import { formStackStyles } from "@/shared/ui/form-stack"
 import {
-  FormLabel,
-  Heading,
-  Text,
-} from "@/shared/ui/typography"
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet"
+import { panelHeadStyles } from "@/shared/ui/page-chrome"
+import { Heading, Text } from "@/shared/ui/typography"
 
 import pageStyles from "./ItemsPage.module.css"
 
-const listItemCardInteractiveClass =
-  "cursor-pointer outline-none transition-colors hover:bg-accent/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-
-type DetailForm = {
-  title: string
-  domain: string
-  priority: Item["priority"]
-  status: string
-  owner: string
-  dueDate: string
-  description: string
-  clientResponse: string
-  finalConfirmedValue: string
-}
+const PAGE_SIZE = 10
 
 const getStatusOptionsForItem = (current: Item | undefined): ItemStatus[] => {
   if (!current) return [...STATUS_VALUES]
@@ -56,14 +44,19 @@ const getStatusOptionsForItem = (current: Item | undefined): ItemStatus[] => {
 }
 
 export const ItemsPage = () => {
+  const navigate = useNavigate()
+  const paths = useProjectScopedPaths()
+  const [page, setPage] = useState(1)
+
   const domains = useAppStore((s) => s.domains)
   const allItems = useAppStore((s) => s.items)
   const itemsQuery = useAppStore((s) => s.ui.itemsQuery)
-  const typeFilter = useAppStore((s) => s.ui.typeFilter)
+  const typeFilters = useAppStore((s) => s.ui.typeFilters)
   const domainFilter = useAppStore((s) => s.ui.domainFilter)
   const statusFilter = useAppStore((s) => s.ui.statusFilter)
-  const priorityFilter = useAppStore((s) => s.ui.priorityFilter)
+  const priorityFilters = useAppStore((s) => s.ui.priorityFilters)
   const dueDateFilter = useAppStore((s) => s.ui.dueDateFilter)
+  const ownerFilter = useAppStore((s) => s.ui.ownerFilter)
   const selectedItemId = useAppStore((s) => s.ui.selectedItemId)
   const comments = useAppStore((s) => s.comments)
   const history = useAppStore((s) => s.history)
@@ -72,7 +65,13 @@ export const ItemsPage = () => {
   const getSortedItems = useAppStore((s) => s.getSortedItems)
   const saveSelectedItem = useAppStore((s) => s.saveSelectedItem)
   const toggleLockSelectedItem = useAppStore((s) => s.toggleLockSelectedItem)
-  const addComment = useAppStore((s) => s.addComment)
+  const addCommentFromApi = useAppStore((s) => s.addCommentFromApi)
+
+  const syncMockAfterMutation = () => {
+    void syncMockAppStateFromStore().catch((err) => {
+      console.error("[items] mock app-state sync failed", err)
+    })
+  }
 
   const domainMap = useMemo(
     () => new Map(domains.map((d) => [d.id, d])),
@@ -87,31 +86,83 @@ export const ItemsPage = () => {
     return sorted.filter((item) => {
       return (
         itemMatchesSearch(item, itemsQuery, domainLabel) &&
-        (!typeFilter || item.type === typeFilter) &&
+        (!typeFilters.length || typeFilters.includes(item.type)) &&
         (!domainFilter || item.domain === domainFilter) &&
         (!statusFilter || item.status === statusFilter) &&
-        (!priorityFilter || item.priority === priorityFilter) &&
-        (!dueDateFilter || item.dueDate === dueDateFilter)
+        (!priorityFilters.length ||
+          priorityFilters.includes(item.priority)) &&
+        (!dueDateFilter || item.dueDate === dueDateFilter) &&
+        (!ownerFilter.trim() ||
+          item.owner.trim() === ownerFilter.trim())
       )
     })
   }, [
     sorted,
     itemsQuery,
-    typeFilter,
+    typeFilters,
     domainFilter,
     statusFilter,
-    priorityFilter,
+    priorityFilters,
     dueDateFilter,
+    ownerFilter,
     domainMap,
   ])
+
+  const filterSignature = useMemo(
+    () =>
+      JSON.stringify({
+        itemsQuery,
+        typeFilters,
+        priorityFilters,
+        domainFilter,
+        ownerFilter,
+        statusFilter,
+        dueDateFilter,
+      }),
+    [
+      itemsQuery,
+      typeFilters,
+      priorityFilters,
+      domainFilter,
+      ownerFilter,
+      statusFilter,
+      dueDateFilter,
+    ],
+  )
+
+  const [prevFilterSignature, setPrevFilterSignature] =
+    useState(filterSignature)
+
+  const totalPages =
+    filtered.length === 0 ? 0 : Math.ceil(filtered.length / PAGE_SIZE)
+
+  if (filterSignature !== prevFilterSignature) {
+    setPrevFilterSignature(filterSignature)
+    setPage(1)
+  } else if (totalPages > 0 && page > totalPages) {
+    setPage(totalPages)
+  }
+
+  const safePage = Math.min(
+    page,
+    Math.max(1, totalPages || 1),
+  )
+
+  const pageSlice = useMemo(() => {
+    const start = (safePage - 1) * PAGE_SIZE
+    return filtered.slice(start, start + PAGE_SIZE)
+  }, [filtered, safePage])
 
   useEffect(() => {
     if (!filtered.length) {
       if (selectedItemId !== null) selectItem(null)
       return
     }
-    if (!filtered.some((item) => item.id === selectedItemId)) {
-      selectItem(filtered[0]?.id ?? null)
+    if (
+      selectedItemId &&
+      !filtered.some((item) => item.id === selectedItemId)
+    ) {
+      selectItem(null)
     }
   }, [filtered, selectedItemId, selectItem])
 
@@ -139,7 +190,7 @@ export const ItemsPage = () => {
         }
       : {
           title: "",
-          domain: walkDomainsFlat(domains)[0]?.id ?? "",
+          domain: walkDomainsFlatForClassificationSelect(domains)[0]?.id ?? "",
           priority: "P1",
           status: "논의",
           owner: "",
@@ -165,14 +216,10 @@ export const ItemsPage = () => {
     syncDetailTitleHeight()
   }, [selected?.id, titleWatched])
 
-  const {
-    ref: detailTitleFieldRef,
-    ...detailTitleFieldRest
-  } = register("title")
+  const titleField = register("title")
 
   const handleDetailTitleRef = (el: HTMLTextAreaElement | null) => {
     detailTitleTextareaRef.current = el
-    detailTitleFieldRef(el)
   }
 
   const handleDetailTitleInput = () => {
@@ -180,7 +227,7 @@ export const ItemsPage = () => {
   }
 
   const onSave = handleSubmit((data) => {
-    saveSelectedItem({
+    const ok = saveSelectedItem({
       title: data.title,
       domain: data.domain,
       priority: data.priority,
@@ -191,7 +238,37 @@ export const ItemsPage = () => {
       clientResponse: data.clientResponse,
       finalConfirmedValue: data.finalConfirmedValue,
     })
+    if (ok) syncMockAfterMutation()
   })
+
+  const handleAddCommentWithSync = async (author: string, body: string) => {
+    if (!selectedItemId) return false
+    const aid = author.trim()
+    const bid = body.trim()
+    if (!aid || !bid) {
+      window.alert("작성자와 코멘트 내용을 입력해 주세요.")
+      return false
+    }
+    try {
+      const comment = await postItemComment(selectedItemId, {
+        author: aid,
+        body: bid,
+      })
+      const ok = addCommentFromApi(comment)
+      if (ok) syncMockAfterMutation()
+      return ok
+    } catch (err) {
+      window.alert(
+        err instanceof Error ? err.message : "코멘트 저장 요청에 실패했습니다.",
+      )
+      return false
+    }
+  }
+
+  const handleToggleLockWithSync = () => {
+    const ok = toggleLockSelectedItem()
+    if (ok) syncMockAfterMutation()
+  }
 
   const itemComments = selected
     ? comments
@@ -213,341 +290,107 @@ export const ItemsPage = () => {
 
   const statusOptions = getStatusOptionsForItem(selected)
 
+  const handleOpenTask = (itemId: string) => {
+    selectItem(itemId)
+  }
+
+  const handleSheetOpenChange = (open: boolean) => {
+    if (!open) selectItem(null)
+  }
+
   return (
-    <section className={pageStyles.itemsLayout} aria-label="아이템 목록 및 상세">
-      <Card variant="panel" className={pageStyles.listPanel}>
+    <section className={pageStyles.itemsLayout} aria-label="작업 검색 및 목록">
+      <Card variant="panel" className={pageStyles.filterPanel}>
         <div className={panelHeadStyles.panelHead}>
           <Heading as="h3" variant="panel">
-            Item 목록
+            필터
           </Heading>
         </div>
 
-        <ItemsFiltersRow domains={domains} />
-
-        <div className={pageStyles.itemList}>
-          {filtered.map((row) => (
-            <Card
-              key={row.id}
-              variant="compact"
-              role="button"
-              tabIndex={0}
-              className={clsx(
-                listItemCardInteractiveClass,
-                row.id === selectedItemId &&
-                  "border-primary shadow-app-focus",
-              )}
-              onClick={() => selectItem(row.id)}
-              onKeyDown={(e) => {
-                if (e.key !== "Enter" && e.key !== " ") return
-                e.preventDefault()
-                selectItem(row.id)
-              }}
-              aria-current={row.id === selectedItemId ? "true" : undefined}
-              aria-label={`${row.code} ${row.title}`}
-            >
-              <div className={pageStyles.listTop}>
-                <div className={pageStyles.listMain}>
-                  <div className={pageStyles.listCode}>{row.code}</div>
-                  <Text as="div" variant="listTitle">
-                    {row.title}
-                  </Text>
-                  <Text as="div" variant="listDescription">
-                    {row.description}
-                  </Text>
-                </div>
-                <Pill
-                  tone={
-                    row.priority === "P0"
-                      ? "danger"
-                      : row.priority === "P1"
-                        ? "warn"
-                        : "dark"
-                  }
-                >
-                  {row.priority}
-                </Pill>
-              </div>
-              <div className={pageStyles.listMeta}>
-                <Pill tone="dark">{TYPE_LABELS[row.type]}</Pill>
-                <Pill tone="primary">{getDomainLabel(row.domain)}</Pill>
-                <Pill tone={pillToneFromLegacyClass(STATUS_STYLE[row.status] || "dark")}>
-                  {STATUS_LABELS[row.status]}
-                </Pill>
-              </div>
-            </Card>
-          ))}
-        </div>
+        <TasksFilterPanel
+          domains={domains}
+          onFiltersApplied={() => setPage(1)}
+        />
       </Card>
 
-      <Card variant="panel" className={pageStyles.detailPanel}>
-        <div className={panelHeadStyles.panelHead}>
-          <Heading as="h3" variant="panel">
-            Item 상세
-          </Heading>
-        </div>
+      <Card variant="panel" className={pageStyles.resultsPanel}>
+        <div className={pageStyles.resultsBody}>
+          <div className={pageStyles.tasksToolbar}>
+            <span className={pageStyles.tasksToolbarCount}>
+              {filtered.length} Tasks
+            </span>
+            <Button
+              type="button"
+              appearance="fill"
+              dimension="fixedMd"
+              onClick={() => navigate(paths.taskNew)}
+            >
+              태스크 추가
+            </Button>
+          </div>
 
-        {!selected ? (
-          <Text as="div" variant="emptyDetail">
-            왼쪽 목록에서 항목을 선택해 주세요.
-          </Text>
-        ) : (
-          <form className={pageStyles.detailWrap} onSubmit={onSave}>
-            <div className={pageStyles.detailHeader}>
-              <div>
-                <Text as="div" variant="detailCode">
-                  {selected.code}
-                </Text>
-                <Textarea
-                  className="min-h-0 resize-none border-0 bg-transparent p-0 text-app-lg font-bold text-foreground shadow-none focus-visible:ring-0 aria-invalid:ring-0"
-                  rows={2}
-                  disabled={locked}
-                  aria-label="제목"
-                  {...detailTitleFieldRest}
-                  ref={handleDetailTitleRef}
-                  onInput={handleDetailTitleInput}
-                />
-              </div>
-              <div className={pageStyles.detailPills}>
-                <Pill
-                  tone={
-                    selected.priority === "P0"
-                      ? "danger"
-                      : selected.priority === "P1"
-                        ? "warn"
-                        : "dark"
-                  }
-                >
-                  {selected.priority}
-                </Pill>
-                <Pill tone="primary">{getDomainLabel(selected.domain)}</Pill>
-                <Pill
-                  tone={pillToneFromLegacyClass(
-                    STATUS_STYLE[selected.status] || "dark",
-                  )}
-                >
-                  {STATUS_LABELS[selected.status]}
-                </Pill>
-              </div>
-            </div>
+          <div className={pageStyles.tasksCardList}>
+            {pageSlice.map((row) => (
+              <TasksResultCard
+                key={row.id}
+                item={row}
+                getDomainLabel={getDomainLabel}
+                selected={row.id === selectedItemId}
+                onOpen={handleOpenTask}
+              />
+            ))}
+            {filtered.length === 0 ? (
+              <Text as="div" variant="emptyDetail" className={pageStyles.tasksEmpty}>
+                조건에 맞는 작업이 없습니다.
+              </Text>
+            ) : null}
+          </div>
 
-            <div className={formStackStyles.formGrid}>
-              <div>
-                <FormLabel htmlFor="detail-type">유형</FormLabel>
-                <Input
-                  id="detail-type"
-                  disabled
-                  value={TYPE_LABELS[selected.type]}
-                  readOnly
-                />
-              </div>
-              <div>
-                <FormLabel htmlFor="detail-domain">도메인</FormLabel>
-                <select
-                  id="detail-domain"
-                  className={clsx(inputControlClassName)}
-                  disabled={locked}
-                  {...register("domain")}
-                >
-                  {walkDomainsFlat(domains).map((d) => (
-                    <option key={d.id} value={d.id}>
-                      {getDomainOptionLabel(domains, d.id)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <FormLabel htmlFor="detail-priority">우선순위</FormLabel>
-                <select
-                  id="detail-priority"
-                  className={clsx(inputControlClassName)}
-                  disabled={locked}
-                  {...register("priority")}
-                >
-                  {(["P0", "P1", "P2"] as const).map((p) => (
-                    <option key={p} value={p}>
-                      {p}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <FormLabel htmlFor="detail-status">상태</FormLabel>
-                <select
-                  id="detail-status"
-                  className={clsx(inputControlClassName)}
-                  disabled={locked}
-                  {...register("status")}
-                >
-                  {statusOptions.map((st) => (
-                    <option key={st} value={st}>
-                      {STATUS_LABELS[st]}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <FormLabel htmlFor="detail-owner">담당자</FormLabel>
-                <Input
-                  id="detail-owner"
-                  disabled={locked}
-                  {...register("owner")}
-                />
-              </div>
-              <div>
-                <FormLabel htmlFor="detail-due">마감일</FormLabel>
-                <Input
-                  id="detail-due"
-                  type="date"
-                  disabled={locked}
-                  {...register("dueDate")}
-                />
-              </div>
-            </div>
-
-            <div className={formStackStyles.formSection}>
-              <FormLabel htmlFor="detail-desc">설명</FormLabel>
-              <Textarea
-                id="detail-desc"
-                rows={3}
-                disabled={locked}
-                {...register("description")}
+          {totalPages > 1 ? (
+            <div className={pageStyles.tasksPagination}>
+              <TasksPagination
+                currentPage={safePage}
+                totalPages={totalPages}
+                onPageChange={setPage}
               />
             </div>
-
-            <div className={pageStyles.detailSplit}>
-              <div className={formStackStyles.formSection}>
-                <FormLabel htmlFor="detail-client">고객 회신값</FormLabel>
-                <Textarea
-                  id="detail-client"
-                  rows={6}
-                  disabled={locked}
-                  {...register("clientResponse")}
-                />
-              </div>
-              <div className={formStackStyles.formSection}>
-                <FormLabel htmlFor="detail-final">최종 확인값</FormLabel>
-                <Textarea
-                  id="detail-final"
-                  rows={6}
-                  disabled={locked}
-                  {...register("finalConfirmedValue")}
-                />
-              </div>
-            </div>
-
-            <div className={pageStyles.detailActions}>
-              <Button
-                type="submit"
-                appearance="fill"
-                dimension="hug"
-                disabled={locked}
-              >
-                저장
-              </Button>
-              <Button
-                type="button"
-                appearance="outline"
-                dimension="hug"
-                onClick={() => toggleLockSelectedItem()}
-              >
-                {locked ? "확정 해제" : "확정 처리"}
-              </Button>
-            </div>
-
-            <div className={pageStyles.detailSplit}>
-              <Card variant="subpanel">
-                <Text as="div" variant="subpanelHead">
-                  코멘트
-                </Text>
-                <CommentSection
-                  key={selected.id}
-                  defaultAuthor={commentAuthor}
-                  addComment={addComment}
-                />
-                <div className={pageStyles.commentsList}>
-                  {itemComments.map((c) => (
-                    <div key={c.id} className={pageStyles.commentRow}>
-                      <Text as="div" variant="commentAuthor">
-                        {c.author}
-                      </Text>
-                      <Text as="div" variant="commentMeta">
-                        {formatDateTime(c.createdAt)}
-                      </Text>
-                      <Text as="div" variant="body">
-                        {c.body}
-                      </Text>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-              <Card variant="subpanel">
-                <Text as="div" variant="subpanelHead">
-                  변경 이력
-                </Text>
-                <div className={pageStyles.historyList}>
-                  {itemHistory.map((h) => (
-                    <Card key={h.id} variant="history">
-                      <div>
-                        <Text as="div" variant="emphasis">
-                          {h.summary}
-                        </Text>
-                      </div>
-                      <Text as="div" variant="small">
-                        {h.actor}
-                      </Text>
-                      <Text as="div" variant="caption" className="mt-1">
-                        {formatDateTime(h.createdAt)}
-                      </Text>
-                    </Card>
-                  ))}
-                </div>
-              </Card>
-            </div>
-          </form>
-        )}
+          ) : null}
+        </div>
       </Card>
+
+      <Sheet open={Boolean(selected)} onOpenChange={handleSheetOpenChange}>
+        <SheetContent
+          side="right"
+          showCloseButton
+          className="w-full max-w-none overflow-y-auto sm:max-w-2xl"
+        >
+          <SheetHeader>
+            <SheetTitle>Item 상세</SheetTitle>
+          </SheetHeader>
+          {selected ? (
+            <div className={pageStyles.sheetContentInner}>
+              <ItemDetailForm
+                selected={selected}
+                locked={locked}
+                domains={domains}
+                getDomainLabel={getDomainLabel}
+                statusOptions={statusOptions}
+                titleField={titleField}
+                handleDetailTitleRef={handleDetailTitleRef}
+                handleDetailTitleInput={handleDetailTitleInput}
+                register={register}
+                onSubmit={onSave}
+                itemComments={itemComments}
+                itemHistory={itemHistory}
+                commentAuthor={commentAuthor}
+                addComment={handleAddCommentWithSync}
+                toggleLockSelectedItem={handleToggleLockWithSync}
+              />
+            </div>
+          ) : null}
+        </SheetContent>
+      </Sheet>
+
     </section>
-  )
-}
-
-const CommentSection = ({
-  defaultAuthor,
-  addComment,
-}: {
-  defaultAuthor: string
-  addComment: (author: string, body: string) => boolean
-}) => {
-  const { register, handleSubmit, reset } = useForm({
-    defaultValues: { author: defaultAuthor || "틴토랩 PM", body: "" },
-  })
-
-  const onAdd = handleSubmit((data) => {
-    if (addComment(data.author, data.body)) {
-      reset({ author: data.author, body: "" })
-    }
-  })
-
-  return (
-    <div className={pageStyles.commentCompose}>
-      <Input
-        placeholder="작성자"
-        aria-label="코멘트 작성자"
-        {...register("author")}
-      />
-      <Textarea
-        rows={3}
-        placeholder="질문, 보완 요청, 회의 메모를 입력하세요."
-        aria-label="코멘트 내용"
-        {...register("body")}
-      />
-      <Button
-        type="button"
-        appearance="outline"
-        dimension="hug"
-        onClick={onAdd}
-      >
-        코멘트 추가
-      </Button>
-    </div>
   )
 }

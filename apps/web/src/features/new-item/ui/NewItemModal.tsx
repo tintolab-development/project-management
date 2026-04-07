@@ -1,6 +1,7 @@
 import * as Dialog from "@radix-ui/react-dialog"
 import { useNavigate } from "react-router-dom"
 import { useState } from "react"
+import { useProjectScopedPaths } from "@/shared/lib/projectScopedPaths"
 import clsx from "clsx"
 import { Input, inputControlClassName } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -15,7 +16,10 @@ import { useAppStore } from "@/app/store/useAppStore"
 import { PRIORITY_LABELS, TYPE_LABELS } from "@/shared/constants/labels"
 import type { ItemType } from "@/entities/item/model/types"
 import type { Item } from "@/entities/item/model/types"
-import { getDomainOptionLabel, walkDomainsFlat } from "@/entities/domain/lib/domainTree"
+import {
+  getDomainOptionLabel,
+  walkDomainsFlatForClassificationSelect,
+} from "@/entities/domain/lib/domainTree"
 
 type Props = {
   open: boolean
@@ -24,10 +28,11 @@ type Props = {
 
 export const NewItemModal = ({ open, onOpenChange }: Props) => {
   const navigate = useNavigate()
+  const paths = useProjectScopedPaths()
   const domains = useAppStore((s) => s.domains)
   const createItem = useAppStore((s) => s.createItem)
 
-  const defaultDomain = walkDomainsFlat(domains)[0]?.id ?? ""
+  const defaultDomain = walkDomainsFlatForClassificationSelect(domains)[0]?.id ?? ""
 
   const [type, setType] = useState<ItemType>("information_request")
   const [domain, setDomain] = useState(defaultDomain)
@@ -41,7 +46,7 @@ export const NewItemModal = ({ open, onOpenChange }: Props) => {
     onOpenChange(next)
     if (!next) {
       setType("information_request")
-      setDomain(walkDomainsFlat(domains)[0]?.id ?? "")
+      setDomain(walkDomainsFlatForClassificationSelect(domains)[0]?.id ?? "")
       setPriority("P1")
       setOwner("")
       setDueDate("")
@@ -65,7 +70,7 @@ export const NewItemModal = ({ open, onOpenChange }: Props) => {
       description,
     })
     handleOpenChange(false)
-    navigate("/items")
+    navigate(paths.tasks)
   }
 
   return (
@@ -83,7 +88,7 @@ export const NewItemModal = ({ open, onOpenChange }: Props) => {
               <Button
                 type="button"
                 variant="ghost"
-                size="icon"
+                size="icon-lg"
                 className={modalCloseIconClassName}
                 aria-label="닫기"
               >
@@ -116,7 +121,7 @@ export const NewItemModal = ({ open, onOpenChange }: Props) => {
                 value={domain}
                 onChange={(e) => setDomain(e.target.value)}
               >
-                {walkDomainsFlat(domains).map((d) => (
+                {walkDomainsFlatForClassificationSelect(domains).map((d) => (
                   <option key={d.id} value={d.id}>
                     {getDomainOptionLabel(domains, d.id)}
                   </option>

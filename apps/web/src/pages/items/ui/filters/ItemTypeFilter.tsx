@@ -23,6 +23,7 @@ export function ItemTypeFilter({ value, onValueChange }: ItemTypeFilterProps) {
       options={options}
       value={value}
       onValueChange={onValueChange}
+      resolveDisplayLabel={(v) => TYPE_LABELS[v] ?? undefined}
     />
   )
 }

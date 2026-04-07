@@ -3,7 +3,7 @@ import { useId, useMemo } from "react"
 import type { Domain } from "@/entities/domain/model/types"
 import {
   getDomainOptionLabel,
-  walkDomainsFlat,
+  walkDomainsFlatForClassificationSelect,
 } from "@/entities/domain/lib/domainTree"
 import { FilterSelectField } from "@/shared/ui/filter-field"
 
@@ -21,7 +21,7 @@ export function ItemClassificationFilter({
   const controlId = useId()
   const options = useMemo(
     () =>
-      walkDomainsFlat(domains).map((d) => ({
+      walkDomainsFlatForClassificationSelect(domains).map((d) => ({
         value: d.id,
         label: getDomainOptionLabel(domains, d.id),
       })),
@@ -36,6 +36,7 @@ export function ItemClassificationFilter({
       options={options}
       value={value}
       onValueChange={onValueChange}
+      resolveDisplayLabel={(id) => getDomainOptionLabel(domains, id)}
     />
   )
 }

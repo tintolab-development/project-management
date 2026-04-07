@@ -1,7 +1,7 @@
 import * as Dialog from "@radix-ui/react-dialog"
 import { useState } from "react"
 import clsx from "clsx"
-import { Input, inputControlClassName } from "@/components/ui/input"
+import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { formStackStyles } from "@/shared/ui/form-stack"
 import { Button } from "@/shared/ui/button"
@@ -112,7 +112,7 @@ export const BulkImportModal = ({ open, onOpenChange }: Props) => {
               <Button
                 type="button"
                 variant="ghost"
-                size="icon"
+                size="icon-lg"
                 className={modalCloseIconClassName}
                 aria-label="닫기"
               >
@@ -187,7 +187,6 @@ export const BulkImportModal = ({ open, onOpenChange }: Props) => {
                 type="file"
                 accept=".csv,.txt"
                 className={clsx(
-                  inputControlClassName,
                   "cursor-pointer py-1 file:mr-3 file:cursor-pointer",
                 )}
                 onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
