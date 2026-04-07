@@ -12,20 +12,26 @@ import { getTasksPaginationRange } from "../lib/tasksPaginationRange"
 export type TasksPaginationProps = {
   currentPage: number
   totalPages: number
+  /** 페이지당 항목 수(기본 10) — 접근성 라벨에 반영 */
+  pageSize?: number
   onPageChange: (page: number) => void
 }
 
 export const TasksPagination = ({
   currentPage,
   totalPages,
+  pageSize = 10,
   onPageChange,
 }: TasksPaginationProps) => {
-  if (totalPages <= 1) return null
+  if (totalPages < 1) return null
 
   const items = getTasksPaginationRange(currentPage, totalPages)
 
   return (
-    <Pagination className="mx-0 w-full justify-center border-0 shadow-none">
+    <Pagination
+      className="mx-0 w-full justify-center border-0 shadow-none"
+      aria-label={`페이지네이션, 페이지당 ${pageSize}개`}
+    >
       <PaginationContent>
         <PaginationItem>
           <PaginationPrevious

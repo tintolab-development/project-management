@@ -1,21 +1,26 @@
+/** TopBar 아래 메인 열에서 남은 세로 공간을 꽉 채움(SidebarInset flex-col + flex-1) */
 .itemsLayout {
   display: grid;
   grid-template-columns: 420px 1fr;
   gap: var(--space-6);
+  align-items: stretch;
+  flex: 1 1 0;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
 }
 
-.filterPanel {
-  align-self: start;
-}
-
-.resultsPanel {
-  min-height: 720px;
-}
-
+.filterPanel,
 .resultsPanel {
   display: flex;
-  min-width: 0;
+  min-height: 0;
+  max-height: 100%;
   flex-direction: column;
+  overflow: hidden;
+}
+
+.resultsPanel {
+  min-width: 0;
 }
 
 .resultsBody {
@@ -51,6 +56,12 @@
   padding: var(--space-3);
   border-radius: var(--radius-md);
   background: var(--surface-subtle);
+}
+
+.filterPanelScroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .tasksPagination {
@@ -229,6 +240,17 @@
 @media (max-width: 1400px) {
   .itemsLayout {
     grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
+    align-items: stretch;
+  }
+
+  .filterPanel,
+  .resultsPanel {
+    max-height: none;
+  }
+
+  .resultsPanel {
+    min-height: 0;
   }
 }
 

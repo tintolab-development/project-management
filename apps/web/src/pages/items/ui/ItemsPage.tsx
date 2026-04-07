@@ -28,8 +28,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import { panelHeadStyles } from "@/shared/ui/page-chrome"
-import { Heading, Text } from "@/shared/ui/typography"
+import { Text } from "@/shared/ui/typography"
 
 import pageStyles from "./ItemsPage.module.css"
 
@@ -301,16 +300,12 @@ export const ItemsPage = () => {
   return (
     <section className={pageStyles.itemsLayout} aria-label="작업 검색 및 목록">
       <Card variant="panel" className={pageStyles.filterPanel}>
-        <div className={panelHeadStyles.panelHead}>
-          <Heading as="h3" variant="panel">
-            필터
-          </Heading>
+        <div className={pageStyles.filterPanelScroll}>
+          <TasksFilterPanel
+            domains={domains}
+            onFiltersApplied={() => setPage(1)}
+          />
         </div>
-
-        <TasksFilterPanel
-          domains={domains}
-          onFiltersApplied={() => setPage(1)}
-        />
       </Card>
 
       <Card variant="panel" className={pageStyles.resultsPanel}>
@@ -346,11 +341,12 @@ export const ItemsPage = () => {
             ) : null}
           </div>
 
-          {totalPages > 1 ? (
+          {filtered.length > 0 ? (
             <div className={pageStyles.tasksPagination}>
               <TasksPagination
                 currentPage={safePage}
                 totalPages={totalPages}
+                pageSize={PAGE_SIZE}
                 onPageChange={setPage}
               />
             </div>
