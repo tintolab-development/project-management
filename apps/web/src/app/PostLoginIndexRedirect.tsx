@@ -9,7 +9,7 @@ export const PostLoginIndexRedirect = () => {
   const user = useAuthSessionStore((s) => s.user)
 
   if (authBypassed) {
-    return <Navigate to="/p/seohaewon/dashboard" replace />
+    return <Navigate to="/project/demo/dashboard" replace />
   }
 
   if (!accessToken || !user) {

@@ -26,7 +26,6 @@ export const WorkspacesPage = () => {
   const activeWorkspace = useAppStore((s) => s.ui.activeWorkspace)
   const setActiveWorkspace = useAppStore((s) => s.setActiveWorkspace)
   const domains = useAppStore((s) => s.domains)
-  const selectItem = useAppStore((s) => s.selectItem)
   const itemsRaw = useAppStore((s) => s.items)
 
   const items = useMemo(
@@ -75,8 +74,7 @@ export const WorkspacesPage = () => {
   }, [searchParams, activeWorkspace, setActiveWorkspace, setSearchParams])
 
   const handleOpenItem = (itemId: string) => {
-    selectItem(itemId)
-    navigate(paths.tasks)
+    navigate(paths.taskDetail(itemId))
   }
 
   const dndDisabled = hasWorkspaceFiltersActive(selections)

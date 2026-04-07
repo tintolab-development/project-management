@@ -1,18 +1,19 @@
 /* Item Tree Explorer — co-located slice styles (tokens only). Imported by TreePage only. */
 
-.tree-panel-head {
-  margin-bottom: var(--space-4);
+.item-tree-page {
+  --tree-indent-step: 22px;
+  min-height: 760px;
 }
 
-.item-tree-page {
-  min-height: 760px;
+.tree-panel-head {
+  margin-bottom: var(--space-4);
 }
 
 .item-tree-toolbar {
   display: grid;
   grid-template-columns: minmax(280px, 460px) 1fr;
   gap: var(--space-4);
-  align-items: center;
+  align-items: start;
   margin-bottom: var(--space-4);
 }
 
@@ -26,10 +27,27 @@
 .tree-toolbar-actions {
   grid-template-columns: minmax(280px, 380px);
   justify-content: end;
+  justify-self: end;
+  width: 100%;
 }
 
 .tree-toolbar-create {
   grid-template-columns: 1fr auto;
+  align-items: center;
+}
+
+/* 툴바 인풋 높이 = DS Button `dimension="hug"`(h-10 / 40px) 과 동일 */
+.item-tree-toolbar .tree-toolbar-search .input-field-cq,
+.item-tree-toolbar .tree-toolbar-create .input-field-cq {
+  min-height: 2.5rem;
+  height: 2.5rem;
+}
+
+.item-tree-toolbar .tree-toolbar-input-control {
+  height: 100%;
+  min-height: 0;
+  max-height: 2.5rem;
+  padding-block: 0.5rem;
 }
 
 .tree-master-bar {
@@ -96,8 +114,8 @@
   border: 1px dashed transparent;
 }
 
-.tree-domain-dropzone.active,
-.tree-root-dropzone.active {
+.tree-domain-dropzone[data-drop-active],
+.tree-root-dropzone[data-drop-active] {
   background: var(--surface-dropzone);
   border-color: var(--border-accent);
 }
@@ -108,7 +126,7 @@
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: var(--space-2);
-  min-height: 50px;
+  min-height: var(--filter-control-height);
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-md);
   background: var(--surface-tint-wash);
@@ -117,11 +135,11 @@
     background 0.15s ease,
     border-color 0.15s ease,
     box-shadow 0.15s ease;
-  margin-left: calc(var(--tree-depth, 0) * 22px);
+  margin-left: calc(var(--tree-depth, 0) * var(--tree-indent-step));
   cursor: grab;
 }
 
-.tree-outline-head.drag-over,
+.tree-outline-head[data-item-drag-over],
 .tree-outline-head.drop-before,
 .tree-outline-head.drop-inside,
 .tree-outline-head.drop-after {
@@ -149,8 +167,8 @@
   bottom: -2px;
 }
 
-.tree-outline-head.dragging,
-.tree-item-row.dragging {
+.tree-outline-head[data-dragging],
+.tree-item-row[data-dragging] {
   opacity: 0.55;
 }
 
@@ -164,15 +182,15 @@
 
 .tree-domain-actions {
   display: flex;
-  gap: var(--space-1);
+  gap: var(--space-2);
   align-items: center;
   justify-content: flex-end;
 }
 
 .tree-outline-body {
   position: relative;
-  margin-left: calc((var(--tree-depth, 0) * 22px) + var(--space-7));
-  padding: var(--space-2) 0 var(--space-1) 22px;
+  margin-left: calc((var(--tree-depth, 0) * var(--tree-indent-step)) + var(--space-7));
+  padding: var(--space-2) 0 var(--space-1) var(--tree-indent-step);
   border-left: 1px solid var(--line-strong);
   display: flex;
   flex-direction: column;
@@ -181,24 +199,16 @@
 
 .tree-outline-item {
   position: relative;
-  margin-left: calc(var(--tree-depth, 0) * 22px);
-}
-
-.tree-outline-item::before {
-  content: "";
-  position: absolute;
-  left: -22px;
-  top: 22px;
-  width: var(--space-6);
-  border-top: 1px solid var(--line-strong);
+  margin-left: calc(var(--tree-depth, 0) * var(--tree-indent-step));
 }
 
 .tree-item-row {
+  position: relative;
   display: grid;
   grid-template-columns: 1fr auto;
   gap: var(--space-3);
   align-items: center;
-  min-height: 48px;
+  min-height: var(--filter-control-height);
   padding: var(--space-3) var(--space-4);
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
@@ -208,6 +218,19 @@
     border-color 0.15s ease,
     box-shadow 0.15s ease,
     background 0.15s ease;
+}
+
+/* Horizontal branch: vertically centered on the row */
+.tree-outline-item .tree-item-row::before {
+  content: "";
+  position: absolute;
+  left: calc(-1 * var(--tree-indent-step));
+  top: 50%;
+  transform: translateY(-50%);
+  width: var(--space-6);
+  height: 0;
+  border-top: 1px solid var(--line-strong);
+  pointer-events: none;
 }
 
 .tree-item-row:hover {
@@ -241,9 +264,18 @@
   min-width: 0;
 }
 
+.tree-item-title-truncate {
+  min-width: 0;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
 .tree-item-actions {
   display: flex;
-  gap: var(--space-1);
+  gap: var(--space-2);
   align-items: center;
 }
 
@@ -262,46 +294,32 @@
   flex-wrap: wrap;
 }
 
+/* Ghost Text-button: DS handles chrome; keep alignment only */
 .tree-domain-link {
-  border: none;
-  background: transparent;
-  padding: 0;
-  text-align: left;
+  height: auto;
+  min-height: 0;
 }
 
-.tree-count {
-  color: var(--text-muted);
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  min-height: 28px;
-  display: inline-flex;
-  align-items: center;
-  padding: 0 var(--space-3);
-  font-size: var(--font-size-xs);
+.tree-count-badge {
+  max-width: min(100%, 280px);
+  height: auto;
+  min-height: var(--badge-height);
+  white-space: normal;
+  text-align: start;
+  line-height: 1.25;
 }
 
+/* Outline icon control for expand (matches row rhythm) */
 .tree-toggle {
-  color: var(--text);
-  background: var(--panel);
-  border: 1px solid var(--line);
-  width: 32px;
-  height: 32px;
   border-radius: var(--filter-control-radius);
-  padding: 0;
 }
 
-.tree-item-delete {
-  width: 30px;
-  height: 30px;
-  border-radius: 999px;
+.tree-icon-danger {
   color: var(--danger);
-  font-size: var(--font-size-base);
-  border: 1px solid transparent;
-  background: transparent;
+  border-radius: 999px;
 }
 
-.tree-item-delete:hover {
+.tree-icon-danger:hover {
   background: var(--danger-soft);
   border-color: var(--border-pill-danger);
   color: var(--danger);
@@ -314,11 +332,16 @@
 
   .tree-toolbar-actions {
     justify-content: stretch;
+    justify-self: stretch;
     grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 860px) {
+  .item-tree-page {
+    --tree-indent-step: 12px;
+  }
+
   .tree-master-bar {
     flex-direction: column;
     align-items: flex-start;
@@ -348,11 +371,11 @@
 
   .tree-outline-item,
   .tree-outline-head {
-    margin-left: calc(var(--tree-depth, 0) * 12px);
+    margin-left: calc(var(--tree-depth, 0) * var(--tree-indent-step));
   }
 
-  .tree-outline-item::before {
-    left: -18px;
+  .tree-outline-item .tree-item-row::before {
+    left: calc(-1 * var(--tree-indent-step) - 6px);
     width: 12px;
   }
 }

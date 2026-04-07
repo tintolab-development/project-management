@@ -1,3 +1,5 @@
+import type { PillTone } from "@/shared/ui/pill"
+
 export const TYPE_LABELS: Record<string, string> = {
   information_request: "고객정보 요청",
   decision: "의사결정",
@@ -15,11 +17,22 @@ export const STATUS_LABELS: Record<ItemStatus, string> = {
   확정: "확정",
 }
 
-export const STATUS_STYLE: Record<ItemStatus, string> = {
+/**
+ * 아이템 상태(논의·방향합의·확정)별 Pill/Badge 색상 톤.
+ * {@link Pill}·{@link Badge} pill* 변형과 동일한 의미의 토큰이다.
+ */
+export const STATUS_PILL_TONE: Record<ItemStatus, PillTone> = {
   논의: "warn",
   방향합의: "primary",
   확정: "success",
 }
+
+export const isItemStatus = (value: string): value is ItemStatus =>
+  (STATUS_VALUES as readonly string[]).includes(value)
+
+/** 알 수 없는 status 문자열은 `dark` 톤으로 폴백 */
+export const statusToPillTone = (status: string): PillTone =>
+  isItemStatus(status) ? STATUS_PILL_TONE[status] : "dark"
 
 export const PRIORITY_LABELS = {
   P0: "P0",

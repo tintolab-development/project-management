@@ -8,7 +8,7 @@ export const resolveShellPageTitle = (pathname: string): string => {
     const m = matchPath({ path: item.to, end: item.end ?? false }, pathname)
     if (m) return item.label
   }
-  const projectMatch = pathname.match(/^\/p\/([^/]+)/)
+  const projectMatch = pathname.match(/^\/project\/([^/]+)/)
   if (projectMatch) {
     const slug = projectMatch[1]
     for (const item of buildProjectSidebarNav(slug)) {

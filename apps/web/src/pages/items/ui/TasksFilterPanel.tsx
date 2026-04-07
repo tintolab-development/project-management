@@ -293,8 +293,8 @@ export const TasksFilterPanel = ({ domains, onFiltersApplied }: TasksFilterPanel
 
         <FilterSelectField
           controlId={ownerSelectId}
-          label="담당자"
-          placeholder="담당자를 선택해 주세요"
+          label="프로젝트 담당자"
+          placeholder="프로젝트 담당자를 선택해 주세요"
           options={ownerSelectOptions}
           value={draftOwner}
           onValueChange={setDraftOwner}

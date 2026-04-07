@@ -134,14 +134,20 @@
   font-size: var(--font-size-base);
 }
 
-.assigneeRow {
+/**
+ * 담당자: 라벨 아래 한 줄에 셀렉트 · 추가 · 칩(연관 태스크 칩과 동일 DS) 배치해 수직 정렬 유지
+ */
+.assigneeSubgridRow {
+  grid-column: 1 / -1;
   display: flex;
   flex-direction: column;
-  gap: var(--task-create-section-gap);
-  padding-top: var(--space-5);
+  gap: var(--filter-field-label-input-gap, 8px);
+  margin-top: var(--task-create-section-gap);
+  width: 100%;
+  min-width: 0;
 }
 
-/** 바깥 라벨(담당자) ↔ 셀렉트 행 — DS 라벨-인풋 간격(섹션 `gap`과 분리) */
+/** 바깥 라벨(담당자) ↔ 컨트롤 행 — DS 라벨-인풋 간격(섹션 `gap`과 분리) */
 .assigneeLabelControl {
   display: flex;
   flex-direction: column;
@@ -152,20 +158,29 @@
 
 .assigneePickRow {
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: flex-start;
   gap: var(--space-4);
   width: 100%;
   min-width: 0;
 }
 
-/** 담당자 필터 — 필터 토큰과 동일 280px, 좁은 뷰에서는 줄어듦 */
+/** 유형 필드와 동일 최대 폭의 셀렉트 + `+`·칩 그룹(추가↔첫 칩 30px는 하위 `assigneePlusAndChips`) */
 .assigneeSelectField {
-  flex: 0 0 auto;
-  width: var(--filter-field-max-width);
-  max-width: 100%;
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: var(--filter-field-max-width);
   min-width: 0;
+}
+
+/** 담당자 추가 버튼과 칩 목록 — 버튼↔첫 배지 30px, 배지 간 10px(`badgeList`) */
+.assigneePlusAndChips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--task-related-label-chips-gap);
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .assigneePlusBtn {
@@ -205,38 +220,9 @@
 .badgeList {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
+  gap: var(--task-related-chip-gap);
   align-items: center;
-}
-
-.badgeWithRemove {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  max-width: 100%;
-}
-
-.removeIconBtn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-1);
-  border: none;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--muted-foreground);
-  cursor: pointer;
-  outline: none;
-}
-
-.removeIconBtn:hover {
-  color: var(--foreground);
-  background: var(--muted);
-}
-
-.removeIconBtn:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: 2px;
+  min-width: 0;
 }
 
 .sectionBar {

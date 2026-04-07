@@ -1,11 +1,10 @@
 import type { Item, ItemType, Priority } from "@/entities/item/model/types"
 import {
   STATUS_LABELS,
-  STATUS_STYLE,
+  statusToPillTone,
   TYPE_LABELS,
 } from "@/shared/constants/labels"
-import { Pill, type PillTone, pillToneFromLegacyClass } from "@/shared/ui/pill"
-import { cn } from "@/lib/utils"
+import { Pill, type PillTone } from "@/shared/ui/pill"
 
 import { formatTaskDueDisplay } from "../lib/formatTaskDueDisplay"
 import styles from "./TasksResultCard.module.css"
@@ -27,14 +26,12 @@ const priorityTone = (p: Priority): PillTone => {
 export type TasksResultCardProps = {
   item: Item
   getDomainLabel: (domainId: string) => string
-  selected: boolean
   onOpen: (itemId: string) => void
 }
 
 export const TasksResultCard = ({
   item,
   getDomainLabel,
-  selected,
   onOpen,
 }: TasksResultCardProps) => {
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -49,10 +46,9 @@ export const TasksResultCard = ({
   return (
     <button
       type="button"
-      className={cn(styles.card, selected && styles.cardSelected)}
+      className={styles.card}
       onClick={() => onOpen(item.id)}
       onKeyDown={handleKeyDown}
-      aria-current={selected ? "true" : undefined}
       aria-label={`${item.code} ${item.title} 상세 열기`}
     >
       <div className={styles.topRow}>
@@ -62,9 +58,7 @@ export const TasksResultCard = ({
           </Pill>
           <Pill tone="primary">{getDomainLabel(item.domain)}</Pill>
           <Pill
-            tone={pillToneFromLegacyClass(
-              STATUS_STYLE[item.status] || "dark",
-            )}
+            tone={statusToPillTone(item.status)}
           >
             {STATUS_LABELS[item.status]}
           </Pill>

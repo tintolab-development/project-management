@@ -43,14 +43,8 @@
   flex: 0 0 58px;
 }
 
-.brandLogo {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.brandLetterT {
+/* 어드민(T)·프로젝트(P) 브랜드 마크 공통 글리프 */
+.brandLetterMark {
   font-family: var(--font-login-title);
   font-size: clamp(1.5rem, 1.35rem + 0.4vw, 1.75rem);
   font-weight: 700;

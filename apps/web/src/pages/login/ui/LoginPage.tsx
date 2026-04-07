@@ -22,8 +22,8 @@ const authBypassed = import.meta.env.VITE_REQUIRE_AUTH === "false"
 /** MSW `mockUsersStore` 시드와 동일 — 로그인 폼 빠른 입력 */
 const TINTOLAB_MASTER_ADMIN_EMAIL = "master-pm@tinto.co.kr"
 const TINTOLAB_MASTER_ADMIN_PASSWORD = "MasterPm2026!"
-const SEOHAEWON_STAFF_EMAIL = "staff@seohaewon.co.kr"
-const SEOHAEWON_STAFF_PASSWORD = "SeohaeStaff2026!"
+const PROJECT_PM_EMAIL = "pm@project.com"
+const PROJECT_PM_PASSWORD = "ProjectPm2026!"
 const MULTI_SAMPLE_EMAIL = "multi@demo.local"
 const MULTI_SAMPLE_PASSWORD = "MultiDemo2026!"
 
@@ -147,17 +147,17 @@ export const LoginPage = () => {
                 className={styles.quickLoginButton}
                 onClick={() => {
                   clearErrors()
-                  setValue("email", SEOHAEWON_STAFF_EMAIL, {
+                  setValue("email", PROJECT_PM_EMAIL, {
                     shouldDirty: true,
                     shouldValidate: true,
                   })
-                  setValue("password", SEOHAEWON_STAFF_PASSWORD, {
+                  setValue("password", PROJECT_PM_PASSWORD, {
                     shouldDirty: true,
                     shouldValidate: true,
                   })
                 }}
               >
-                설해원 담당자
+                프로젝트 담당자
               </Button>
               <Button
                 type="button"

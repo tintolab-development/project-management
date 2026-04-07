@@ -13,7 +13,7 @@ export const APP_SIDEBAR_NAV: AppSidebarNavItem[] = [
 ]
 
 export const buildProjectSidebarNav = (projectSlug: string): AppSidebarNavItem[] => {
-  const base = `/p/${projectSlug}`
+  const base = `/project/${projectSlug}`
   return [
     { to: `${base}/dashboard`, end: true, label: "Dashboard" },
     { to: `${base}/workspaces`, label: "Workspace" },

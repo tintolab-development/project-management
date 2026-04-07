@@ -30,6 +30,7 @@ import {
 } from "@/entities/item/lib/sortItemsByBoard"
 import { getNextItemCode } from "@/entities/item/lib/nextItemCode"
 import { useAuthSessionStore } from "@/features/auth"
+import { appAlert, appConfirm, appPrompt } from "@/shared/lib/appDialog"
 
 const nowIso = () => new Date().toISOString()
 
@@ -68,6 +69,7 @@ export type CreateItemInput = {
 }
 
 export type ItemDetailPatch = {
+  type: ItemType
   title: string
   domain: string
   priority: Item["priority"]
@@ -103,12 +105,12 @@ export type AppStore = AppState & {
   toggleDomainExpanded: (domainId: string) => void
   setTreeExpandAll: (expand: boolean) => void
   toggleTreeItemPreview: (itemId: string) => void
-  saveSelectedItem: (patch: ItemDetailPatch) => boolean
-  toggleLockSelectedItem: () => boolean
-  addComment: (author: string, body: string) => boolean
+  saveSelectedItem: (patch: ItemDetailPatch) => Promise<boolean>
+  toggleLockSelectedItem: () => Promise<boolean>
+  addComment: (author: string, body: string) => Promise<boolean>
   /** MSW/백엔드가 부여한 `id`·`createdAt`으로 코멘트를 반영할 때 사용 */
-  addCommentFromApi: (comment: Comment) => boolean
-  deleteItem: (itemId: string) => void
+  addCommentFromApi: (comment: Comment) => Promise<boolean>
+  deleteItem: (itemId: string) => Promise<void>
   moveItemToDomain: (itemId: string, targetDomainId: string) => void
   moveDomainNode: (
     dragDomainId: string,
@@ -120,14 +122,14 @@ export type AppStore = AppState & {
     targetDomainId: string,
     position: "before" | "after" | "inside",
   ) => string | undefined
-  createItem: (input: CreateItemInput) => string | undefined
-  createDomain: (name: string, parentId?: string) => Domain | null
-  createChildDomain: (parentDomainId: string) => void
-  renameDomain: (domainId: string) => void
-  deleteDomainNode: (domainId: string) => void
-  executeBulkImport: (rows: ImportRowResult[]) => void
+  createItem: (input: CreateItemInput) => Promise<string | undefined>
+  createDomain: (name: string, parentId?: string) => Promise<Domain | null>
+  createChildDomain: (parentDomainId: string) => Promise<void>
+  renameDomain: (domainId: string) => Promise<void>
+  deleteDomainNode: (domainId: string) => Promise<void>
+  executeBulkImport: (rows: ImportRowResult[]) => Promise<void>
   exportStateJson: () => string
-  resetToSample: () => void
+  resetToSample: () => Promise<void>
   setWorkspaceColumnOrder: (order: ItemStatus[]) => void
   reorderWorkspaceItemsInStatus: (status: ItemStatus, orderedIds: string[]) => void
   /** 다른 상태 컬럼으로 카드 이동(보드 DnD). 확정→다른 상태는 허용(잠금 해제). 비확정+잠금만 무시. */
@@ -230,28 +232,30 @@ export const useAppStore = create<AppStore>()(
           },
         })),
 
-      saveSelectedItem: (patch) => {
+      saveSelectedItem: async (patch) => {
         const id = get().ui.selectedItemId
         if (!id) return false
         const item = get().items.find((i) => i.id === id)
         if (!item) return false
 
         if (item.status === "확정" || item.isLocked) {
-          window.alert(
+          await appAlert(
             "확정된 항목은 직접 수정할 수 없습니다. 확정을 해제하거나 변경 요청 항목을 새로 생성해 주세요.",
           )
           return false
         }
 
         if (!patch.title.trim()) {
-          window.alert("제목을 입력해 주세요.")
+          await appAlert("제목을 입력해 주세요.")
           return false
         }
 
         const before = JSON.stringify(item)
         const nextStatus = normalizeStatusValue(patch.status)
+        const nextType = normalizeItemType(patch.type)
         const updated: Item = {
           ...item,
+          type: nextType,
           title: patch.title.trim(),
           domain: patch.domain,
           priority: patch.priority,
@@ -289,7 +293,7 @@ export const useAppStore = create<AppStore>()(
         return true
       },
 
-      toggleLockSelectedItem: () => {
+      toggleLockSelectedItem: async () => {
         const id = get().ui.selectedItemId
         if (!id) return false
         const item = get().items.find((i) => i.id === id)
@@ -297,7 +301,7 @@ export const useAppStore = create<AppStore>()(
 
         if (item.status !== "확정") {
           if (item.status !== "방향합의") {
-            window.alert("확정 처리 전 상태를 먼저 방향합의로 맞춰 주세요.")
+            await appAlert("확정 처리 전 상태를 먼저 방향합의로 맞춰 주세요.")
             return false
           }
           const updated: Item = {
@@ -348,13 +352,13 @@ export const useAppStore = create<AppStore>()(
         return true
       },
 
-      addComment: (author, body) => {
+      addComment: async (author, body) => {
         const id = get().ui.selectedItemId
         if (!id) return false
         const item = get().items.find((i) => i.id === id)
         if (!item) return false
         if (!author.trim() || !body.trim()) {
-          window.alert("작성자와 코멘트 내용을 입력해 주세요.")
+          await appAlert("작성자와 코멘트 내용을 입력해 주세요.")
           return false
         }
 
@@ -382,13 +386,13 @@ export const useAppStore = create<AppStore>()(
         return true
       },
 
-      addCommentFromApi: (comment) => {
+      addCommentFromApi: async (comment) => {
         const item = get().items.find((i) => i.id === comment.itemId)
         if (!item) return false
         const author = comment.author?.trim()
         const body = comment.body?.trim()
         if (!author || !body) {
-          window.alert("작성자와 코멘트 내용을 입력해 주세요.")
+          await appAlert("작성자와 코멘트 내용을 입력해 주세요.")
           return false
         }
         const normalized: Comment = {
@@ -412,10 +416,10 @@ export const useAppStore = create<AppStore>()(
         return true
       },
 
-      deleteItem: (itemId) => {
+      deleteItem: async (itemId) => {
         const item = get().items.find((i) => i.id === itemId)
         if (!item) return
-        const ok = window.confirm(
+        const ok = await appConfirm(
           `[${item.code}] ${item.title} 항목을 삭제하시겠습니까?\n관련 코멘트와 이력도 함께 제거됩니다.`,
         )
         if (!ok) return
@@ -501,9 +505,9 @@ export const useAppStore = create<AppStore>()(
         return undefined
       },
 
-      createItem: (input) => {
+      createItem: async (input) => {
         if (!input.title.trim()) {
-          window.alert("제목을 입력해 주세요.")
+          await appAlert("제목을 입력해 주세요.")
           return undefined
         }
         const nextStatus = normalizeStatusValue(input.status ?? "논의")
@@ -568,10 +572,10 @@ export const useAppStore = create<AppStore>()(
         return item.id
       },
 
-      createDomain: (name, parentId = "") => {
+      createDomain: async (name, parentId = "") => {
         const value = normalizeTextValue(name)
         if (!value) {
-          window.alert("도메인 이름을 입력해 주세요.")
+          await appAlert("도메인 이름을 입력해 주세요.")
           return null
         }
 
@@ -614,19 +618,24 @@ export const useAppStore = create<AppStore>()(
         return newDomain
       },
 
-      createChildDomain: (parentDomainId) => {
+      createChildDomain: async (parentDomainId) => {
         const parent = getDomainMap(get().domains).get(parentDomainId)
         if (!parent) return
-        const name = window.prompt(`[${parent.name}] 하위 도메인 이름을 입력해 주세요.`)
-        if (!normalizeTextValue(name)) return
-        get().createDomain(name!, parentDomainId)
+        const name = await appPrompt(
+          `[${parent.name}] 하위 도메인 이름을 입력해 주세요.`,
+        )
+        if (!normalizeTextValue(name ?? "")) return
+        await get().createDomain(name!, parentDomainId)
       },
 
-      renameDomain: (domainId) => {
+      renameDomain: async (domainId) => {
         const domain = getDomainMap(get().domains).get(domainId)
         if (!domain) return
-        const nextName = window.prompt("도메인 이름을 입력해 주세요.", domain.name)
-        const value = normalizeTextValue(nextName)
+        const nextName = await appPrompt(
+          "도메인 이름을 입력해 주세요.",
+          domain.name,
+        )
+        const value = normalizeTextValue(nextName ?? "")
         if (!value || value === domain.name) return
 
         const collision = get().domains.find(
@@ -634,7 +643,7 @@ export const useAppStore = create<AppStore>()(
             entry.id !== domainId && normalizeKey(entry.name) === normalizeKey(value),
         )
         if (collision) {
-          window.alert("같은 이름의 도메인이 이미 있습니다.")
+          await appAlert("같은 이름의 도메인이 이미 있습니다.")
           return
         }
 
@@ -645,12 +654,12 @@ export const useAppStore = create<AppStore>()(
         }))
       },
 
-      deleteDomainNode: (domainId) => {
+      deleteDomainNode: async (domainId) => {
         const domain = getDomainMap(get().domains).get(domainId)
         if (!domain) return
 
         if (get().domains.length <= 1) {
-          window.alert(
+          await appAlert(
             "도메인은 최소 1개 이상 있어야 하므로 마지막 도메인은 삭제할 수 없습니다.",
           )
           return
@@ -668,7 +677,7 @@ export const useAppStore = create<AppStore>()(
           ? getDomainPathLabel(get().domains, fallbackDomainId)
           : "-"
 
-        const ok = window.confirm(
+        const ok = await appConfirm(
           `정말로 [${domain.name}] 도메인을 삭제하시겠습니까?\n\n직속 하위 도메인은 상위 레벨로 승격되며, 직속 아이템 ${directItems.length}개는 [${fallbackLabel}]로 이동됩니다.`,
         )
         if (!ok) return
@@ -722,12 +731,12 @@ export const useAppStore = create<AppStore>()(
         })
       },
 
-      executeBulkImport: (rows) => {
+      executeBulkImport: async (rows) => {
         const actionable = rows.filter(
           (row) => row.action === "create" || row.action === "update",
         )
         if (!actionable.length) {
-          window.alert("실행 가능한 행이 없습니다. 먼저 미리보기를 확인해 주세요.")
+          await appAlert("실행 가능한 행이 없습니다. 먼저 미리보기를 확인해 주세요.")
           return
         }
 
@@ -830,8 +839,8 @@ export const useAppStore = create<AppStore>()(
           2,
         ),
 
-      resetToSample: () => {
-        const ok = window.confirm("샘플데이터를 초기화하시겠습니까?")
+      resetToSample: async () => {
+        const ok = await appConfirm("샘플데이터를 초기화하시겠습니까?")
         if (!ok) return
         set(normalizeAppState(createSeedData()))
       },
@@ -919,12 +928,22 @@ export const useAppStore = create<AppStore>()(
       merge: (persisted, current) => {
         const c = current as AppStore
         if (!persisted || typeof persisted !== "object") return c
+        const seed = createSeedData()
+        const merged = normalizeAppState({
+          ...seed,
+          ...(persisted as object),
+        })
+        const seedProject = seed.project
+        if (merged.project.id === seedProject.id) {
+          merged.project = {
+            ...merged.project,
+            name: seedProject.name,
+            subtitle: seedProject.subtitle,
+          }
+        }
         return {
           ...c,
-          ...normalizeAppState({
-            ...createSeedData(),
-            ...(persisted as object),
-          }),
+          ...merged,
         }
       },
     },

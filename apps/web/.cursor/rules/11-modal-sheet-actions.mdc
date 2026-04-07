@@ -1,0 +1,11 @@
+---
+description: Modal and sheet footer actions must use DS modal button wrappers
+globs: apps/web/**/*.tsx
+alwaysApply: false
+---
+
+# Modal & sheet action buttons
+
+- **Dialog / Sheet 하단의 주요·보조 액션**(확인, 취소, 저장, 생성 등)에는 `Button`의 `variant`/`size`만으로 shadcn 경로를 쓰지 말고, **`ModalPrimaryButton` / `ModalSecondaryButton`**(`@/shared/ui/modal-dialog-buttons`)를 사용한다. 내부에서 DS `appearance` + `dimension`이 고정된다.
+- **닫기 아이콘**, 툴바 **`icon` 버튼**, 테이블/폼 내 **인라인 보조** 등은 기존처럼 `Button` `variant`/`size`를 써도 된다.
+- 넓은 고정 폭이 필요한 중첩 모달 등은 `actionSize="fixedMd"`를 쓰고, 기본(앱 다이얼로그·대부분 모달)은 `actionSize` 생략(`hug`).

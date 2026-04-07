@@ -1,5 +1,8 @@
 import { Navigate, Route, Routes } from "react-router-dom"
-import { LegacyPathRedirect } from "@/app/LegacyPathRedirect"
+import {
+  LegacyPPathPrefixRedirect,
+  LegacyPathRedirect,
+} from "@/app/LegacyPathRedirect"
 import { PostLoginIndexRedirect } from "@/app/PostLoginIndexRedirect"
 import { RequireAdmin } from "@/app/RequireAdmin"
 import { RequireAuth } from "@/app/RequireAuth"
@@ -38,12 +41,15 @@ export const AppRoutes = () => (
         </Route>
       </Route>
 
-      <Route path="p/:projectSlug" element={<RequireProjectAccess />}>
+      <Route path="p/*" element={<LegacyPPathPrefixRedirect />} />
+
+      <Route path="project/:projectSlug" element={<RequireProjectAccess />}>
         <Route element={<AppShellLayout variant="project" />}>
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="workspaces" element={<WorkspacesPage />} />
           <Route path="tasks/new" element={<TaskCreatePage />} />
+          <Route path="tasks/:itemId" element={<TaskCreatePage />} />
           <Route path="tasks" element={<ItemsPage />} />
           <Route path="items" element={<Navigate to="tasks" replace />} />
           <Route path="tree" element={<TreePage />} />
@@ -53,6 +59,7 @@ export const AppRoutes = () => (
 
       <Route path="workspaces" element={<LegacyPathRedirect />} />
       <Route path="tasks/new" element={<LegacyPathRedirect />} />
+      <Route path="tasks/:itemId" element={<LegacyPathRedirect />} />
       <Route path="tasks" element={<LegacyPathRedirect />} />
       <Route path="items" element={<LegacyPathRedirect />} />
       <Route path="tree" element={<LegacyPathRedirect />} />
