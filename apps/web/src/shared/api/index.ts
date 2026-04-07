@@ -7,7 +7,12 @@ export {
   httpClient,
   setHttpClientAuthTokenGetter,
 } from "./httpClient"
-export { putAppStateSnapshot } from "./appStateSync"
+export { putAppStateSnapshot, syncMockAppStateFromStore } from "./appStateSync"
+export {
+  postItemComment,
+  postTaskDraftComment,
+  type TaskDraftCommentResponse,
+} from "./commentsApi"
 export {
   createRestCrudHooks,
   normalizeApiPath,

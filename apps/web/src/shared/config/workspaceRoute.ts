@@ -9,8 +9,13 @@ export function parseWorkspaceTabParam(
   return null
 }
 
-export function buildWorkspacesPath(active: WorkspaceTabParam): string {
+export function buildWorkspacesPath(
+  active: WorkspaceTabParam,
+  opts?: { projectBasePath?: string },
+): string {
   const q = new URLSearchParams()
   q.set(WORKSPACE_QUERY_KEY, active)
-  return `/workspaces?${q.toString()}`
+  const base = opts?.projectBasePath?.replace(/\/$/, "") ?? ""
+  const path = base ? `${base}/workspaces` : "/workspaces"
+  return `${path}?${q.toString()}`
 }
