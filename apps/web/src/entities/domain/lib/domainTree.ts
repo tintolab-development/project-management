@@ -21,6 +21,43 @@ export const walkDomainsFlat = (domains: Domain[]): Domain[] => {
   return ordered
 }
 
+/**
+ * 분류·도메인 필터/셀렉트에서 빼는 테스트용 노드
+ * (하위 도메인은 `getDomainOptionLabel`에서 `— 이름`으로 보일 수 있음)
+ */
+const CLASSIFICATION_SELECT_BLOCKLIST = new Set([
+  "123",
+  "ㅁㄴㅇ",
+  "-123",
+  "-ㅁㄴㅇ",
+])
+
+export const shouldExcludeDomainFromClassificationSelect = (domain: Domain) =>
+  CLASSIFICATION_SELECT_BLOCKLIST.has(domain.name.trim()) ||
+  CLASSIFICATION_SELECT_BLOCKLIST.has(domain.id.trim())
+
+/** 분류 필터·도메인 선택 UI용 — `walkDomainsFlat`에서 위 블록 목록 제외 */
+export const walkDomainsFlatForClassificationSelect = (
+  domains: Domain[],
+): Domain[] =>
+  walkDomainsFlat(domains).filter(
+    (d) => !shouldExcludeDomainFromClassificationSelect(d),
+  )
+
+/**
+ * 상세 폼 등: 블록 목록 도메인은 현재 항목이 그 도메인을 쓰는 경우에만 옵션에 포함
+ * (값 불일치로 셀렉트가 깨지지 않게 함)
+ */
+export const walkDomainsFlatForClassificationSelectOrCurrent = (
+  domains: Domain[],
+  currentDomainId?: string,
+): Domain[] =>
+  walkDomainsFlat(domains).filter(
+    (d) =>
+      !shouldExcludeDomainFromClassificationSelect(d) ||
+      Boolean(currentDomainId && d.id === currentDomainId),
+  )
+
 export const getDomainMap = (domains: Domain[]) =>
   new Map(domains.map((domain) => [domain.id, domain]))
 

@@ -1,0 +1,16 @@
+.root {
+  margin-inline: auto;
+  display: flex;
+  width: 100%;
+  max-width: min(100%, 88rem);
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  border-radius: var(--radius-lg, 12px);
+  background: var(--surface-subtle);
+  box-sizing: border-box;
+}
+
+.calendarWrap {
+  margin-top: 60px;
+}

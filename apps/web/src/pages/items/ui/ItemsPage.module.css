@@ -1,0 +1,261 @@
+/** TopBar 아래 메인 열에서 남은 세로 공간을 꽉 채움(SidebarInset flex-col + flex-1) */
+.itemsLayout {
+  display: grid;
+  grid-template-columns: 420px 1fr;
+  gap: var(--space-6);
+  align-items: stretch;
+  flex: 1 1 0;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+}
+
+.filterPanel,
+.resultsPanel {
+  display: flex;
+  min-height: 0;
+  max-height: 100%;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.resultsPanel {
+  min-width: 0;
+}
+
+.resultsBody {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.tasksToolbar {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.tasksToolbarCount {
+  font-family: var(--font-login-title);
+  font-size: var(--font-size-md);
+  font-weight: 700;
+  color: var(--text);
+}
+
+.tasksCardList {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-3);
+  overflow-y: auto;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--surface-subtle);
+}
+
+.filterPanelScroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.tasksPagination {
+  flex-shrink: 0;
+  padding-top: var(--space-2);
+}
+
+.tasksEmpty {
+  padding: var(--space-8);
+  text-align: center;
+}
+
+.detailWrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.detailHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.detailHeader > div:first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.detailPills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.detailSplit {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-5);
+}
+
+.detailActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+
+.commentsList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.commentRow {
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line);
+}
+
+.commentCompose {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 0;
+}
+
+.commentsDivider {
+  flex-shrink: 0;
+  width: 100%;
+  height: 0;
+  margin: 20px 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+  background: none;
+}
+
+.commentAssigneeZone {
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--input-field-padding) var(--input-field-padding);
+  border: 1px solid var(--filter-control-border);
+  border-radius: var(--filter-control-radius);
+  background-color: var(--panel);
+}
+
+.commentAssigneeRow {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.commentAssigneeKey {
+  flex-shrink: 0;
+  font-family: var(--font-login-title);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--foreground);
+}
+
+.commentAssigneeSep {
+  flex-shrink: 0;
+  font-family: var(--font-login-title);
+  font-size: var(--font-size-base);
+  line-height: 1.5;
+  color: var(--foreground);
+}
+
+.commentAssigneeInputWrap {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.commentAssigneeInputWrap :global(.input-field-cq) {
+  display: block;
+  width: 100%;
+}
+
+.commentAssigneeInputWrap :global([data-slot="input"]) {
+  min-height: var(--filter-control-height);
+  border: none;
+  border-radius: 0;
+  background-color: transparent;
+  box-shadow: none;
+  padding-right: 0;
+  padding-left: 0.125rem;
+}
+
+.commentAssigneeInputWrap :global([data-slot="input"]:focus-visible) {
+  border-color: transparent;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ring) 35%, transparent);
+  outline: none;
+}
+
+.commentTextZone {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--filter-control-border);
+  border-radius: var(--filter-control-radius);
+  background-color: var(--panel);
+}
+
+.commentTextareaInZone {
+  min-height: 4.5rem;
+  resize: vertical;
+  border: none;
+  border-radius: 0;
+  background-color: transparent;
+  box-shadow: none;
+}
+
+.commentTextZone .commentTextareaInZone:focus-visible {
+  border-color: transparent;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ring) 35%, transparent);
+  outline: none;
+}
+
+.historyList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.sheetContentInner {
+  display: flex;
+  max-height: 100%;
+  flex-direction: column;
+  gap: var(--space-4);
+  overflow-y: auto;
+  padding-right: var(--space-2);
+}
+
+@media (max-width: 1400px) {
+  .itemsLayout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
+    align-items: stretch;
+  }
+
+  .filterPanel,
+  .resultsPanel {
+    max-height: none;
+  }
+
+  .resultsPanel {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 1100px) {
+  .detailSplit {
+    grid-template-columns: 1fr;
+  }
+}

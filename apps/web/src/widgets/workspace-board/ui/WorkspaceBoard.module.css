@@ -1,0 +1,108 @@
+.dndHint {
+  margin-bottom: var(--space-3);
+  color: var(--muted-foreground, #737373);
+  font-size: 0.875rem;
+}
+
+.board {
+  display: grid;
+  gap: 24px;
+  align-items: start;
+}
+
+.boardColumn {
+  display: flex;
+  flex-direction: column;
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 10px;
+  padding: var(--space-4);
+  min-height: 420px;
+}
+
+.boardColumnHead {
+  margin-bottom: var(--space-4);
+}
+
+.boardColumnHeadTitles {
+  display: flex;
+  flex: 1;
+  justify-content: space-between;
+  align-items: center;
+  min-width: 0;
+}
+
+/* 컬럼 헤더+카드 영역 전체를 드롭 존으로 씀 */
+.columnDropSurface {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 200px;
+  border-radius: 8px;
+}
+
+.columnDropSurfaceActive {
+  outline: 2px dashed color-mix(in srgb, var(--primary) 45%, transparent);
+  outline-offset: 2px;
+  background: color-mix(in srgb, var(--primary) 6%, transparent);
+}
+
+.cardStack {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 10px;
+  min-height: 120px;
+}
+
+/* 카드가 없을 때도 컬럼 드롭 영역이 충분히 잡히도록 (dnd-kit pointerWithin/rect 교차) */
+.cardStack:empty {
+  min-height: 280px;
+}
+
+.sortableCardRow {
+  min-width: 0;
+}
+
+/* DragOverlay로 미리보기를 보여 주므로 원본 행은 자리 표시만 */
+.sortableCardRowPlaceholder {
+  border-radius: 10px;
+  outline: 2px dashed color-mix(in srgb, var(--muted-foreground) 35%, transparent);
+  outline-offset: 2px;
+  background: color-mix(in srgb, var(--muted) 35%, transparent);
+}
+
+.dragOverlayRoot {
+  pointer-events: none;
+  touch-action: none;
+  width: min(100vw - 32px, 420px);
+  cursor: grabbing;
+}
+
+.dragOverlayCardWrap {
+  box-shadow: var(--shadow);
+  border-radius: 10px;
+}
+
+.dragOverlayCard {
+  box-shadow: none;
+}
+
+.cardDragSurface {
+  cursor: grab;
+  touch-action: none;
+}
+
+.cardDragSurface:active {
+  cursor: grabbing;
+}
+
+.cardGrow {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 1100px) {
+  .board {
+    grid-template-columns: 1fr !important;
+  }
+}

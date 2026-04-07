@@ -1,0 +1,164 @@
+.page {
+  display: flex;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg);
+  padding: 16px;
+  box-sizing: border-box;
+  /* 카드가 뷰포트보다 길면 상·하단까지 스크롤로 볼 수 있게 */
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.widget {
+  box-sizing: border-box;
+  display: flex;
+  width: 560px;
+  max-width: min(560px, calc(100vw - 32px));
+  /* 콘텐츠 높이에 맞춤 — 내부 스크롤·상단 라벨 잘림 방지 (페이지/바디 스크롤 사용) */
+  min-height: 0;
+  max-height: none;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 80px 40px !important;
+  border-radius: 32px !important;
+  background: var(--WT) !important;
+  box-shadow: var(--shadow-login-widget) !important;
+  overflow-x: hidden !important;
+  overflow-y: visible !important;
+}
+
+.header {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0 0 50px;
+  margin: 0;
+  text-align: center;
+  /* 제목 하단 50px + 위젯 gap 10px = 피그마 타이틀~ID 60px */
+}
+
+.content {
+  box-sizing: border-box;
+  width: 100%;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  overflow: visible;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  width: 100%;
+  /* 높이를 내용 이하로 줄이지 않음 — flex shrink + min-height:0 조합이 인풋·버튼 겹침을 유발할 수 있음 */
+  flex: 0 0 auto;
+  min-height: min-content;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--filter-field-label-input-gap);
+  width: 100%;
+  flex-shrink: 0;
+  min-height: min-content;
+}
+
+/** `FormLabel` 마진과 flex `gap` 이중 간격 방지 — 라벨↔인풋은 `gap`만 사용 */
+.field > label {
+  margin-bottom: 0;
+}
+
+.fieldInput {
+  box-sizing: border-box;
+  width: 100%;
+  height: 60px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--line-strong);
+  background-color: var(--panel);
+  font-size: var(--font-size-base);
+  line-height: 1.4;
+}
+
+.fieldInput:focus-visible {
+  outline: none;
+  border-color: var(--palette-primary);
+  box-shadow: var(--shadow-focus-ring);
+}
+
+.fieldInput[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+
+/* DS primary(fill) — 토큰과 동일한 중립 primary */
+.submit {
+  width: 100%;
+  flex-shrink: 0;
+  height: 60px !important;
+  min-height: 60px;
+  padding: 10px 16px !important;
+  border-radius: 8px !important;
+  border-color: transparent !important;
+  background-color: var(--primary) !important;
+  color: var(--text-on-primary) !important;
+}
+
+.submit:hover:not(:disabled) {
+  filter: brightness(0.92);
+}
+
+.submit:focus-visible {
+  box-shadow:
+    0 0 0 2px var(--WT),
+    0 0 0 4px var(--primary) !important;
+}
+
+.submit:disabled {
+  opacity: 0.55;
+}
+
+.quickLoginRow {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.quickLoginButton {
+  flex: 1 1 0;
+  min-width: min(100%, 160px);
+  height: auto !important;
+  min-height: 40px;
+  padding: 8px 10px !important;
+  border-radius: 8px !important;
+  border-color: transparent !important;
+  background-color: var(--default-BK) !important;
+  font-size: var(--font-size-sm);
+  color: var(--text-on-primary) !important;
+  white-space: normal;
+  text-align: center;
+}
+
+.quickLoginButton:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.rootError {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--danger);
+  flex-shrink: 0;
+}
+
+.fieldError {
+  margin: 0;
+  font-size: var(--font-size-xs);
+  color: var(--danger);
+}

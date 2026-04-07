@@ -1,0 +1,15 @@
+/**
+ * shadcn Date Picker — outline 트리거가 필드 테두리를 담당하므로 셸 `.body` 박스 크롬 제거
+ * https://ui.shadcn.com/docs/components/radix/date-picker
+ */
+.plainShellBody {
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  align-items: stretch;
+}

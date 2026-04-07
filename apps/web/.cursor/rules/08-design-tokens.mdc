@@ -1,0 +1,27 @@
+---
+description: Design tokens, CSS Modules precedence over Tailwind, and shadcn token wiring.
+alwaysApply: true
+---
+
+# Design Tokens & Styling Rule
+
+## Design tokens
+
+- **CSS custom properties** are the default for UI color, overlay scrims, and shared shadows. The canonical palette is `apps/web/src/app/styles/tokens.css`.
+- **Load order:** import `tokens.css` before `shadcn.css` so shadcn theme variables (`--background`, `--primary`, `--muted`, etc.) alias app tokens in `apps/web/src/app/styles/shadcn.css`.
+- **Adding a color:** add a meaning-based name in `tokens.css` first, then reference `var(--token-name)` from global CSS, CSS Modules, or (only when necessary) Tailwind arbitrary values such as `bg-[var(--surface-subtle)]`.
+- **Do not** introduce raw `#[hex]` or `rgb()` / `rgba()` for theme UI colors in application code. Exceptions: static brand assets (SVG, favicon), third-party embeds, or data-driven visualization outside the design system.
+- **Secondary text** in legacy global styles uses `var(--text-muted)`; shadcn maps `--muted-foreground` to that token. The `--muted` variable is the muted **surface** for `bg-muted`, not body text.
+
+## CSS Modules vs Tailwind (precedence)
+
+- **Prefer CSS Modules** (`*.module.css`) over Tailwind utility strings for layout and appearance owned by **this application**: `widgets`, `pages`, `features`, `entities`, and app-specific compositions in `shared`.
+- Co-locate styles with the component (e.g. `TopBar.tsx` + `TopBar.module.css`). Use **tokens only** inside modules (`color: var(--sidebar-text);`, `gap: 16px;`)—no hard-coded theme hex/rgb in module files.
+- **Tailwind** is still appropriate for: shadcn/ui primitive implementations and CVA-driven variants in `components/ui`, small `cn()` merges when a module would add friction, and rapid composition inside existing token-based utilities (`text-muted-foreground`, `bg-background`).
+- **When both are viable for new code, choose CSS Modules** for slice-owned UI. Migrate legacy global class names and long Tailwind strings to modules incrementally.
+- **Global CSS** (`global.css`) is reserved for resets, legacy page chrome, and shared patterns not yet moved to modules; avoid adding new global class names—prefer a module on the nearest widget or page.
+
+## Tailwind and shadcn
+
+- Prefer semantic utilities that map to tokens (`bg-background`, `text-muted-foreground`, `shadow-app`, `bg-surface-subtle`, `border-history-border`) over ad-hoc literals.
+- shadcn components should keep using semantic classes (`bg-card`, `text-primary`) so they stay tied to the token layer.

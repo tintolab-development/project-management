@@ -1,6 +1,17 @@
 import * as Dialog from "@radix-ui/react-dialog"
 import { useState } from "react"
 import clsx from "clsx"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { formStackStyles } from "@/shared/ui/form-stack"
+import { Button } from "@/shared/ui/button"
+import { Pill, type PillTone } from "@/shared/ui/pill"
+import {
+  FormLabel,
+  Heading,
+  Text,
+  modalCloseIconClassName,
+} from "@/shared/ui/typography"
 import { useAppStore } from "@/app/store/useAppStore"
 import {
   prepareImport,
@@ -16,12 +27,15 @@ type Props = {
   onOpenChange: (open: boolean) => void
 }
 
-const actionPillClass = (action: ImportRowResult["action"]) => {
-  if (action === "create") return "pill success"
-  if (action === "update") return "pill primary"
-  if (action === "skip") return "pill warn"
-  return "pill danger"
+const importActionTone = (action: ImportRowResult["action"]): PillTone => {
+  if (action === "create") return "success"
+  if (action === "update") return "primary"
+  if (action === "skip") return "warn"
+  return "danger"
 }
+
+const countTone = (n: number, active: PillTone, idle: PillTone = "dark") =>
+  n ? active : idle
 
 export const BulkImportModal = ({ open, onOpenChange }: Props) => {
   const items = useAppStore((s) => s.items)
@@ -90,75 +104,103 @@ export const BulkImportModal = ({ open, onOpenChange }: Props) => {
         <Dialog.Content className="modal import-modal" aria-describedby={undefined}>
           <div className="modal-head">
             <Dialog.Title asChild>
-              <h3>엑셀 일괄등록</h3>
+              <Heading as="h3" variant="modal">
+                엑셀 일괄등록
+              </Heading>
             </Dialog.Title>
-            <Dialog.Close
-              type="button"
-              className="icon-btn"
-              aria-label="닫기"
-            >
-              ×
+            <Dialog.Close asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-lg"
+                className={modalCloseIconClassName}
+                aria-label="닫기"
+              >
+                ×
+              </Button>
             </Dialog.Close>
           </div>
 
           <div className="import-help">
-            <div className="import-help-title">사용 방법</div>
+            <Text as="div" variant="importHelpTitle">
+              사용 방법
+            </Text>
             <ul className="import-help-list">
               <li>
-                <strong>방법 1</strong> : 엑셀에서 헤더 포함 행을 복사해서 오른쪽 칸에
-                그대로 붙여넣기
+                <Text as="span" variant="emphasis">
+                  방법 1
+                </Text>{" "}
+                : 엑셀에서 헤더 포함 행을 복사해서 오른쪽 칸에 그대로 붙여넣기
               </li>
               <li>
-                <strong>방법 2</strong> : 엑셀에서 <strong>CSV UTF-8</strong>로 저장 후
-                업로드
+                <Text as="span" variant="emphasis">
+                  방법 2
+                </Text>{" "}
+                : 엑셀에서{" "}
+                <Text as="span" variant="emphasis">
+                  CSV UTF-8
+                </Text>
+                로 저장 후 업로드
               </li>
               <li>
-                <strong>code</strong> 가 기존 항목과 같으면 <strong>업데이트</strong>,
-                없으면 <strong>신규 생성</strong>
+                <Text as="span" variant="emphasis">
+                  code
+                </Text>{" "}
+                가 기존 항목과 같으면{" "}
+                <Text as="span" variant="emphasis">
+                  업데이트
+                </Text>
+                , 없으면{" "}
+                <Text as="span" variant="emphasis">
+                  신규 생성
+                </Text>
               </li>
               <li>
-                <strong>확정</strong> 항목은 보호를 위해 일괄업데이트에서 자동 건너뜀
+                <Text as="span" variant="emphasis">
+                  확정
+                </Text>{" "}
+                항목은 보호를 위해 일괄업데이트에서 자동 건너뜀
               </li>
             </ul>
-            <div className="import-columns muted">
+            <Text as="div" variant="importColumns">
               헤더 예: type, domain, title, description, priority, status, owner,
               dueDate, clientResponse, finalConfirmedValue, code
-            </div>
-            <div className="import-template-action" style={{ marginTop: 10 }}>
-              <button
+            </Text>
+            <div className="import-template-action mt-app-3">
+              <Button
                 type="button"
-                className="btn"
+                appearance="outline"
+                dimension="hug"
                 onClick={handleDownloadTemplateCsv}
                 aria-label="일괄등록용 템플릿 CSV 파일 다운로드"
               >
                 템플릿 CSV 다운로드
-              </button>
+              </Button>
             </div>
           </div>
 
           <div className="import-grid">
             <div>
-              <label className="muted" htmlFor="import-file">
-                CSV 파일
-              </label>
-              <input
+              <FormLabel htmlFor="import-file">CSV 파일</FormLabel>
+              <Input
                 id="import-file"
                 type="file"
                 accept=".csv,.txt"
-                className="input"
+                className={clsx(
+                  "cursor-pointer py-1 file:mr-3 file:cursor-pointer",
+                )}
                 onChange={(e) => handleFile(e.target.files?.[0] ?? null)}
               />
               {fileName ? (
-                <div className="muted" style={{ marginTop: 8 }}>
+                <Text variant="muted" as="div" className="mt-app-2">
                   선택됨: {fileName}
-                </div>
+                </Text>
               ) : null}
 
-              <div className="form-section" style={{ marginTop: 14 }}>
-                <label htmlFor="import-paste">엑셀 붙여넣기</label>
-                <textarea
+              <div className={clsx(formStackStyles.formSection, "mt-app-5")}>
+                <FormLabel htmlFor="import-paste">엑셀 붙여넣기</FormLabel>
+                <Textarea
                   id="import-paste"
-                  className="textarea"
                   rows={12}
                   placeholder="엑셀에서 복사한 영역을 붙여넣으세요."
                   value={paste}
@@ -167,45 +209,53 @@ export const BulkImportModal = ({ open, onOpenChange }: Props) => {
               </div>
 
               <div className="import-inline-actions">
-                <button type="button" className="btn" onClick={handlePreview}>
-                  미리보기
-                </button>
-                <button
+                <Button
                   type="button"
-                  className="btn primary"
+                  appearance="outline"
+                  dimension="hug"
+                  onClick={handlePreview}
+                >
+                  미리보기
+                </Button>
+                <Button
+                  type="button"
+                  appearance="fill"
+                  dimension="hug"
                   disabled={!parsed || parsed.actionableCount === 0}
                   onClick={handleExecute}
                 >
                   실행
-                </button>
+                </Button>
               </div>
             </div>
 
             <div className="import-preview">
               {!parsed ? (
-                <div className="muted">
+                <Text variant="muted" as="div">
                   미리보기를 실행하면 등록/업데이트/건너뜀 결과가 표시됩니다.
-                </div>
+                </Text>
               ) : parsed.errorMessage ? (
-                <div className="muted">{parsed.errorMessage}</div>
+                <Text variant="muted" as="div">
+                  {parsed.errorMessage}
+                </Text>
               ) : (
                 <>
                   <div className="import-summary">
-                    <span className={clsx("pill", parsed.actionableCount ? "success" : "dark")}>
+                    <Pill tone={countTone(parsed.actionableCount, "success")}>
                       실행 가능 {parsed.actionableCount}
-                    </span>
-                    <span className={clsx("pill", parsed.createCount ? "success" : "dark")}>
+                    </Pill>
+                    <Pill tone={countTone(parsed.createCount, "success")}>
                       신규 {parsed.createCount}
-                    </span>
-                    <span className={clsx("pill", parsed.updateCount ? "primary" : "dark")}>
+                    </Pill>
+                    <Pill tone={countTone(parsed.updateCount, "primary")}>
                       업데이트 {parsed.updateCount}
-                    </span>
-                    <span className={clsx("pill", parsed.skipCount ? "warn" : "dark")}>
+                    </Pill>
+                    <Pill tone={countTone(parsed.skipCount, "warn")}>
                       건너뜀 {parsed.skipCount}
-                    </span>
-                    <span className={clsx("pill", parsed.errorCount ? "danger" : "dark")}>
+                    </Pill>
+                    <Pill tone={countTone(parsed.errorCount, "danger")}>
                       오류 {parsed.errorCount}
-                    </span>
+                    </Pill>
                   </div>
                   <table className="import-table">
                     <thead>
@@ -223,14 +273,18 @@ export const BulkImportModal = ({ open, onOpenChange }: Props) => {
                     <tbody>
                       {previewRows.length === 0 ? (
                         <tr>
-                          <td colSpan={8}>표시할 데이터가 없습니다.</td>
+                          <td colSpan={8}>
+                            <Text as="span" variant="muted">
+                              표시할 데이터가 없습니다.
+                            </Text>
+                          </td>
                         </tr>
                       ) : (
                         previewRows.map((row) => (
                           <tr key={`${row.rowNo}-${row.code}`}>
                             <td>{row.rowNo}</td>
                             <td>
-                              <span className={actionPillClass(row.action)}>
+                              <Pill tone={importActionTone(row.action)}>
                                 {row.action === "create"
                                   ? "신규"
                                   : row.action === "update"
@@ -238,7 +292,7 @@ export const BulkImportModal = ({ open, onOpenChange }: Props) => {
                                     : row.action === "skip"
                                       ? "건너뜀"
                                       : "오류"}
-                              </span>
+                              </Pill>
                             </td>
                             <td>{row.code || "-"}</td>
                             <td>
@@ -269,9 +323,9 @@ export const BulkImportModal = ({ open, onOpenChange }: Props) => {
                     </tbody>
                   </table>
                   {parsed.results.length > 50 ? (
-                    <div className="muted" style={{ marginTop: 10 }}>
+                    <Text variant="muted" as="div" className="mt-app-3">
                       미리보기는 처음 50행까지만 표시했습니다.
-                    </div>
+                    </Text>
                   ) : null}
                 </>
               )}

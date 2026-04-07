@@ -1,0 +1,115 @@
+.root {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.titleBlock {
+  min-width: 0;
+}
+
+.trailing {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+  flex: 1;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.toolActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.sessionRail {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text, #09090b);
+  cursor: pointer;
+}
+
+.iconButton:hover {
+  background: var(--surface-row-hover, #fafafa);
+}
+
+.iconButton:focus-visible {
+  outline: 2px solid var(--ring, #18181b);
+  outline-offset: 2px;
+}
+
+.sessionIcon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+/* 알림: 피 근처에서 시각 무게 맞춤 (로그아웃은 pill 안이라 한 단계 작게 유지) */
+.bellIcon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.userPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(360px, 100%);
+  padding: 6px 8px 6px 14px;
+  border: 1px solid var(--text, #09090b);
+  border-radius: 999px;
+  background: var(--panel, #ffffff);
+}
+
+.userPillLabel {
+  min-width: 0;
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--text, #09090b);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pillIconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 4px;
+  margin: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text, #09090b);
+  cursor: pointer;
+}
+
+.pillIconButton:hover {
+  background: var(--surface-muted, #f3f4f6);
+}
+
+.pillIconButton:focus-visible {
+  outline: 2px solid var(--ring, #18181b);
+  outline-offset: 2px;
+}

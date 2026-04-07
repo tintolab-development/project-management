@@ -1,33 +1,38 @@
-import { useEffect, useLayoutEffect, useMemo, useRef } from "react"
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 import { useForm, useWatch } from "react-hook-form"
-import clsx from "clsx"
+import { useNavigate } from "react-router-dom"
+
 import { useAppStore } from "@/app/store/useAppStore"
+import { useProjectScopedPaths } from "@/shared/lib/projectScopedPaths"
+import { postItemComment, syncMockAppStateFromStore } from "@/shared/api"
 import type { Item } from "@/entities/item/model/types"
 import type { ItemStatus } from "@/shared/constants/labels"
-import {
-  STATUS_LABELS,
-  STATUS_STYLE,
-  STATUS_VALUES,
-  TYPE_LABELS,
-} from "@/shared/constants/labels"
-import {
-  getDomainOptionLabel,
-  walkDomainsFlat,
-} from "@/entities/domain/lib/domainTree"
+import { STATUS_VALUES } from "@/shared/constants/labels"
+import { walkDomainsFlatForClassificationSelect } from "@/entities/domain/lib/domainTree"
 import { itemMatchesSearch } from "@/shared/lib/itemSearch"
-import { formatDateTime } from "@/shared/lib/formatDateTime"
+import { TasksFilterPanel } from "./TasksFilterPanel"
+import { ItemDetailForm, type DetailForm } from "./ItemDetailForm"
+import { TasksResultCard } from "./TasksResultCard"
+import { TasksPagination } from "./TasksPagination"
+import { Button } from "@/shared/ui/button"
+import { Card } from "@/shared/ui/card"
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet"
+import { Text } from "@/shared/ui/typography"
 
-type DetailForm = {
-  title: string
-  domain: string
-  priority: Item["priority"]
-  status: string
-  owner: string
-  dueDate: string
-  description: string
-  clientResponse: string
-  finalConfirmedValue: string
-}
+import pageStyles from "./ItemsPage.module.css"
+
+const PAGE_SIZE = 10
 
 const getStatusOptionsForItem = (current: Item | undefined): ItemStatus[] => {
   if (!current) return [...STATUS_VALUES]
@@ -38,25 +43,34 @@ const getStatusOptionsForItem = (current: Item | undefined): ItemStatus[] => {
 }
 
 export const ItemsPage = () => {
+  const navigate = useNavigate()
+  const paths = useProjectScopedPaths()
+  const [page, setPage] = useState(1)
+
   const domains = useAppStore((s) => s.domains)
   const allItems = useAppStore((s) => s.items)
   const itemsQuery = useAppStore((s) => s.ui.itemsQuery)
-  const typeFilter = useAppStore((s) => s.ui.typeFilter)
+  const typeFilters = useAppStore((s) => s.ui.typeFilters)
   const domainFilter = useAppStore((s) => s.ui.domainFilter)
   const statusFilter = useAppStore((s) => s.ui.statusFilter)
+  const priorityFilters = useAppStore((s) => s.ui.priorityFilters)
+  const dueDateFilter = useAppStore((s) => s.ui.dueDateFilter)
+  const ownerFilter = useAppStore((s) => s.ui.ownerFilter)
   const selectedItemId = useAppStore((s) => s.ui.selectedItemId)
   const comments = useAppStore((s) => s.comments)
   const history = useAppStore((s) => s.history)
 
-  const setItemsQuery = useAppStore((s) => s.setItemsQuery)
-  const setTypeFilter = useAppStore((s) => s.setTypeFilter)
-  const setDomainFilter = useAppStore((s) => s.setDomainFilter)
-  const setStatusFilter = useAppStore((s) => s.setStatusFilter)
   const selectItem = useAppStore((s) => s.selectItem)
   const getSortedItems = useAppStore((s) => s.getSortedItems)
   const saveSelectedItem = useAppStore((s) => s.saveSelectedItem)
   const toggleLockSelectedItem = useAppStore((s) => s.toggleLockSelectedItem)
-  const addComment = useAppStore((s) => s.addComment)
+  const addCommentFromApi = useAppStore((s) => s.addCommentFromApi)
+
+  const syncMockAfterMutation = () => {
+    void syncMockAppStateFromStore().catch((err) => {
+      console.error("[items] mock app-state sync failed", err)
+    })
+  }
 
   const domainMap = useMemo(
     () => new Map(domains.map((d) => [d.id, d])),
@@ -71,20 +85,83 @@ export const ItemsPage = () => {
     return sorted.filter((item) => {
       return (
         itemMatchesSearch(item, itemsQuery, domainLabel) &&
-        (!typeFilter || item.type === typeFilter) &&
+        (!typeFilters.length || typeFilters.includes(item.type)) &&
         (!domainFilter || item.domain === domainFilter) &&
-        (!statusFilter || item.status === statusFilter)
+        (!statusFilter || item.status === statusFilter) &&
+        (!priorityFilters.length ||
+          priorityFilters.includes(item.priority)) &&
+        (!dueDateFilter || item.dueDate === dueDateFilter) &&
+        (!ownerFilter.trim() ||
+          item.owner.trim() === ownerFilter.trim())
       )
     })
-  }, [sorted, itemsQuery, typeFilter, domainFilter, statusFilter, domainMap])
+  }, [
+    sorted,
+    itemsQuery,
+    typeFilters,
+    domainFilter,
+    statusFilter,
+    priorityFilters,
+    dueDateFilter,
+    ownerFilter,
+    domainMap,
+  ])
+
+  const filterSignature = useMemo(
+    () =>
+      JSON.stringify({
+        itemsQuery,
+        typeFilters,
+        priorityFilters,
+        domainFilter,
+        ownerFilter,
+        statusFilter,
+        dueDateFilter,
+      }),
+    [
+      itemsQuery,
+      typeFilters,
+      priorityFilters,
+      domainFilter,
+      ownerFilter,
+      statusFilter,
+      dueDateFilter,
+    ],
+  )
+
+  const [prevFilterSignature, setPrevFilterSignature] =
+    useState(filterSignature)
+
+  const totalPages =
+    filtered.length === 0 ? 0 : Math.ceil(filtered.length / PAGE_SIZE)
+
+  if (filterSignature !== prevFilterSignature) {
+    setPrevFilterSignature(filterSignature)
+    setPage(1)
+  } else if (totalPages > 0 && page > totalPages) {
+    setPage(totalPages)
+  }
+
+  const safePage = Math.min(
+    page,
+    Math.max(1, totalPages || 1),
+  )
+
+  const pageSlice = useMemo(() => {
+    const start = (safePage - 1) * PAGE_SIZE
+    return filtered.slice(start, start + PAGE_SIZE)
+  }, [filtered, safePage])
 
   useEffect(() => {
     if (!filtered.length) {
       if (selectedItemId !== null) selectItem(null)
       return
     }
-    if (!filtered.some((item) => item.id === selectedItemId)) {
-      selectItem(filtered[0]?.id ?? null)
+    if (
+      selectedItemId &&
+      !filtered.some((item) => item.id === selectedItemId)
+    ) {
+      selectItem(null)
     }
   }, [filtered, selectedItemId, selectItem])
 
@@ -112,7 +189,7 @@ export const ItemsPage = () => {
         }
       : {
           title: "",
-          domain: walkDomainsFlat(domains)[0]?.id ?? "",
+          domain: walkDomainsFlatForClassificationSelect(domains)[0]?.id ?? "",
           priority: "P1",
           status: "논의",
           owner: "",
@@ -138,14 +215,10 @@ export const ItemsPage = () => {
     syncDetailTitleHeight()
   }, [selected?.id, titleWatched])
 
-  const {
-    ref: detailTitleFieldRef,
-    ...detailTitleFieldRest
-  } = register("title")
+  const titleField = register("title")
 
   const handleDetailTitleRef = (el: HTMLTextAreaElement | null) => {
     detailTitleTextareaRef.current = el
-    detailTitleFieldRef(el)
   }
 
   const handleDetailTitleInput = () => {
@@ -153,7 +226,7 @@ export const ItemsPage = () => {
   }
 
   const onSave = handleSubmit((data) => {
-    saveSelectedItem({
+    const ok = saveSelectedItem({
       title: data.title,
       domain: data.domain,
       priority: data.priority,
@@ -164,7 +237,37 @@ export const ItemsPage = () => {
       clientResponse: data.clientResponse,
       finalConfirmedValue: data.finalConfirmedValue,
     })
+    if (ok) syncMockAfterMutation()
   })
+
+  const handleAddCommentWithSync = async (author: string, body: string) => {
+    if (!selectedItemId) return false
+    const aid = author.trim()
+    const bid = body.trim()
+    if (!aid || !bid) {
+      window.alert("작성자와 코멘트 내용을 입력해 주세요.")
+      return false
+    }
+    try {
+      const comment = await postItemComment(selectedItemId, {
+        author: aid,
+        body: bid,
+      })
+      const ok = addCommentFromApi(comment)
+      if (ok) syncMockAfterMutation()
+      return ok
+    } catch (err) {
+      window.alert(
+        err instanceof Error ? err.message : "코멘트 저장 요청에 실패했습니다.",
+      )
+      return false
+    }
+  }
+
+  const handleToggleLockWithSync = () => {
+    const ok = toggleLockSelectedItem()
+    if (ok) syncMockAfterMutation()
+  }
 
   const itemComments = selected
     ? comments
@@ -186,375 +289,104 @@ export const ItemsPage = () => {
 
   const statusOptions = getStatusOptionsForItem(selected)
 
+  const handleOpenTask = (itemId: string) => {
+    selectItem(itemId)
+  }
+
+  const handleSheetOpenChange = (open: boolean) => {
+    if (!open) selectItem(null)
+  }
+
   return (
-    <section className="items-layout" aria-label="아이템 목록 및 상세">
-      <section className="panel list-panel">
-        <div className="panel-head">
-          <h3>Item 목록</h3>
-        </div>
-
-        <div className="filters">
-          <input
-            className="input"
-            type="search"
-            placeholder="제목/코드 검색"
-            aria-label="제목 또는 코드 검색"
-            value={itemsQuery}
-            onChange={(e) => setItemsQuery(e.target.value)}
+    <section className={pageStyles.itemsLayout} aria-label="작업 검색 및 목록">
+      <Card variant="panel" className={pageStyles.filterPanel}>
+        <div className={pageStyles.filterPanelScroll}>
+          <TasksFilterPanel
+            domains={domains}
+            onFiltersApplied={() => setPage(1)}
           />
-          <select
-            className="input"
-            aria-label="유형 필터"
-            value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
-          >
-            <option value="">전체 유형</option>
-            {(Object.keys(TYPE_LABELS) as (keyof typeof TYPE_LABELS)[]).map(
-              (key) => (
-                <option key={key} value={key}>
-                  {TYPE_LABELS[key]}
-                </option>
-              ),
-            )}
-          </select>
-          <select
-            className="input"
-            aria-label="도메인 필터"
-            value={domainFilter}
-            onChange={(e) => setDomainFilter(e.target.value)}
-          >
-            <option value="">전체 도메인</option>
-            {walkDomainsFlat(domains).map((d) => (
-              <option key={d.id} value={d.id}>
-                {getDomainOptionLabel(domains, d.id)}
-              </option>
-            ))}
-          </select>
-          <select
-            className="input"
-            aria-label="상태 필터"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="">전체 상태</option>
-            {STATUS_VALUES.map((st) => (
-              <option key={st} value={st}>
-                {STATUS_LABELS[st]}
-              </option>
-            ))}
-          </select>
         </div>
+      </Card>
 
-        <div className="item-list">
-          {filtered.map((row) => (
-            <div
-              key={row.id}
-              role="button"
-              tabIndex={0}
-              className={clsx(
-                "list-item",
-                row.id === selectedItemId && "active",
-              )}
-              onClick={() => selectItem(row.id)}
-              onKeyDown={(e) => {
-                if (e.key !== "Enter" && e.key !== " ") return
-                e.preventDefault()
-                selectItem(row.id)
-              }}
-              aria-current={row.id === selectedItemId ? "true" : undefined}
-              aria-label={`${row.code} ${row.title}`}
+      <Card variant="panel" className={pageStyles.resultsPanel}>
+        <div className={pageStyles.resultsBody}>
+          <div className={pageStyles.tasksToolbar}>
+            <span className={pageStyles.tasksToolbarCount}>
+              {filtered.length} Tasks
+            </span>
+            <Button
+              type="button"
+              appearance="fill"
+              dimension="fixedMd"
+              onClick={() => navigate(paths.taskNew)}
             >
-              <div className="list-top">
-                <div className="list-main">
-                  <div className="list-code">{row.code}</div>
-                  <div className="list-title">{row.title}</div>
-                  <div className="list-desc">{row.description}</div>
-                </div>
-                <span
-                  className={clsx(
-                    "pill",
-                    row.priority === "P0"
-                      ? "danger"
-                      : row.priority === "P1"
-                        ? "warn"
-                        : "dark",
-                  )}
-                >
-                  {row.priority}
-                </span>
-              </div>
-              <div className="list-meta">
-                <span className="pill dark">{TYPE_LABELS[row.type]}</span>
-                <span className="pill primary">
-                  {getDomainLabel(row.domain)}
-                </span>
-                <span
-                  className={clsx(
-                    "pill",
-                    STATUS_STYLE[row.status] || "dark",
-                  )}
-                >
-                  {STATUS_LABELS[row.status]}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+              태스크 추가
+            </Button>
+          </div>
 
-      <section className="panel detail-panel">
-        <div className="panel-head">
-          <h3>Item 상세</h3>
-        </div>
+          <div className={pageStyles.tasksCardList}>
+            {pageSlice.map((row) => (
+              <TasksResultCard
+                key={row.id}
+                item={row}
+                getDomainLabel={getDomainLabel}
+                selected={row.id === selectedItemId}
+                onOpen={handleOpenTask}
+              />
+            ))}
+            {filtered.length === 0 ? (
+              <Text as="div" variant="emptyDetail" className={pageStyles.tasksEmpty}>
+                조건에 맞는 작업이 없습니다.
+              </Text>
+            ) : null}
+          </div>
 
-        {!selected ? (
-          <div className="empty-detail">왼쪽 목록에서 항목을 선택해 주세요.</div>
-        ) : (
-          <form className="detail-wrap" onSubmit={onSave}>
-            <div className="detail-header">
-              <div>
-                <div className="detail-code">{selected.code}</div>
-                <textarea
-                  className="detail-title-input"
-                  rows={2}
-                  disabled={locked}
-                  aria-label="제목"
-                  {...detailTitleFieldRest}
-                  ref={handleDetailTitleRef}
-                  onInput={handleDetailTitleInput}
-                />
-              </div>
-              <div className="detail-pills">
-                <span
-                  className={clsx(
-                    "pill",
-                    selected.priority === "P0"
-                      ? "danger"
-                      : selected.priority === "P1"
-                        ? "warn"
-                        : "dark",
-                  )}
-                >
-                  {selected.priority}
-                </span>
-                <span className="pill primary">
-                  {getDomainLabel(selected.domain)}
-                </span>
-                <span
-                  className={clsx(
-                    "pill",
-                    STATUS_STYLE[selected.status] || "dark",
-                  )}
-                >
-                  {STATUS_LABELS[selected.status]}
-                </span>
-              </div>
-            </div>
-
-            <div className="form-grid">
-              <div>
-                <label>유형</label>
-                <input
-                  className="input"
-                  disabled
-                  value={TYPE_LABELS[selected.type]}
-                  readOnly
-                />
-              </div>
-              <div>
-                <label htmlFor="detail-domain">도메인</label>
-                <select
-                  id="detail-domain"
-                  className="input"
-                  disabled={locked}
-                  {...register("domain")}
-                >
-                  {walkDomainsFlat(domains).map((d) => (
-                    <option key={d.id} value={d.id}>
-                      {getDomainOptionLabel(domains, d.id)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label htmlFor="detail-priority">우선순위</label>
-                <select
-                  id="detail-priority"
-                  className="input"
-                  disabled={locked}
-                  {...register("priority")}
-                >
-                  {(["P0", "P1", "P2"] as const).map((p) => (
-                    <option key={p} value={p}>
-                      {p}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label htmlFor="detail-status">상태</label>
-                <select
-                  id="detail-status"
-                  className="input"
-                  disabled={locked}
-                  {...register("status")}
-                >
-                  {statusOptions.map((st) => (
-                    <option key={st} value={st}>
-                      {STATUS_LABELS[st]}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label htmlFor="detail-owner">담당자</label>
-                <input
-                  id="detail-owner"
-                  className="input"
-                  disabled={locked}
-                  {...register("owner")}
-                />
-              </div>
-              <div>
-                <label htmlFor="detail-due">마감일</label>
-                <input
-                  id="detail-due"
-                  className="input"
-                  type="date"
-                  disabled={locked}
-                  {...register("dueDate")}
-                />
-              </div>
-            </div>
-
-            <div className="form-section">
-              <label htmlFor="detail-desc">설명</label>
-              <textarea
-                id="detail-desc"
-                className="textarea"
-                rows={3}
-                disabled={locked}
-                {...register("description")}
+          {filtered.length > 0 ? (
+            <div className={pageStyles.tasksPagination}>
+              <TasksPagination
+                currentPage={safePage}
+                totalPages={totalPages}
+                pageSize={PAGE_SIZE}
+                onPageChange={setPage}
               />
             </div>
+          ) : null}
+        </div>
+      </Card>
 
-            <div className="detail-split">
-              <div className="form-section">
-                <label htmlFor="detail-client">고객 회신값</label>
-                <textarea
-                  id="detail-client"
-                  className="textarea"
-                  rows={6}
-                  disabled={locked}
-                  {...register("clientResponse")}
-                />
-              </div>
-              <div className="form-section">
-                <label htmlFor="detail-final">최종 확인값</label>
-                <textarea
-                  id="detail-final"
-                  className="textarea"
-                  rows={6}
-                  disabled={locked}
-                  {...register("finalConfirmedValue")}
-                />
-              </div>
+      <Sheet open={Boolean(selected)} onOpenChange={handleSheetOpenChange}>
+        <SheetContent
+          side="right"
+          showCloseButton
+          className="w-full max-w-none overflow-y-auto sm:max-w-2xl"
+        >
+          <SheetHeader>
+            <SheetTitle>Item 상세</SheetTitle>
+          </SheetHeader>
+          {selected ? (
+            <div className={pageStyles.sheetContentInner}>
+              <ItemDetailForm
+                selected={selected}
+                locked={locked}
+                domains={domains}
+                getDomainLabel={getDomainLabel}
+                statusOptions={statusOptions}
+                titleField={titleField}
+                handleDetailTitleRef={handleDetailTitleRef}
+                handleDetailTitleInput={handleDetailTitleInput}
+                register={register}
+                onSubmit={onSave}
+                itemComments={itemComments}
+                itemHistory={itemHistory}
+                commentAuthor={commentAuthor}
+                addComment={handleAddCommentWithSync}
+                toggleLockSelectedItem={handleToggleLockWithSync}
+              />
             </div>
+          ) : null}
+        </SheetContent>
+      </Sheet>
 
-            <div className="detail-actions">
-              <button
-                type="submit"
-                className="btn primary"
-                disabled={locked}
-              >
-                저장
-              </button>
-              <button
-                type="button"
-                className="btn"
-                onClick={() => toggleLockSelectedItem()}
-              >
-                {locked ? "확정 해제" : "확정 처리"}
-              </button>
-            </div>
-
-            <div className="detail-split">
-              <div className="subpanel">
-                <div className="subpanel-head">코멘트</div>
-                <CommentSection
-                  key={selected.id}
-                  defaultAuthor={commentAuthor}
-                  addComment={addComment}
-                />
-                <div className="comments-list">
-                  {itemComments.map((c) => (
-                    <div key={c.id} className="comment-row">
-                      <div className="comment-author">{c.author}</div>
-                      <div className="comment-meta">
-                        {formatDateTime(c.createdAt)}
-                      </div>
-                      <div>{c.body}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="subpanel">
-                <div className="subpanel-head">변경 이력</div>
-                <div className="history-list">
-                  {itemHistory.map((h) => (
-                    <div key={h.id} className="history-row">
-                      <div>
-                        <strong>{h.summary}</strong>
-                      </div>
-                      <div>{h.actor}</div>
-                      <div className="time">{formatDateTime(h.createdAt)}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </form>
-        )}
-      </section>
     </section>
-  )
-}
-
-const CommentSection = ({
-  defaultAuthor,
-  addComment,
-}: {
-  defaultAuthor: string
-  addComment: (author: string, body: string) => boolean
-}) => {
-  const { register, handleSubmit, reset } = useForm({
-    defaultValues: { author: defaultAuthor || "틴토랩 PM", body: "" },
-  })
-
-  const onAdd = handleSubmit((data) => {
-    if (addComment(data.author, data.body)) {
-      reset({ author: data.author, body: "" })
-    }
-  })
-
-  return (
-    <div className="comment-compose">
-      <input
-        className="input"
-        placeholder="작성자"
-        aria-label="코멘트 작성자"
-        {...register("author")}
-      />
-      <textarea
-        className="textarea"
-        rows={3}
-        placeholder="질문, 보완 요청, 회의 메모를 입력하세요."
-        aria-label="코멘트 내용"
-        {...register("body")}
-      />
-      <button type="button" className="btn" onClick={onAdd}>
-        코멘트 추가
-      </button>
-    </div>
   )
 }

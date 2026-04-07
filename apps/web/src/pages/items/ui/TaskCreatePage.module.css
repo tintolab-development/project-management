@@ -1,0 +1,755 @@
+/* Tasks `/tasks` 메인 패널·필터와 동일 리듬: 셸 `.main` 패딩(24px)만 사용, 여기서는 중복 패딩 없음 */
+.page {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--task-create-section-gap);
+  background: var(--bg);
+}
+
+.mainCardInner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--task-create-section-gap);
+  /* `Card` 기본 `overflow-hidden`이 자식(메타 행·언더라인 제목)을 잘라 보이는 선·클리핑 이슈 유발 */
+  overflow: visible !important;
+}
+
+/** 제목 블록 + 메타 그리드 — 카드 gap과 중복되지 않도록 한 래퍼 */
+.firstWidgetBlock {
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+  width: 100%;
+  min-width: 0;
+  gap: var(--task-create-title-divider-gap-after, 25px);
+}
+
+/** 넘버링↔인풋 16px, 하단 패딩 */
+.firstWidgetTop {
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+  gap: var(--space-6);
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding-bottom: 18px;
+}
+
+.firstWidgetTop :global(.input-field-cq) {
+  width: 100%;
+  min-width: 0;
+}
+
+.itemNumbering {
+  margin: 0;
+  color: #000000;
+  font-family: var(--font-login-title);
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: normal;
+}
+
+/** 제목 인풋 — 보더 없음, 박스 높이 24px */
+.firstWidgetTitleInput {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  height: 24px !important;
+  min-height: 24px !important;
+  max-height: 24px !important;
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  font-family: var(--font-login-title) !important;
+  font-size: var(--font-size-base) !important;
+  font-weight: 700 !important;
+  line-height: 24px !important;
+  color: var(--foreground) !important;
+}
+
+.firstWidgetTitleInput:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  --tw-ring-width: 0 !important;
+  --tw-ring-offset-width: 0 !important;
+}
+
+.firstWidgetTitleInput[aria-invalid="true"] {
+  box-shadow: none !important;
+}
+
+.metaGrid {
+  display: grid;
+  /* 좁은 뷰에서는 자동 줄바꿈, 넓을 때만 5열 */
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 13.5rem), 1fr));
+  column-gap: var(--space-5);
+  row-gap: var(--space-5);
+  align-items: start;
+}
+
+@media (min-width: 1240px) {
+  .metaGrid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    column-gap: var(--space-6);
+    row-gap: var(--space-5);
+  }
+}
+
+@media (max-width: 560px) {
+  .metaGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.fieldStack {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+}
+
+/* shadcn Select 트리거를 필터 컨트롤(49px)·테두리·라디우스에 맞춤 */
+.metaSelectTrigger {
+  width: 100%;
+  min-width: 0;
+  height: var(--filter-control-height) !important;
+  min-height: var(--filter-control-height) !important;
+  max-height: var(--filter-control-height) !important;
+  border-radius: var(--filter-control-radius);
+  border-color: var(--filter-control-border);
+  background-color: var(--panel);
+  padding-left: 16px;
+  padding-right: 12px;
+  font-family: var(--font-login-title);
+  font-size: var(--font-size-base);
+}
+
+.assigneeRow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--task-create-section-gap);
+  padding-top: var(--space-5);
+}
+
+/** 바깥 라벨(담당자) ↔ 셀렉트 행 — DS 라벨-인풋 간격(섹션 `gap`과 분리) */
+.assigneeLabelControl {
+  display: flex;
+  flex-direction: column;
+  gap: var(--filter-field-label-input-gap, 8px);
+  width: 100%;
+  min-width: 0;
+}
+
+.assigneePickRow {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--space-4);
+  width: 100%;
+  min-width: 0;
+}
+
+/** 담당자 필터 — 필터 토큰과 동일 280px, 좁은 뷰에서는 줄어듦 */
+.assigneeSelectField {
+  flex: 0 0 auto;
+  width: var(--filter-field-max-width);
+  max-width: 100%;
+  min-width: 0;
+}
+
+.assigneePlusBtn {
+  flex-shrink: 0;
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px !important;
+  min-height: 40px !important;
+  max-width: 40px !important;
+  max-height: 40px !important;
+  border-radius: 9999px;
+  border-color: var(--filter-control-border);
+  background-color: #fff !important;
+  padding: 0 !important;
+}
+
+/** 담당자 추가 모달 — 이름·소속 가로 배치, 너비 동일 비율(1:1) */
+.assigneeModalInputsRow {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: var(--space-3);
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+}
+
+.assigneeModalInputCell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--filter-field-label-input-gap, 8px);
+  min-width: 0;
+  flex: 1 1 0;
+}
+
+.badgeList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.badgeWithRemove {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  max-width: 100%;
+}
+
+.removeIconBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-1);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  outline: none;
+}
+
+.removeIconBtn:hover {
+  color: var(--foreground);
+  background: var(--muted);
+}
+
+.removeIconBtn:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.sectionBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--pad-widget-x);
+  border-radius: var(--radius-md);
+  background: var(--panel);
+  box-shadow: var(--shadow-app, 0 1px 3px rgba(0, 0, 0, 0.06));
+}
+
+/** 연관 태스크 — `--task-related-bar-height` 툴바 */
+.relatedTasksBar {
+  box-sizing: border-box;
+  flex-wrap: nowrap;
+  height: var(--task-related-bar-height);
+  min-height: var(--task-related-bar-height);
+  max-height: var(--task-related-bar-height);
+  padding-block: 0;
+  padding-inline: var(--pad-widget-x);
+  gap: var(--space-3);
+}
+
+.relatedTasksBar .sectionBarLeft {
+  flex: 1 1 auto;
+  flex-wrap: nowrap;
+  min-width: 0;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.relatedTasksBar.relatedTasksBarWithChips .sectionBarLeft {
+  gap: var(--task-related-label-chips-gap);
+}
+
+.relatedTasksChips {
+  flex: 1 1 auto;
+  flex-wrap: nowrap;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.sectionBarLeft {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.sectionBarTitle {
+  flex-shrink: 0;
+}
+
+.sectionBarChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+  min-width: 0;
+}
+
+/** 연관 태스크 추가 칩 — DS: inline-flex, padding 10px, pill, 1px #000, 텍스트↔X gap 10px */
+.relatedTaskChip {
+  display: inline-flex;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  max-width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: var(--task-related-chip-gap);
+  padding: var(--task-related-chip-padding);
+  border-radius: var(--task-related-chip-radius);
+  border: 1px solid var(--task-related-chip-border);
+  background: var(--panel);
+}
+
+.relatedTaskChipText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--task-related-chip-fg);
+  font-family: var(--font-login-title);
+  font-size: var(--task-related-chip-font-size);
+  font-style: normal;
+  font-weight: var(--task-related-chip-font-weight);
+  line-height: normal;
+}
+
+.relatedTaskChipRemove {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--task-related-chip-icon-size);
+  height: var(--task-related-chip-icon-size);
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--task-related-chip-fg);
+  cursor: pointer;
+  outline: none;
+}
+
+.relatedTaskChipRemove:hover {
+  opacity: 0.75;
+}
+
+.relatedTaskChipRemove:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.relatedTaskChipIcon {
+  width: var(--task-related-chip-icon-size);
+  height: var(--task-related-chip-icon-size);
+}
+
+/**
+ * `Card variant="panel"`에 붙임 — 목록·최종 확인값 등과 동일 패딩·배경·섀도
+ * 페이지 플렉스 자식에서 줄어들 수 있도록 `min-width: 0`
+ */
+.panelSection {
+  width: 100%;
+  min-width: 0;
+  overflow: visible !important;
+}
+
+.twoCol {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-6);
+}
+
+/** 프로젝트 설명 ↔ 고객 회신 가로 간격 20px (`--task-create-section-gap`) */
+.twoColEditorGap {
+  gap: var(--task-create-section-gap);
+}
+
+@media (max-width: 900px) {
+  .twoCol {
+    grid-template-columns: 1fr;
+  }
+}
+
+/** 서브패널 카드 없이 라벨 + 에디터만(회색 래퍼 없음) */
+.editorColumn {
+  display: flex;
+  flex-direction: column;
+  gap: var(--task-create-section-gap);
+  min-width: 0;
+  min-height: min(22rem, 70vh);
+}
+
+/** Toast UI 에디터 — 필터 토큰과 맞춤(Toast 기본 12px 덮어씀) */
+.taskMarkdownEditor {
+  flex: 1 1 auto;
+  min-height: 280px;
+  border-color: var(--filter-control-border) !important;
+  border-radius: var(--filter-control-radius) !important;
+}
+
+/**
+ * 최종 확인값 패널 — 별도 래퍼 없이 카드가 라벨·인풋 열 담당
+ * `min-height`: `--task-final-confirmed-wrap-min-height`, 인풋은 `--task-final-confirmed-height`(50px)
+ */
+.finalCard {
+  box-sizing: border-box;
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  min-height: var(--task-final-confirmed-wrap-min-height, 127px);
+  flex-direction: column;
+  gap: 0;
+  overflow: visible !important;
+}
+
+.finalCard :global(.input-field-cq) {
+  flex-shrink: 0;
+  width: 100%;
+}
+
+.finalConfirmLabel {
+  flex-shrink: 0;
+  margin: 0;
+  margin-bottom: var(--filter-field-label-input-gap, 8px);
+}
+
+/** 최종 확인값 `Input` — 박스 50px·좌우 20px·세로는 1줄 수직 중앙 */
+.finalConfirmInput {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  height: var(--task-final-confirmed-height) !important;
+  min-height: var(--task-final-confirmed-height) !important;
+  max-height: var(--task-final-confirmed-height) !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  white-space: nowrap !important;
+  padding-left: var(--task-final-confirmed-input-padding-x) !important;
+  padding-right: var(--task-final-confirmed-input-padding-x) !important;
+  padding-top: calc((var(--task-final-confirmed-height) - 2px - 1em) / 2) !important;
+  padding-bottom: calc((var(--task-final-confirmed-height) - 2px - 1em) / 2) !important;
+  border-radius: var(--filter-control-radius) !important;
+  border-color: var(--filter-control-border) !important;
+  background-color: var(--panel) !important;
+  color: var(--task-final-confirmed-input-fg) !important;
+  font-family: var(--font-login-title) !important;
+  font-size: var(--task-final-confirmed-input-size) !important;
+  font-style: normal !important;
+  font-weight: var(--task-final-confirmed-input-weight) !important;
+  line-height: var(--task-final-confirmed-input-line-height) !important;
+}
+
+/** 필터 셸·메타 셀렉트와 동일 높이·모서리·테두리 */
+.filterFormControl {
+  min-height: var(--filter-control-height);
+  border-radius: var(--filter-control-radius);
+  border-color: var(--filter-control-border);
+  background-color: var(--panel);
+}
+
+/**
+ * 코멘트·변경 이력 — 부모 너비를 `flex: 1 1 0`으로 50:50 균등 분배, 입력+목록 세로 공간 확보
+ */
+.commentHistorySection {
+  --comment-history-widget-max-height: 640px;
+  --comment-history-widget-min-height: 360px;
+
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  align-self: stretch;
+}
+
+.commentHistoryGrid {
+  display: flex;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 420px;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: var(--task-create-section-gap);
+}
+
+@media (max-width: 900px) {
+  .commentHistoryGrid {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    min-height: 0;
+  }
+
+  .commentHistoryPanel {
+    flex: none;
+    width: 100%;
+    min-height: 160px;
+  }
+}
+
+.commentHistoryPanel {
+  display: flex;
+  box-sizing: border-box;
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background-color: var(--panel);
+}
+
+/**
+ * 코멘트 위젯 — 제목·입력·디바이더·목록이 한 덩어리로 스크롤.
+ * `align-self: flex-start`로 행 높이에 맞춰 늘어나며 빈 영역만 커지지 않게 함.
+ */
+.commentHistoryPanelComments {
+  align-self: flex-start;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  width: 100%;
+  min-height: var(--comment-history-widget-min-height);
+  max-height: var(--comment-history-widget-max-height);
+  padding: var(--space-4);
+  gap: var(--space-3);
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.commentHistoryPanelHead {
+  margin: 0;
+  flex-shrink: 0;
+  font-family: var(--font-login-title);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+/** 변경 이력 위젯 — 코멘트 위젯과 동일 max-height, 패널 단위 세로 스크롤 */
+.commentHistoryPanelHistory {
+  align-self: flex-start;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  width: 100%;
+  min-height: var(--comment-history-widget-min-height);
+  max-height: var(--comment-history-widget-max-height);
+  padding: var(--space-4);
+  gap: var(--space-3);
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.localHistoryList {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: var(--space-3);
+  align-items: stretch;
+  overflow: visible;
+}
+
+.localHistoryEmpty {
+  margin: 0;
+}
+
+/**
+ * 입력 — 디바이더 — 목록: 높이는 콘텐츠에 맞춤.
+ * 목록만 `overflow: auto` 두지 않아, 내부 스크롤 없이 페이지(메인) 스크롤로 함께 이동.
+ */
+.commentDraftWriteAndListStack {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  min-width: 0;
+  width: 100%;
+}
+
+.commentDraftDivider {
+  flex-shrink: 0;
+  width: 100%;
+  height: 0;
+  margin: 20px 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+  background: none;
+}
+
+/**
+ * 목록(`flex:1`)이 남는 높이를 가져갈 때 입력 블록이 눌려 Input·Textarea가 겹치지 않도록
+ * 축소 금지 + 최소 높이(권한 필드 + 간격 + 본문 + 버튼) 확보
+ */
+.commentDraftCompose {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: 10px;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  /* 담당자 블록 + gap + 본문 + gap + 버튼 */
+  min-height: calc(3rem + 10px + 7.5rem + 10px + 2.75rem);
+}
+
+.commentDraftAssigneeZone {
+  box-sizing: border-box;
+  width: 100%;
+  flex-shrink: 0;
+  padding: var(--input-field-padding) var(--input-field-padding);
+  border: 1px solid var(--filter-control-border);
+  border-radius: var(--filter-control-radius);
+  background-color: var(--panel);
+}
+
+.commentDraftAssigneeLine {
+  margin: 0;
+  text-align: left;
+  word-break: break-word;
+  font-family: var(--font-login-title);
+  font-size: var(--font-size-base);
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--foreground);
+}
+
+.commentDraftAssigneeKey {
+  font-weight: 600;
+}
+
+.commentDraftAssigneeSep {
+  font-weight: 400;
+}
+
+.commentDraftAssigneeValue {
+  font-weight: 400;
+}
+
+.commentDraftTextZone {
+  box-sizing: border-box;
+  width: 100%;
+  flex-shrink: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--filter-control-border);
+  border-radius: var(--filter-control-radius);
+  background-color: var(--panel);
+}
+
+.commentDraftTextarea {
+  min-height: 7.5rem;
+  flex-shrink: 0;
+  resize: vertical;
+  border: none;
+  border-radius: 0;
+  background-color: transparent;
+  box-shadow: none;
+}
+
+.commentDraftTextZone .commentDraftTextarea:focus-visible {
+  border-color: transparent;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ring) 35%, transparent);
+  outline: none;
+}
+
+.commentDraftList {
+  display: flex;
+  flex-shrink: 0;
+  flex-direction: column;
+  gap: var(--space-2);
+  overflow: visible;
+  width: 100%;
+}
+
+.commentDraftCard {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  padding: var(--space-3);
+  border-radius: var(--filter-control-radius);
+  border: 1px solid var(--filter-control-border);
+  background-color: var(--panel);
+  text-align: left;
+  cursor: pointer;
+  outline: none;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.commentDraftCard:hover {
+  background-color: var(--accent);
+}
+
+.commentDraftCard:focus-visible {
+  border-color: var(--ring);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ring) 35%, transparent);
+}
+
+.commentDraftCardBody {
+  margin: 0;
+  overflow: hidden;
+  font-family: var(--font-login-title);
+  font-size: var(--font-size-sm);
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--foreground);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.commentDetailCard {
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--space-4);
+  border-radius: var(--filter-control-radius);
+  border: 1px solid var(--filter-control-border);
+  background-color: var(--panel);
+}
+
+.commentDetailBody {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: var(--font-login-title);
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+  color: var(--foreground);
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-top: var(--task-create-section-gap);
+}
+
+.footerActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.errorText {
+  margin: var(--space-1) 0 0;
+  font-size: var(--font-size-xs);
+  color: var(--destructive);
+}

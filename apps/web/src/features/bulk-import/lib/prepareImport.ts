@@ -5,6 +5,7 @@ import {
 } from "@/shared/constants/aliases"
 import { TYPE_LABELS } from "@/shared/constants/labels"
 import type { Item } from "@/entities/item/model/types"
+import { PRIORITY_VALUES } from "@/entities/item/model/types"
 import { findDomainByAny } from "@/entities/domain/lib/findDomain"
 import type { Domain } from "@/entities/domain/model/types"
 import { normalizeDateInput } from "@/shared/lib/dates"
@@ -80,7 +81,9 @@ const normalizeImportRecord = (raw: Record<string, string>, rowNo: number) => {
   const title = String(raw.title ?? "").trim()
   const description = String(raw.description ?? "").trim()
   const priorityRaw = String(raw.priority ?? "").trim().toUpperCase()
-  const priority = ["P0", "P1", "P2"].includes(priorityRaw) ? priorityRaw : "P1"
+  const priority = (PRIORITY_VALUES as readonly string[]).includes(priorityRaw)
+    ? priorityRaw
+    : "P1"
   const status = normalizeStatusValue(raw.status)
   const owner = String(raw.owner ?? "").trim()
   const dueDate = normalizeDateInput(raw.dueDate)

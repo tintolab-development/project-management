@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import clsx from "clsx"
 import { useAppStore } from "@/app/store/useAppStore"
+import { useProjectScopedPaths } from "@/shared/lib/projectScopedPaths"
 import {
   buildDomainTree,
   getChildDomains,
@@ -12,11 +13,20 @@ import {
 import { normalizeKey } from "@/shared/lib/text"
 import { itemMatchesSearch } from "@/shared/lib/itemSearch"
 import { STATUS_LABELS, STATUS_STYLE } from "@/shared/constants/labels"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/shared/ui/button"
+import { Pill, pillToneFromLegacyClass } from "@/shared/ui/pill"
+import { panelHeadStyles } from "@/shared/ui/page-chrome"
+
+import "./tree-explorer.css"
+import { Heading, Text, textVariants } from "@/shared/ui/typography"
+import { Card } from "@/shared/ui/card"
 
 type DropPos = "before" | "after" | "inside" | null
 
 export const TreePage = () => {
   const navigate = useNavigate()
+  const paths = useProjectScopedPaths()
   const domains = useAppStore((s) => s.domains)
   const items = useAppStore((s) => s.items)
   const treeQuery = useAppStore((s) => s.ui.treeQuery)
@@ -148,21 +158,22 @@ export const TreePage = () => {
     !key && domains.every((domain) => !expandedIds.has(domain.id))
 
   return (
-    <section className="panel item-tree-page" aria-label="아이템 트리">
-      <div className="panel-head tree-panel-head">
+    <Card variant="panel" className="item-tree-page" aria-label="아이템 트리">
+      <div className={clsx(panelHeadStyles.panelHead, "tree-panel-head")}>
         <div>
-          <h3>Item Tree Explorer</h3>
-          <div className="panel-sub">
+          <Heading as="h3" variant="panel">
+            Item Tree Explorer
+          </Heading>
+          <Text as="div" variant="panelSub">
             도메인과 아이템을 위계 구조로 펼쳐 보며, 최종확인값까지 빠르게
             확인합니다.
-          </div>
+          </Text>
         </div>
       </div>
 
       <div className="item-tree-toolbar">
         <div className="tree-toolbar-search">
-          <input
-            className="input"
+          <Input
             type="search"
             placeholder="이슈 검색"
             aria-label="트리에서 이슈 검색"
@@ -172,9 +183,8 @@ export const TreePage = () => {
         </div>
         <div className="tree-toolbar-actions">
           <div className="tree-toolbar-create">
-            <input
+            <Input
               id="newDomainInput"
-              className="input"
               type="text"
               placeholder="도메인(트리) 추가"
               aria-label="새 도메인 이름"
@@ -185,9 +195,10 @@ export const TreePage = () => {
                 input.value = ""
               }}
             />
-            <button
+            <Button
               type="button"
-              className="btn"
+              appearance="outline"
+              dimension="hug"
               onClick={() => {
                 const input = document.getElementById(
                   "newDomainInput",
@@ -198,40 +209,44 @@ export const TreePage = () => {
               }}
             >
               추가
-            </button>
+            </Button>
           </div>
         </div>
       </div>
 
       <div className="tree-master-bar">
         <div className="tree-master-summary">
-          <div className="tree-master-title">전체 트리</div>
-          <div className="tree-master-count">
+          <Text as="div" variant="treeMasterTitle">
+            전체 트리
+          </Text>
+          <Text as="div" variant="treeMasterCount">
             도메인 {domains.length}개 · 아이템 {items.length}개
-          </div>
+          </Text>
         </div>
         <div className="tree-master-actions">
-          <button
+          <Button
             type="button"
-            className="btn"
+            appearance="outline"
+            dimension="hug"
             onClick={() => setTreeExpandAll(false)}
           >
             전체 접기
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            className="btn"
+            appearance="outline"
+            dimension="hug"
             onClick={() => setTreeExpandAll(true)}
           >
             전체 펼치기
-          </button>
+          </Button>
         </div>
       </div>
 
-      <div className="tree-explorer-helpbar">
+      <Text as="div" variant="treeHelpBar">
         도메인 접기/펼치기 · 도메인 드래그 정렬/중첩 · 하위 도메인 생성 · 상세보기로
         최종확인값 확인
-      </div>
+      </Text>
 
       <div
         className={clsx("tree-outline", allCollapsed && "all-collapsed")}
@@ -271,7 +286,7 @@ export const TreePage = () => {
             itemDropInsideId={itemDropInsideId}
             onToggleDomain={toggleDomainExpanded}
             onPreviewItem={toggleTreeItemPreview}
-            onGoItem={() => navigate("/items")}
+            onGoItem={() => navigate(paths.tasks)}
             onSelectItem={selectItem}
             onDeleteItem={deleteItem}
             onAddChild={createChildDomain}
@@ -337,7 +352,7 @@ export const TreePage = () => {
           }}
         />
       </div>
-    </section>
+    </Card>
   )
 }
 
@@ -501,29 +516,31 @@ const TreeDomainBranch = ({
           onDrop={(e) => onItemRowDrop(item.domain, e)}
         >
           <div className="tree-item-main">
-            <div className="tree-item-code">{item.code}</div>
+            <Text as="div" variant="treeCode">
+              {item.code}
+            </Text>
             <div className="tree-item-meta">
-              <div className="tree-item-title">{item.title}</div>
-              <span
-                className={clsx(
-                  "pill",
-                  STATUS_STYLE[item.status] || "dark",
-                )}
-              >
+              <Text as="div" variant="treeTitle">
+                {item.title}
+              </Text>
+              <Pill tone={pillToneFromLegacyClass(STATUS_STYLE[item.status] || "dark")}>
                 {STATUS_LABELS[item.status]}
-              </span>
+              </Pill>
             </div>
           </div>
           <div className="tree-item-actions">
-            <button
+            <Button
               type="button"
-              className="tree-inline-btn"
+              appearance="outline"
+              dimension="treeInline"
               onClick={() => onPreviewItem(item.id)}
             >
               {isPreviewOpen ? "닫기" : "상세보기"}
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="ghost"
+              size="icon"
               className="tree-item-delete"
               title="아이템 삭제"
               aria-label={`${item.code} 삭제`}
@@ -533,31 +550,34 @@ const TreeDomainBranch = ({
               }}
             >
               ×
-            </button>
+            </Button>
           </div>
         </div>
         {isPreviewOpen ? (
           <div className="tree-item-preview">
-            <div className="tree-preview-label">최종확인값</div>
-            <div
-              className={clsx(
-                "tree-preview-value",
-                !finalValue && "tree-preview-empty",
-              )}
+            <Text as="div" variant="treePreviewLabel">
+              최종확인값
+            </Text>
+            <Text
+              as="div"
+              variant={
+                finalValue ? "treePreviewValue" : "treePreviewPlaceholder"
+              }
             >
               {finalValue || "아직 최종 확인값이 입력되지 않았습니다."}
-            </div>
+            </Text>
             <div className="tree-preview-actions">
-              <button
-                type="button"
-                className="tree-inline-btn"
-                onClick={() => {
-                  onSelectItem(item.id)
-                  onGoItem()
-                }}
-              >
-                더보기
-              </button>
+            <Button
+              type="button"
+              appearance="outline"
+              dimension="treeInline"
+              onClick={() => {
+                onSelectItem(item.id)
+                onGoItem()
+              }}
+            >
+              더보기
+            </Button>
             </div>
           </div>
         ) : null}
@@ -572,7 +592,9 @@ const TreeDomainBranch = ({
         {itemHtml}
       </>
     ) : (
-      <div className="tree-empty">아이템이 없습니다.</div>
+      <Text as="div" variant="treeEmpty">
+        아이템이 없습니다.
+      </Text>
     )
 
   return (
@@ -622,48 +644,57 @@ const TreeDomainBranch = ({
         onDragLeave={onDomainDragLeave}
         onDrop={(e) => onDomainDrop(node.domain.id, e)}
       >
-        <button
+        <Button
           type="button"
+          variant="ghost"
           className="tree-toggle"
           aria-expanded={isOpen}
           aria-label={isOpen ? "접기" : "펼치기"}
           onClick={() => onToggleDomain(node.domain.id)}
         >
           {isOpen ? "▾" : "▸"}
-        </button>
+        </Button>
         <div className="tree-domain-main">
-          <button
+          <Button
             type="button"
-            className="tree-domain-link"
+            variant="ghost"
+            className={clsx(
+              "tree-domain-link",
+              textVariants({ variant: "treeDomainButton" }),
+            )}
             onClick={() => onToggleDomain(node.domain.id)}
           >
             {node.domain.name}
-          </button>
+          </Button>
           <span className="tree-count">{countLabel}</span>
         </div>
         <div className="tree-domain-actions">
-          <button
+          <Button
             type="button"
-            className="tree-inline-btn"
+            appearance="outline"
+            dimension="treeInline"
             onClick={(e) => {
               e.stopPropagation()
               onAddChild(node.domain.id)
             }}
           >
             하위 추가
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
-            className="tree-inline-btn"
+            appearance="outline"
+            dimension="treeInline"
             onClick={(e) => {
               e.stopPropagation()
               onRenameDomain(node.domain.id)
             }}
           >
             이름변경
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             className="tree-item-delete tree-domain-delete"
             title="도메인 삭제"
             aria-label={`${node.domain.name} 도메인 삭제`}
@@ -673,7 +704,7 @@ const TreeDomainBranch = ({
             }}
           >
             ×
-          </button>
+          </Button>
         </div>
       </div>
       {isOpen ? (

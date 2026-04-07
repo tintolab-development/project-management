@@ -1,0 +1,13 @@
+---
+description: Enforce accessible UI and explicit interaction states.
+alwaysApply: true
+---
+
+# Accessibility and States Rule
+
+- Every interactive UI must handle loading, empty, error, disabled, and success states where relevant.
+- Inputs must have accessible labels, descriptions, and error messaging.
+- Dialogs, popovers, dropdowns, sheets, and menus must preserve keyboard and focus behavior.
+- Use semantic HTML first.
+- Do not hide validation or error feedback behind unclear interactions.
+- Prefer consistency of state feedback across the application.

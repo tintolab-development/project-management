@@ -1,0 +1,76 @@
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-5);
+  margin-bottom: var(--space-7);
+}
+
+.panelGrid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: var(--space-6);
+  margin-bottom: var(--space-6);
+  align-items: stretch;
+}
+
+.panelGridSingle {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+  margin-bottom: var(--space-6);
+}
+
+/**
+ * P0 / 도메인 패널: 고정 캡 높이( min = max )로 플렉스 본문에 남는 높이를 줘
+ * `max-height`만 있으면 카드 높이가 헤더만 잡히고 본문(`flex:1`)이 0px로 붕괴될 수 있음
+ */
+.panelCardCapped {
+  --dashboard-panel-cap: min(560px, calc(100vh - 220px));
+  display: flex;
+  flex-direction: column;
+  min-height: var(--dashboard-panel-cap);
+  max-height: var(--dashboard-panel-cap);
+  overflow: hidden;
+}
+
+.panelHeadStatic {
+  flex-shrink: 0;
+}
+
+.panelBodyScroll {
+  /* flex: 1 1 0 — 상위 max-height 안에서 본문이 확실히 남는 높이를 받고 overflow-y 스크롤이 동작하도록 */
+  flex: 1 1 0;
+  min-height: 0;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* 스크롤 끝에서 마지막 카드(태그 줄)가 패널 하단에 붙어 잘리는 것처럼 보이지 않게 */
+  padding-bottom: var(--space-5);
+  box-sizing: border-box;
+}
+
+.listStack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.historyList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+@media (max-width: 1400px) {
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 1100px) {
+  .statsGrid,
+  .panelGrid {
+    grid-template-columns: 1fr;
+  }
+}

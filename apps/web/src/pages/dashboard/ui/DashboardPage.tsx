@@ -1,17 +1,24 @@
+import { useMemo } from "react"
 import { useNavigate } from "react-router-dom"
-import clsx from "clsx"
 import { useAppStore } from "@/app/store/useAppStore"
+import { useProjectScopedPaths } from "@/shared/lib/projectScopedPaths"
+import { sortItemsForGlobalList } from "@/entities/item/lib/sortItemsByBoard"
+import { Card } from "@/shared/ui/card"
+import { ItemBoardCard } from "@/entities/item/ui/ItemBoardCard"
+import { DomainProgressTable } from "@/shared/ui/domain-progress-table"
 import {
-  STATUS_LABELS,
-  STATUS_STYLE,
-  TYPE_LABELS,
-} from "@/shared/constants/labels"
+  Heading,
+  StatLabel,
+  StatSub,
+  StatValue,
+  Text,
+} from "@/shared/ui/typography"
 import { formatDateTime } from "@/shared/lib/formatDateTime"
 import { getDomainMap, walkDomainsFlat } from "@/entities/domain/lib/domainTree"
+import { panelHeadStyles } from "@/shared/ui/page-chrome"
+import { cn } from "@/lib/utils"
 
-const pill = (text: string, style: string) => (
-  <span className={clsx("pill", style)}>{text}</span>
-)
+import styles from "./DashboardPage.module.css"
 
 const getStatusDoneCount = (items: { status: string }[]) =>
   items.filter(
@@ -20,12 +27,16 @@ const getStatusDoneCount = (items: { status: string }[]) =>
 
 export const DashboardPage = () => {
   const navigate = useNavigate()
-  const getSortedItems = useAppStore((s) => s.getSortedItems)
+  const paths = useProjectScopedPaths()
   const domains = useAppStore((s) => s.domains)
   const history = useAppStore((s) => s.history)
   const selectItem = useAppStore((s) => s.selectItem)
+  const itemsRaw = useAppStore((s) => s.items)
 
-  const items = getSortedItems()
+  const items = useMemo(
+    () => sortItemsForGlobalList(itemsRaw),
+    [itemsRaw],
+  )
   const domainMap = getDomainMap(domains)
   const getDomainLabel = (id: string) => domainMap.get(id)?.name || id || "-"
 
@@ -47,127 +58,91 @@ export const DashboardPage = () => {
     .filter((item) => item.priority === "P0" && item.status !== "확정")
     .slice(0, 6)
 
+  const domainProgressRows =
+    domains.length === 0
+      ? []
+      : walkDomainsFlat(domains).map((domain) => {
+          const domainItems = items.filter((item) => item.domain === domain.id)
+          const done = getStatusDoneCount(domainItems)
+          return {
+            id: domain.id,
+            label: domain.name,
+            completed: done,
+            total: domainItems.length,
+          }
+        })
+
   const handleOpenItem = (itemId: string) => {
     selectItem(itemId)
-    navigate("/items")
-  }
-
-  const handleKeyOpenItem = (itemId: string) => (e: React.KeyboardEvent) => {
-    if (e.key !== "Enter" && e.key !== " ") return
-    e.preventDefault()
-    handleOpenItem(itemId)
+    navigate(paths.tasks)
   }
 
   return (
     <section aria-label="대시보드">
-      <div className="stats-grid">
+      <div className={styles.statsGrid}>
         {stats.map((stat) => (
-          <div key={stat.label} className="stat-card">
-            <div className="stat-label">{stat.label}</div>
-            <div className="stat-value">{stat.value}</div>
-            <div className="stat-sub">{stat.sub}</div>
-          </div>
+          <Card key={stat.label} variant="stat">
+            <StatLabel appearance="dashboard">{stat.label}</StatLabel>
+            <StatSub appearance="dashboard">{stat.sub}</StatSub>
+            <StatValue appearance="dashboard">{stat.value}</StatValue>
+          </Card>
         ))}
       </div>
 
-      <div className="panel-grid">
-        <section className="panel">
-          <div className="panel-head">
-            <h3>즉시 확인할 P0 항목</h3>
+      <div className={styles.panelGrid}>
+        <Card variant="panel" className={styles.panelCardCapped}>
+          <div
+            className={cn(panelHeadStyles.panelHead, styles.panelHeadStatic)}
+          >
+            <Heading as="h3" variant="dashboardSection">
+              즉시 확인할 P0 항목
+            </Heading>
           </div>
-          <div className="list-stack">
-            {urgent.length === 0 ? (
-              <div className="muted">표시할 항목이 없습니다.</div>
-            ) : (
-              urgent.map((item) => (
-                <div
-                  key={item.id}
-                  role="button"
-                  tabIndex={0}
-                  className="urgent-card"
-                  onClick={() => handleOpenItem(item.id)}
-                  onKeyDown={handleKeyOpenItem(item.id)}
-                  aria-label={`${item.code} ${item.title} 상세 열기`}
-                >
-                  <div className="card-top">
-                    <div>
-                      <div className="card-title">
-                        {item.code} · {item.title}
-                      </div>
-                      <div className="card-desc">{item.description}</div>
-                    </div>
-                    {pill(item.priority, "danger")}
-                  </div>
-                  <div className="card-meta">
-                    {pill(TYPE_LABELS[item.type], "dark")}
-                    {pill(getDomainLabel(item.domain), "primary")}
-                    {pill(
-                      STATUS_LABELS[item.status] || item.status,
-                      STATUS_STYLE[item.status] || "dark",
-                    )}
-                    {pill(`담당: ${item.owner || "-"}`, "dark")}
-                  </div>
-                </div>
-              ))
-            )}
+          <div className={styles.panelBodyScroll}>
+            <div className={styles.listStack}>
+              {urgent.length === 0 ? (
+                <Text variant="dashboardEmpty" as="div">
+                  표시할 항목이 없습니다.
+                </Text>
+              ) : (
+                urgent.map((item) => (
+                  <ItemBoardCard
+                    key={item.id}
+                    item={item}
+                    getDomainLabel={getDomainLabel}
+                    onOpen={handleOpenItem}
+                  />
+                ))
+              )}
+            </div>
           </div>
-        </section>
+        </Card>
 
-        <section className="panel">
-          <div className="panel-head">
-            <h3>도메인별 진행 현황</h3>
+        <Card variant="panel" className={styles.panelCardCapped}>
+          <div
+            className={cn(panelHeadStyles.panelHead, styles.panelHeadStatic)}
+          >
+            <Heading as="h3" variant="dashboardSection">
+              도메인별 진행 현황
+            </Heading>
           </div>
-          <div id="domainProgress">
-            <table className="progress-table">
-              <thead>
-                <tr>
-                  <th>도메인</th>
-                  <th>진행</th>
-                  <th>바</th>
-                  <th>완료율</th>
-                </tr>
-              </thead>
-              <tbody>
-                {domains.length === 0 ? (
-                  <tr>
-                    <td colSpan={4}>등록된 도메인이 없습니다.</td>
-                  </tr>
-                ) : (
-                  walkDomainsFlat(domains).map((domain) => {
-                    const domainItems = items.filter(
-                      (item) => item.domain === domain.id,
-                    )
-                    const done = getStatusDoneCount(domainItems)
-                    const t = domainItems.length
-                    const ratio = t === 0 ? 0 : Math.round((done / t) * 100)
-                    return (
-                      <tr key={domain.id}>
-                        <td>{domain.name}</td>
-                        <td>
-                          {done} / {t}
-                        </td>
-                        <td>
-                          <div className="bar-wrap">
-                            <div className="bar" style={{ width: `${ratio}%` }} />
-                          </div>
-                        </td>
-                        <td>{ratio}%</td>
-                      </tr>
-                    )
-                  })
-                )}
-              </tbody>
-            </table>
+          <div
+            id="domainProgress"
+            className={styles.panelBodyScroll}
+          >
+            <DomainProgressTable rows={domainProgressRows} />
           </div>
-        </section>
+        </Card>
       </div>
 
-      <div className="panel-grid single">
-        <section className="panel">
-          <div className="panel-head">
-            <h3>최근 변경 이력</h3>
+      <div className={styles.panelGridSingle}>
+        <Card variant="panel">
+          <div className={panelHeadStyles.panelHead}>
+            <Heading as="h3" variant="dashboardSection">
+              최근 변경 이력
+            </Heading>
           </div>
-          <div className="history-list">
+          <div className={styles.historyList}>
             {[...history]
               .sort(
                 (a, b) =>
@@ -176,19 +151,27 @@ export const DashboardPage = () => {
               )
               .slice(0, 8)
               .map((h) => (
-                <div key={h.id} className="history-row">
+                <Card key={h.id} variant="history">
                   <div>
-                    <strong>{h.summary}</strong>
+                    <Text as="div" variant="dashboardTitle" className="mb-1">
+                      {h.summary}
+                    </Text>
                   </div>
-                  <div>{h.actor}</div>
-                  <div className="time">{formatDateTime(h.createdAt)}</div>
-                </div>
+                  <Text as="div" variant="dashboardDesc">
+                    {h.actor}
+                  </Text>
+                  <Text as="div" variant="dashboardCaption" className="mt-1">
+                    {formatDateTime(h.createdAt)}
+                  </Text>
+                </Card>
               ))}
             {history.length === 0 ? (
-              <div className="muted">이력이 없습니다.</div>
+              <Text variant="dashboardEmpty" as="div">
+                이력이 없습니다.
+              </Text>
             ) : null}
           </div>
-        </section>
+        </Card>
       </div>
     </section>
   )

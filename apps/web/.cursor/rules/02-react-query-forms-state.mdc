@@ -1,0 +1,44 @@
+---
+description: Standards for server state, forms, validation, and client state using TanStack Query, react-hook-form, zod, and zustand.
+alwaysApply: true
+---
+
+# Data, Form, and State Management Rule
+
+## TanStack Query
+- Use TanStack Query for all server state fetching, caching, invalidation, and mutation flows.
+- Query keys must be stable, serializable, and colocated with the owning slice.
+- Prefer custom hooks such as `useProjectListQuery` and `useUpdateTaskMutation`.
+- Keep fetchers outside components.
+- Invalidate narrowly. Prefer targeted invalidation over broad cache resets.
+- Model loading, error, empty, and success states explicitly.
+
+## react-hook-form
+- Use react-hook-form for non-trivial forms.
+- Prefer schema-driven forms with zod resolver.
+- Keep field registration close to the field UI, but keep schema and submission logic outside large JSX blocks.
+- Use `FormProvider` only when it meaningfully reduces prop complexity.
+
+## zod
+- Use zod for form validation, API boundary validation, and domain parsing when needed.
+- Prefer shared schema factories or colocated schemas inside the owning slice.
+- Infer types from zod when it improves consistency.
+- Avoid duplicating domain types separately from schemas unless there is a strong reason.
+
+## zustand
+- Use zustand only for cross-page or cross-widget client state that should not live in component state.
+- Good fits: filters, view preferences, temporary selection state, modal orchestration, draft UI state.
+- Bad fits: server cache, simple local toggles, form state, one-off page state.
+- Expose selectors to minimize unnecessary rerenders.
+- Keep stores small and domain-oriented.
+
+## API modeling
+- Keep transport DTOs separate from UI-facing models when transformation is needed.
+- Prefer explicit mapper functions over leaking backend response structures into UI.
+- Centralize auth headers, interceptors, and base client setup in `shared/api`.
+
+## Naming
+- Query hook names: `useXxxQuery`, `useXxxListQuery`, `useXxxMutation`
+- Form schema names: `xxxFormSchema`
+- Zustand store files: `xxx.store.ts`
+- Slice public exports: only expose the smallest necessary surface

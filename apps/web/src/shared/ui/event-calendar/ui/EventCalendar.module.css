@@ -1,0 +1,80 @@
+/* shadcn Calendar(DayPicker)가 월 그리드를 담당 — 셸만 전폭 */
+.calendarShell {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.calendarShell :global([data-slot="calendar"]) {
+  max-width: 100%;
+}
+
+.eventMetaCell {
+  padding: 0;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+  background: var(--panel);
+}
+
+.eventStrip {
+  position: relative;
+  box-sizing: border-box;
+  padding: 0.2rem 0 0.45rem;
+}
+
+.eventBar {
+  position: absolute;
+  box-sizing: border-box;
+  height: 1.375rem;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: default;
+  text-align: left;
+  outline: none;
+}
+
+.eventBar:focus-visible {
+  box-shadow:
+    0 0 0 2px hsl(var(--background)),
+    0 0 0 4px hsl(var(--ring));
+  border-radius: 6px;
+}
+
+.track {
+  position: absolute;
+  left: 3px;
+  right: 3px;
+  top: 4px;
+  bottom: -3px;
+  border-radius: 6px;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.face {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  height: 100%;
+  align-items: center;
+  border-radius: 5px;
+  padding: 0 0.4rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1.2;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.track {
+  background: var(--danger-soft);
+}
+
+.face {
+  background: color-mix(in srgb, var(--danger-soft) 70%, var(--danger) 30%);
+  color: var(--text);
+}

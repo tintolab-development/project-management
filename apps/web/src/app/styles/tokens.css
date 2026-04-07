@@ -1,22 +1,245 @@
 :root {
-  --bg: #f5f7fb;
+  /* Brand / action — Shadcn-style neutral primary (zinc-900) */
+  --palette-primary: #18181b;
+  /* Legacy name; aligns with primary for neutral system */
+  --brand-color-RD: var(--palette-primary);
+  --primary: var(--palette-primary);
+  --primary-soft: #f4f4f5;
+  --text-on-primary: #ffffff;
+
+  /* Text */
+  --text: #09090b;
+  --text-muted: #71717a;
+  /* Form label / placeholder */
+  --default-BK: #27272a;
+  --gray-999999: #999;
+  /** 텍스트 인풋·textarea 공통 — 안쪽 여백·플레이스홀더 */
+  --input-field-padding: 16px;
+  /**
+   * 인풋(`Input`) 플레이스홀더 공통 타이포
+   * #000 / Pretendard / normal(400) / line-height normal / opacity 0.3
+   * 글자 크기: `clamp(min, 40cqh, max)` — 필드 높이(컨테이너)에 비례
+   */
+  --input-placeholder-fg: #000000;
+  --input-placeholder-min-size: 14px;
+  --input-placeholder-max-size: 16px;
+  /** 하위·select·textarea 호환용(상한과 동일) */
+  --input-placeholder-size: var(--input-placeholder-max-size);
+  --input-placeholder-weight: 400;
+  --input-placeholder-line-height: normal;
+  --input-placeholder-opacity: 0.3;
+
+  /* Surfaces — no cool/warm tint (zinc-scale neutrals) */
+  --bg: #fafafa;
   --panel: #ffffff;
-  --line: #dfe6f0;
-  --line-strong: #c9d4e4;
-  --text: #142033;
-  --muted: #6f7d92;
-  --primary: #1f5eff;
-  --primary-soft: #e8efff;
+  --WT: #ffffff;
+  --shadow-login-widget: 0 8px 32px 0 rgba(0, 0, 0, 0.12);
+  --surface-subtle: #fafafa;
+  --surface-muted: #f4f4f5;
+  --surface-disabled: #f4f4f5;
+  --surface-muted-tint: #fafafa;
+  --surface-tint-wash: #fafafa;
+  --surface-dropzone: #f4f4f5;
+  --surface-row-hover: #fafafa;
+  --surface-row-active: #f4f4f5;
+  --surface-board-column: #f4f4f5;
+  --surface-pill-neutral: #f4f4f5;
+  --surface-progress-track: #e4e4e7;
+  --surface-code-badge: #f4f4f5;
+
+  /* Borders */
+  --line: #e4e4e7;
+  --line-strong: #d4d4d8;
+  --border-accent: rgba(24, 24, 27, 0.45);
+  --border-board: #e4e4e7;
+  --border-history: #d4d4d8;
+  --border-preview: #e4e4e7;
+  --border-pill-primary: #d4d4d8;
+  --border-pill-success: #bfe7d0;
+  --border-pill-warn: #f3dc9f;
+  --border-pill-danger: #f5c3be;
+
+  /* Filter controls (list toolbar) */
+  --filter-control-height: 49px;
+  --filter-control-border: #c0c0c0;
+  --filter-control-radius: 10px;
+  /** `FilterFieldShell`·태스크 필터 검색/조회 등 공통 필터 가로 */
+  --filter-field-max-width: 280px;
+  /** 트리거(필터 박스)와 드롭다운 패널 사이 세로 간격 — Popover·Select sideOffset과 동기 */
+  --filter-dropdown-gap: 6px;
+  /** Tasks 목록 필터 — 검색 첫 줄과 둘째 줄(우선순위~) 사이 */
+  --tasks-filter-first-second-gap: 18px;
+  /**
+   * 필터·필드 라벨 공통 타이포
+   * color #000 / Pretendard / 14px / 500 / line-height normal
+   */
+  --filter-field-label-fg: #000000;
+  --filter-field-label-size: 14px;
+  --filter-field-label-weight: 500;
+  --filter-field-label-line-height: normal;
+  /**
+   * 필터 라벨·폼 라벨(`FormLabel`)과 입력·트리거 사이 세로 간격 — DS 통일
+   */
+  --filter-field-label-input-gap: 8px;
+
+  /**
+   * 태스크 생성 — 연관 태스크 바(라벨·칩·추가 버튼 한 줄)
+   */
+  --task-related-bar-height: 60px;
+  /** 태스크 생성 — 연관 태스크 라벨과 칩(태그) 사이 가로 간격(칩이 있을 때) */
+  --task-related-label-chips-gap: 30px;
+  /**
+   * 태스크 생성 — 연관 태스크 칩(필): pill, 1px 테두리, 텍스트·아이콘 #000, 내부 gap 10px, X 15×15
+   */
+  --task-related-chip-fg: #000000;
+  --task-related-chip-border: #000000;
+  --task-related-chip-padding: 10px;
+  --task-related-chip-gap: 10px;
+  --task-related-chip-radius: 50px;
+  --task-related-chip-font-size: 14px;
+  --task-related-chip-font-weight: 500;
+  --task-related-chip-icon-size: 15px;
+  /** 태스크 생성 — 최종 확인값 `Input` 박스 높이(테두리 포함 `border-box`) */
+  --task-final-confirmed-height: 50px;
+  /** 태스크 생성 — 최종 확인값 인풋 좌우 여백 */
+  --task-final-confirmed-input-padding-x: 20px;
+  /**
+   * 태스크 생성 — 최종 확인값 블록(라벨+간격+인풋) 래퍼 최소 높이
+   * 한 줄 인풋·8px 라벨 간격 기준 레이아웃 고정; 내용이 커지면 래퍼는 그만큼 늘어남
+   */
+  --task-final-confirmed-wrap-min-height: 127px;
+  /**
+   * 최종 확인값 입력 텍스트
+   * #000 / Pretendard / 16px / 500 / normal
+   */
+  --task-final-confirmed-input-fg: #000000;
+  --task-final-confirmed-input-size: 16px;
+  --task-final-confirmed-input-weight: 500;
+  --task-final-confirmed-input-line-height: normal;
+  /** 태스크 생성 페이지 — 블록(래퍼) 사이 세로 간격 */
+  --task-create-section-gap: 20px;
+  /** 태스크 생성 — 제목 블록과 메타 그리드 사이 세로 간격 */
+  --task-create-title-divider-gap-after: 25px;
+  /**
+   * DS 텍스트 버튼 고정 크기 — `dsButtonVariants` `dimension.fixedMd`와 동기
+   * (연관 프로젝트 추가·해당 모달 액션 등)
+   */
+  --ds-button-fixed-md-width: 160px;
+  --ds-button-fixed-md-height: 40px;
+
+  /* Status */
   --success: #197b47;
   --success-soft: #e8f7ef;
   --warn: #a16207;
   --warn-soft: #fff6df;
   --danger: #b42318;
   --danger-soft: #fdeceb;
-  --shadow: 0 10px 28px rgba(18, 35, 64, 0.08);
+
+  --text-pill-dark: #27272a;
+
+  /* Sidebar (LNB) — 한 단계 짙은 크롬으로 메인 --bg(#fafafa)와 구분 */
+  --sidebar-bg: #e8e8ec;
+  --sidebar-text: #18181b;
+  --sidebar-muted: #52525b;
+  --sidebar-nav-link: #18181b;
+  --sidebar-section-title: #18181b;
+  --sidebar-principles: #52525b;
+  --sidebar-brand-mark: #18181b;
+  --sidebar-nav-hover-bg: rgba(0, 0, 0, 0.06);
+  --sidebar-divider: rgba(0, 0, 0, 0.12);
+  --sidebar-card-bg: rgba(255, 255, 255, 0.72);
+  --sidebar-footer-border: rgba(0, 0, 0, 0.1);
+  --sidebar-footer-text: #52525b;
+  --sidebar-input-border: rgba(0, 0, 0, 0.15);
+  --sidebar-input-bg: #ffffff;
+  --sidebar-focus-border: rgba(24, 24, 27, 0.65);
+  --sidebar-focus-ring: 0 0 0 3px rgba(24, 24, 27, 0.12);
+  --sidebar-scrollbar-thumb: rgba(0, 0, 0, 0.2);
+  --sidebar-tree-border: rgba(0, 0, 0, 0.1);
+  --sidebar-tree-surface: rgba(0, 0, 0, 0.04);
+  --sidebar-tree-surface-open: rgba(0, 0, 0, 0.06);
+  --sidebar-tree-drag-border: rgba(24, 24, 27, 0.5);
+  --sidebar-tree-drag-bg: rgba(24, 24, 27, 0.08);
+  --sidebar-tree-toggle: #18181b;
+  --sidebar-tree-item: #18181b;
+  --sidebar-tree-item-hover: rgba(0, 0, 0, 0.06);
+  --sidebar-tree-active-bg: rgba(24, 24, 27, 0.1);
+  --sidebar-tree-active-border: rgba(24, 24, 27, 0.22);
+  --sidebar-tree-code: #71717a;
+  --sidebar-delete: #8b2e2e;
+  --sidebar-delete-hover-bg: rgba(180, 35, 24, 0.12);
+  --sidebar-delete-hover-text: #5c1515;
+
+  /* Chart / progress — neutral gradient */
+  --chart-fill-start: #52525b;
+  --chart-fill-end: #a1a1aa;
+
+  /* Overlay & elevation */
+  --overlay-scrim: rgba(0, 0, 0, 0.45);
+  --shadow: 0 10px 28px rgba(0, 0, 0, 0.08);
+  --shadow-modal: 0 20px 60px rgba(0, 0, 0, 0.22);
+  /**
+   * 공통 모달(`[role="dialog"].modal`) — 콘텐츠 높이 상한(뷰포트)
+   * `global.css`에서 `@supports (height: 1dvh)`로 `90dvh` 덮어쓰기 가능
+   */
+  --modal-max-height: min(90vh, 960px);
+  /** Radix `Dialog` + `.modal` 본문(필드 ↔ 액션) 세로 간격 */
+  --modal-body-section-gap: var(--task-create-section-gap);
+  --shadow-focus-ring: 0 0 0 3px rgba(24, 24, 27, 0.12);
+  --shadow-tree-row: 0 6px 20px rgba(0, 0, 0, 0.06);
+  --shadow-outline-primary-inset: inset 0 0 0 1px rgba(24, 24, 27, 0.08);
+
   --radius: 18px;
   --radius-sm: 12px;
-  --sidebar-bg: #10192c;
-  --sidebar-text: #ecf2ff;
-  --sidebar-muted: #b7c7e6;
+  /* Inner radii (cards, list rows, subpanels) */
+  --radius-md: 14px;
+  --radius-inner: 16px;
+
+  /* Spacing scale (legacy layout rhythm from global.css) */
+  --space-1: 6px;
+  --space-2: 8px;
+  --space-3: 10px;
+  --space-3-5: 11px;
+  --space-4: 12px;
+  --space-5: 14px;
+  --space-6: 16px;
+  --space-7: 18px;
+  --space-8: 24px;
+  --space-9: 28px;
+
+  /**
+   * 카드·위젯 내부 여백 — Card 전 변형(default/panel/stat/subpanel/compact/history) 공통
+   * 수치 변경: spacing 스케일 또는 이 매핑만 조정
+   */
+  --pad-widget-y: var(--space-8);
+  --pad-widget-x: var(--space-7);
+
+  /* UI copy (Pretendard stack; login title, 폼 라벨·플레이스홀더 등) */
+  --font-login-title: Pretendard, "Segoe UI", "Malgun Gothic", sans-serif;
+
+  /** shadcn Badge 공통 높이 — 너비는 콘텐츠(w-fit) */
+  --badge-height: 22px;
+
+  /** Tasks 우측 결과 카드 */
+  --task-result-card-height: 132px;
+
+  /**
+   * Tasks(Item) 목록 좌측 카드 — 우선순위·유형 Badge (shadcn)
+   * 비선택: 테두리 #000 / 본문 #000, 선택: 배경 #000 / 본문 #FFF
+   */
+  --item-list-badge-line: #000000;
+  --item-list-badge-text: #000000;
+  --item-list-badge-fill: #000000;
+  --item-list-badge-on-fill: #ffffff;
+  --font-item-list-badge: var(--font-login-title);
+
+  /* Typography scale */
+  --font-size-2xs: 11px;
+  --font-size-xs: 12px;
+  --font-size-sm: 13px;
+  --font-size-base: 14px;
+  --font-size-md: 15px;
+  --font-size-lg: 24px;
+  --font-size-stat: 28px;
+  --leading-snug: 1.55;
 }

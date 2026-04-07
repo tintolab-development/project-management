@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from "zustand/middleware"
 import { normalizeAppState } from "@/entities/app-state/lib/normalizeAppState"
 import { createSeedData } from "@/entities/app-state/model/seed"
 import type { AppState, UiState } from "@/entities/app-state/model/types"
+import type { Comment } from "@/entities/comment/model/types"
 import type { Item, ItemType } from "@/entities/item/model/types"
 import type { Domain } from "@/entities/domain/model/types"
 import { findDomainByAny } from "@/entities/domain/lib/findDomain"
@@ -22,35 +23,49 @@ import { normalizeStatusValue } from "@/shared/lib/status"
 import { STORAGE_KEY } from "@/shared/config/storage"
 import type { ImportRowResult } from "@/features/bulk-import/lib/prepareImport"
 import { normalizeItemType } from "@/shared/lib/itemType"
+import type { ItemStatus } from "@/shared/constants/labels"
+import {
+  sortItemsByBoardRank,
+  sortItemsForGlobalList,
+} from "@/entities/item/lib/sortItemsByBoard"
+import { getNextItemCode } from "@/entities/item/lib/nextItemCode"
+import { useAuthSessionStore } from "@/features/auth"
 
 const nowIso = () => new Date().toISOString()
 
-const getNextCode = (items: Item[], type: ItemType) => {
-  const prefix =
-    type === "information_request"
-      ? "IR"
-      : type === "decision"
-        ? "D"
-        : type === "review"
-          ? "R"
-          : type === "issue"
-            ? "ISS"
-            : "CR"
+const resolveHistoryActor = () =>
+  useAuthSessionStore.getState().user?.displayName?.trim() || "틴토랩 사용자"
 
-  const nums = items
-    .filter((item) => item.code.startsWith(prefix))
-    .map((item) => Number(item.code.split("-")[1] || "0"))
-    .filter((num) => !Number.isNaN(num))
-
-  const next = (nums.length ? Math.max(...nums) : 0) + 1
-  return `${prefix}-${String(next).padStart(3, "0")}`
+const nextBoardRankForStatus = (
+  items: Item[],
+  status: ItemStatus,
+  excludeItemId?: string,
+) => {
+  const ranks = items
+    .filter((i) => i.status === status && i.id !== excludeItemId)
+    .map((i) => i.boardRank)
+  return ranks.length ? Math.max(...ranks) + 1 : 0
 }
 
-const sortItems = (items: Item[]) =>
-  [...items].sort((a, b) => {
-    if (a.code === b.code) return a.title.localeCompare(b.title, "ko")
-    return a.code > b.code ? 1 : -1
-  })
+export type CreateItemInput = {
+  type: ItemType
+  domain: string
+  priority: Item["priority"]
+  owner: string
+  dueDate: string
+  title: string
+  description: string
+  /** 미지정 시 `논의` */
+  status?: string
+  clientResponse?: string
+  finalConfirmedValue?: string
+  /** 태스크 생성 화면에서 저장 시 함께 반영할 초안 코멘트 */
+  initialComments?: ReadonlyArray<{
+    author: string
+    body: string
+    createdAt: string
+  }>
+}
 
 export type ItemDetailPatch = {
   title: string
@@ -64,6 +79,14 @@ export type ItemDetailPatch = {
   finalConfirmedValue: string
 }
 
+export type TasksListFiltersPayload = {
+  itemsQuery: string
+  priorityFilters: Item["priority"][]
+  typeFilters: ItemType[]
+  domainFilter: string
+  ownerFilter: string
+}
+
 export type AppStore = AppState & {
   getSortedItems: () => Item[]
   getItemById: (id: string) => Item | undefined
@@ -71,9 +94,11 @@ export type AppStore = AppState & {
   setActiveWorkspace: (w: UiState["activeWorkspace"]) => void
   setItemsQuery: (q: string) => void
   setTreeQuery: (q: string) => void
-  setTypeFilter: (v: string) => void
   setDomainFilter: (v: string) => void
   setStatusFilter: (v: string) => void
+  setDueDateFilter: (v: string) => void
+  /** Tasks 좌측 패널 조회 — 검색·배지·분류·담당자 일괄 반영, 상태·마감 필터는 초기화 */
+  applyTasksListFilters: (p: TasksListFiltersPayload) => void
   selectItem: (id: string | null) => void
   toggleDomainExpanded: (domainId: string) => void
   setTreeExpandAll: (expand: boolean) => void
@@ -81,6 +106,8 @@ export type AppStore = AppState & {
   saveSelectedItem: (patch: ItemDetailPatch) => boolean
   toggleLockSelectedItem: () => boolean
   addComment: (author: string, body: string) => boolean
+  /** MSW/백엔드가 부여한 `id`·`createdAt`으로 코멘트를 반영할 때 사용 */
+  addCommentFromApi: (comment: Comment) => boolean
   deleteItem: (itemId: string) => void
   moveItemToDomain: (itemId: string, targetDomainId: string) => void
   moveDomainNode: (
@@ -93,15 +120,7 @@ export type AppStore = AppState & {
     targetDomainId: string,
     position: "before" | "after" | "inside",
   ) => string | undefined
-  createItem: (input: {
-    type: ItemType
-    domain: string
-    priority: Item["priority"]
-    owner: string
-    dueDate: string
-    title: string
-    description: string
-  }) => void
+  createItem: (input: CreateItemInput) => string | undefined
   createDomain: (name: string, parentId?: string) => Domain | null
   createChildDomain: (parentDomainId: string) => void
   renameDomain: (domainId: string) => void
@@ -109,6 +128,14 @@ export type AppStore = AppState & {
   executeBulkImport: (rows: ImportRowResult[]) => void
   exportStateJson: () => string
   resetToSample: () => void
+  setWorkspaceColumnOrder: (order: ItemStatus[]) => void
+  reorderWorkspaceItemsInStatus: (status: ItemStatus, orderedIds: string[]) => void
+  /** 다른 상태 컬럼으로 카드 이동(보드 DnD). 확정→다른 상태는 허용(잠금 해제). 비확정+잠금만 무시. */
+  moveWorkspaceCardToStatus: (
+    itemId: string,
+    targetStatus: ItemStatus,
+    targetIndex: number,
+  ) => void
 }
 
 const addHistory = (
@@ -117,6 +144,7 @@ const addHistory = (
   eventType: string,
   summary: string,
   actor = "시스템",
+  createdAtIso?: string,
 ) => {
   history.unshift({
     id: uniqueId("H"),
@@ -124,7 +152,7 @@ const addHistory = (
     eventType,
     summary,
     actor,
-    createdAt: nowIso(),
+    createdAt: createdAtIso ?? nowIso(),
   })
 }
 
@@ -135,7 +163,7 @@ export const useAppStore = create<AppStore>()(
     (set, get) => ({
       ...initial,
 
-      getSortedItems: () => sortItems(get().items),
+      getSortedItems: () => sortItemsForGlobalList(get().items),
 
       getItemById: (id) => get().items.find((item) => item.id === id),
 
@@ -151,13 +179,28 @@ export const useAppStore = create<AppStore>()(
 
       setTreeQuery: (treeQuery) => set((s) => ({ ui: { ...s.ui, treeQuery } })),
 
-      setTypeFilter: (typeFilter) => set((s) => ({ ui: { ...s.ui, typeFilter } })),
-
       setDomainFilter: (domainFilter) =>
         set((s) => ({ ui: { ...s.ui, domainFilter } })),
 
       setStatusFilter: (statusFilter) =>
         set((s) => ({ ui: { ...s.ui, statusFilter } })),
+
+      setDueDateFilter: (dueDateFilter) =>
+        set((s) => ({ ui: { ...s.ui, dueDateFilter } })),
+
+      applyTasksListFilters: (p) =>
+        set((s) => ({
+          ui: {
+            ...s.ui,
+            itemsQuery: p.itemsQuery,
+            priorityFilters: p.priorityFilters,
+            typeFilters: p.typeFilters,
+            domainFilter: p.domainFilter,
+            ownerFilter: p.ownerFilter,
+            statusFilter: "",
+            dueDateFilter: "",
+          },
+        })),
 
       selectItem: (selectedItemId) => set((s) => ({ ui: { ...s.ui, selectedItemId } })),
 
@@ -219,6 +262,10 @@ export const useAppStore = create<AppStore>()(
           clientResponse: patch.clientResponse.trim(),
           finalConfirmedValue: patch.finalConfirmedValue.trim(),
           isLocked: nextStatus === "확정",
+          boardRank:
+            nextStatus !== item.status
+              ? nextBoardRankForStatus(get().items, nextStatus, id)
+              : item.boardRank,
           updatedAt: nowIso(),
         }
 
@@ -228,7 +275,13 @@ export const useAppStore = create<AppStore>()(
             before !== JSON.stringify(updated)
               ? (() => {
                   const h = [...s.history]
-                  addHistory(h, id, "item.updated", `${updated.code} 항목을 수정`, "틴토랩 사용자")
+                  addHistory(
+                    h,
+                    id,
+                    "item.updated",
+                    `${updated.code} 항목을 수정`,
+                    resolveHistoryActor(),
+                  )
                   return h
                 })()
               : s.history,
@@ -247,10 +300,11 @@ export const useAppStore = create<AppStore>()(
             window.alert("확정 처리 전 상태를 먼저 방향합의로 맞춰 주세요.")
             return false
           }
-          const updated = {
+          const updated: Item = {
             ...item,
             isLocked: true,
-            status: "확정" as const,
+            status: "확정",
+            boardRank: nextBoardRankForStatus(get().items, "확정", id),
             updatedAt: nowIso(),
           }
           set((s) => {
@@ -260,7 +314,7 @@ export const useAppStore = create<AppStore>()(
               id,
               "item.locked",
               `${item.code} 항목을 최종 기준으로 확정`,
-              "틴토랩 사용자",
+              resolveHistoryActor(),
             )
             return {
               items: s.items.map((i) => (i.id === id ? updated : i)),
@@ -270,10 +324,11 @@ export const useAppStore = create<AppStore>()(
           return true
         }
 
-        const updated = {
+        const updated: Item = {
           ...item,
           isLocked: false,
-          status: "방향합의" as const,
+          status: "방향합의",
+          boardRank: nextBoardRankForStatus(get().items, "방향합의", id),
           updatedAt: nowIso(),
         }
         set((s) => {
@@ -283,7 +338,7 @@ export const useAppStore = create<AppStore>()(
             id,
             "item.unlocked",
             `${item.code} 항목 확정 해제`,
-            "틴토랩 사용자",
+            resolveHistoryActor(),
           )
           return {
             items: s.items.map((i) => (i.id === id ? updated : i)),
@@ -319,8 +374,38 @@ export const useAppStore = create<AppStore>()(
             history,
             id,
             "comment.added",
-            `${item.code} 항목에 코멘트 추가`,
-            author.trim(),
+            `${item.code} 항목에 코멘트`,
+            resolveHistoryActor(),
+          )
+          return { comments, history }
+        })
+        return true
+      },
+
+      addCommentFromApi: (comment) => {
+        const item = get().items.find((i) => i.id === comment.itemId)
+        if (!item) return false
+        const author = comment.author?.trim()
+        const body = comment.body?.trim()
+        if (!author || !body) {
+          window.alert("작성자와 코멘트 내용을 입력해 주세요.")
+          return false
+        }
+        const normalized: Comment = {
+          ...comment,
+          author,
+          body,
+        }
+        set((s) => {
+          const comments = [...s.comments, normalized]
+          const history = [...s.history]
+          addHistory(
+            history,
+            normalized.itemId,
+            "comment.added",
+            `${item.code} 항목에 코멘트`,
+            resolveHistoryActor(),
+            normalized.createdAt,
           )
           return { comments, history }
         })
@@ -419,9 +504,10 @@ export const useAppStore = create<AppStore>()(
       createItem: (input) => {
         if (!input.title.trim()) {
           window.alert("제목을 입력해 주세요.")
-          return
+          return undefined
         }
-        const code = getNextCode(get().items, input.type)
+        const nextStatus = normalizeStatusValue(input.status ?? "논의")
+        const code = getNextItemCode(get().items, input.type)
         const item: Item = {
           id: code,
           code,
@@ -430,31 +516,56 @@ export const useAppStore = create<AppStore>()(
           title: input.title.trim(),
           description: input.description.trim(),
           priority: input.priority,
-          status: "논의",
+          status: nextStatus,
           owner: input.owner.trim(),
           dueDate: input.dueDate,
-          clientResponse: "",
-          finalConfirmedValue: "",
-          isLocked: false,
+          clientResponse: (input.clientResponse ?? "").trim(),
+          finalConfirmedValue: (input.finalConfirmedValue ?? "").trim(),
+          isLocked: nextStatus === "확정",
+          boardRank: nextBoardRankForStatus(get().items, nextStatus),
           createdAt: nowIso(),
           updatedAt: nowIso(),
         }
 
+        const normalizedInitial =
+          input.initialComments
+            ?.map((c) => ({
+              author: c.author.trim(),
+              body: c.body.trim(),
+              createdAt: c.createdAt,
+            }))
+            .filter((c) => c.author && c.body) ?? []
+
+        const newComments: Comment[] = normalizedInitial.map((c) => ({
+          id: uniqueId("C"),
+          itemId: item.id,
+          author: c.author,
+          body: c.body,
+          createdAt: c.createdAt,
+        }))
+
         set((s) => {
           const history = [...s.history]
-          addHistory(
-            history,
-            item.id,
-            "item.created",
-            `${item.code} 항목 생성`,
-            "틴토랩 사용자",
-          )
+          const actor = resolveHistoryActor()
+          addHistory(history, item.id, "item.created", `${item.code} 항목을 저장`, actor)
+          for (const c of newComments) {
+            addHistory(
+              history,
+              item.id,
+              "comment.added",
+              `${item.code} 항목에 코멘트`,
+              actor,
+              c.createdAt,
+            )
+          }
           return {
             items: [...s.items, item],
+            comments: [...s.comments, ...newComments],
             ui: { ...s.ui, selectedItemId: item.id },
             history,
           }
         })
+        return item.id
       },
 
       createDomain: (name, parentId = "") => {
@@ -633,7 +744,8 @@ export const useAppStore = create<AppStore>()(
               const resolvedDomainId = resolveDomainValue(data.domain, domains, {
                 createIfMissing: true,
               })
-              const code = data.code || getNextCode(items, data.type as ItemType)
+              const code = data.code || getNextItemCode(items, data.type as ItemType)
+              const nextStatus = normalizeStatusValue(data.status)
               const item: Item = {
                 id: code,
                 code,
@@ -642,12 +754,13 @@ export const useAppStore = create<AppStore>()(
                 title: data.title,
                 description: data.description,
                 priority: data.priority as Item["priority"],
-                status: normalizeStatusValue(data.status),
+                status: nextStatus,
                 owner: data.owner,
                 dueDate: data.dueDate,
                 clientResponse: data.clientResponse,
                 finalConfirmedValue: data.finalConfirmedValue,
-                isLocked: data.status === "확정",
+                isLocked: nextStatus === "확정",
+                boardRank: nextBoardRankForStatus(items, nextStatus),
                 createdAt: nowIso(),
                 updatedAt: nowIso(),
               }
@@ -668,20 +781,25 @@ export const useAppStore = create<AppStore>()(
               const resolvedDomainId = resolveDomainValue(data.domain, domains, {
                 createIfMissing: true,
               })
+              const nextStatus = normalizeStatusValue(data.status)
+              const statusChanged = nextStatus !== item.status
               Object.assign(item, {
                 type: normalizeItemType(data.type),
                 domain: resolvedDomainId,
                 title: data.title,
                 description: data.description,
                 priority: data.priority as Item["priority"],
-                status: normalizeStatusValue(data.status),
+                status: nextStatus,
                 owner: data.owner,
                 dueDate: data.dueDate,
                 clientResponse: data.clientResponse,
                 finalConfirmedValue: data.finalConfirmedValue,
-                isLocked: normalizeStatusValue(data.status) === "확정",
+                isLocked: nextStatus === "확정",
                 updatedAt: nowIso(),
               })
+              if (statusChanged) {
+                item.boardRank = nextBoardRankForStatus(items, nextStatus, item.id)
+              }
               addHistory(
                 history,
                 item.id,
@@ -716,6 +834,75 @@ export const useAppStore = create<AppStore>()(
         const ok = window.confirm("샘플데이터를 초기화하시겠습니까?")
         if (!ok) return
         set(normalizeAppState(createSeedData()))
+      },
+
+      setWorkspaceColumnOrder: (order) =>
+        set((s) => ({ ui: { ...s.ui, workspaceColumnOrder: order } })),
+
+      reorderWorkspaceItemsInStatus: (status, orderedIds) => {
+        set((s) => {
+          const rankMap = new Map(orderedIds.map((id, i) => [id, i]))
+          const items = s.items.map((item) => {
+            if (item.status !== status) return item
+            const r = rankMap.get(item.id)
+            if (r === undefined) return item
+            return { ...item, boardRank: r }
+          })
+          return { items }
+        })
+      },
+
+      moveWorkspaceCardToStatus: (itemId, targetStatus, targetIndex) => {
+        set((s) => {
+          const item = s.items.find((i) => i.id === itemId)
+          if (!item) return {}
+          if (item.isLocked && item.status !== "확정") return {}
+          if (item.status === targetStatus) return {}
+
+          const sourceStatus = item.status
+          const now = nowIso()
+          const nextLocked = targetStatus === "확정"
+
+          let items = s.items.map((i) =>
+            i.id === itemId
+              ? {
+                  ...i,
+                  status: targetStatus,
+                  isLocked: nextLocked,
+                  updatedAt: now,
+                }
+              : i,
+          )
+
+          const sourceIds = items
+            .filter((i) => i.status === sourceStatus)
+            .sort(sortItemsByBoardRank)
+            .map((i) => i.id)
+
+          const targetPeers = items
+            .filter((i) => i.status === targetStatus && i.id !== itemId)
+            .sort(sortItemsByBoardRank)
+            .map((i) => i.id)
+
+          const idx = Math.min(Math.max(0, targetIndex), targetPeers.length)
+          const newTargetIds = [
+            ...targetPeers.slice(0, idx),
+            itemId,
+            ...targetPeers.slice(idx),
+          ]
+
+          const rankById = new Map<string, number>()
+          sourceIds.forEach((id, i) => rankById.set(id, i))
+          newTargetIds.forEach((id, i) => rankById.set(id, i))
+
+          items = items.map((i) => {
+            const r = rankById.get(i.id)
+            if (r === undefined) return i
+            return { ...i, boardRank: r }
+          })
+
+          return { items }
+        })
       },
     }),
     {

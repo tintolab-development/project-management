@@ -1,0 +1,94 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+  padding-bottom: var(--space-4);
+}
+
+/** 검색 필드 + Separator; 인풋↔선 간격은 자식 `.field` `padding-bottom` */
+.searchFieldDividerColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+  min-width: 0;
+}
+
+.searchFieldDividerColumn > .field {
+  padding-bottom: var(--tasks-filter-first-second-gap, 18px);
+  box-sizing: border-box;
+}
+
+.panelDivider {
+  flex-shrink: 0;
+  margin-top: 0;
+  align-self: stretch;
+  width: 100%;
+  min-width: 0;
+}
+
+/** 검색 1행 아래 — 우선순위·유형·셀렉트·조회, 행 간격은 `--space-5` */
+.filterRestBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  /** 구분선과 우선순위 블록 사이 여백 (검색↔구분선 간격과 동일 토큰) */
+  margin-top: var(--tasks-filter-first-second-gap, 18px);
+  width: 100%;
+  min-width: 0;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--filter-field-label-input-gap, 8px);
+  width: 100%;
+  min-width: 0;
+}
+
+.searchShell {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  min-height: var(--filter-control-height);
+  box-sizing: border-box;
+  padding: 0;
+  border-radius: var(--filter-control-radius);
+  border: 1px solid var(--filter-control-border);
+  background: var(--panel);
+}
+
+.searchInput {
+  width: 100%;
+  min-width: 0;
+}
+
+.badgeRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.badgeBtn {
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+}
+
+.badgeBtn:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+  border-radius: 9999px;
+}
+
+.submitBtn {
+  width: 100%;
+  max-width: 100%;
+  align-self: stretch;
+  box-sizing: border-box;
+  min-height: var(--filter-control-height);
+  border-radius: var(--filter-control-radius);
+}

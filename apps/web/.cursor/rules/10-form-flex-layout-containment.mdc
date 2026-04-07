@@ -1,0 +1,42 @@
+---
+description: Prevent form layout overlap and clipping—flex + scroll regions, container queries on input wrappers, and card height constraints.
+alwaysApply: true
+---
+
+# Form, Flex & Layout Containment
+
+These rules prevent recurring bugs: **stacked fields and buttons visually overlapping**, **labels clipped so they look “missing”**, and **primary actions cut off inside cards**.
+
+## Input wrapper (`Input` / `.input-field-cq`)
+
+- The shared `Input` in `apps/web/src/components/ui/input.tsx` wraps the native control in **`.input-field-cq`** (see `apps/web/src/app/styles/global.css`).
+- **Do not** set **`container-type: size`** on **the same element** that is a **direct flex/grid child** responsible for vertical stacking with siblings (e.g. form rows separated by `gap`). Size containment on that wrapper can make the box **block size ignore descendants**, so **`gap` is computed too small** while the real input still paints at full height → **overlap** with the next label, field, or button.
+- If container queries are required for placeholder or field chrome, prefer:
+  - **`container-type: inline-size`** only when block size must follow content, or
+  - a **nested inner** wrapper that holds `container-type` while an **outer** wrapper participates in parent flex layout with normal intrinsic height, or
+  - no container on the layout participant and use **fixed/token placeholder sizing** instead.
+
+## Scroll regions and vertical alignment
+
+- **Avoid** combining **`overflow-y: auto` or `scroll`** on a **form’s parent** with **`justify-content: center`** (or similar vertical centering of the whole form inside that scrollport). The form can be **centered in a viewport shorter than the form**, so the **top (e.g. first label) is scrolled out of view** and appears **missing**.
+- Prefer **`justify-content: flex-start`** (or **`align-items: flex-start`** where relevant) inside scrollable panels, or **scroll the page / outer shell** while the form panel uses **`overflow: visible`** and **height from content**.
+- If a card must cap height, either **design explicit padding and min height for all blocks** (including dev-only actions) or **allow the page to scroll** instead of **only** the card—document the choice.
+
+## Flex shrink and form roots
+
+- When a parent uses **`flex: 1`**, **`min-height: 0`**, or a **fixed `max-height`**, the **form root** must not silently shrink below its content unless intentional.
+- Prefer **`flex: 0 0 auto`** (or **`flex-shrink: 0`**) on the **form** when it should **size to its fields**, and **`flex-shrink: 0`** (or explicit **`min-height`**) on **field groups and primary actions** so they are not compressed into overlaps.
+- **`min-height: 0`** on **field columns** is risky when combined with aggressive shrink upstream; prefer **`min-height: min-content`** for field stacks unless there is a documented scrolling strategy.
+
+## Cards and `overflow-hidden`
+
+- shadcn **`Card`** uses **`overflow-hidden`**. Page-level widgets that override with **`overflow-y: auto`** create an **inner scroll model**; verify **bottom buttons** are not **clipped** and **labels** are not **lost** due to centering (see above).
+- When **no inner scroll** is desired, **`overflow-y: visible`** on the widget (with **`!important` if overriding Card**) and **no conflicting `max-height`** on the card are often appropriate; **page** (`body` / route root) carries overflow.
+
+## Delivery check (forms & auth-style pages)
+
+For new or changed **login, modal forms, filter panels, and multi-field steps**:
+
+1. Confirm **first label** is visible **without** scrolling inside an inner panel.
+2. Confirm **gaps** between field blocks and primary CTA match tokens/spec (**no visual overlap**).
+3. On **short viewports**, confirm **scroll behavior** is intentional (**page vs panel**) and **no CTA is permanently clipped**.

@@ -1,11 +1,25 @@
 import * as Dialog from "@radix-ui/react-dialog"
 import { useNavigate } from "react-router-dom"
 import { useState } from "react"
+import { useProjectScopedPaths } from "@/shared/lib/projectScopedPaths"
+import clsx from "clsx"
+import { Input, inputControlClassName } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { formStackStyles } from "@/shared/ui/form-stack"
+import { Button } from "@/shared/ui/button"
+import {
+  FormLabel,
+  Heading,
+  modalCloseIconClassName,
+} from "@/shared/ui/typography"
 import { useAppStore } from "@/app/store/useAppStore"
 import { PRIORITY_LABELS, TYPE_LABELS } from "@/shared/constants/labels"
 import type { ItemType } from "@/entities/item/model/types"
 import type { Item } from "@/entities/item/model/types"
-import { getDomainOptionLabel, walkDomainsFlat } from "@/entities/domain/lib/domainTree"
+import {
+  getDomainOptionLabel,
+  walkDomainsFlatForClassificationSelect,
+} from "@/entities/domain/lib/domainTree"
 
 type Props = {
   open: boolean
@@ -14,10 +28,11 @@ type Props = {
 
 export const NewItemModal = ({ open, onOpenChange }: Props) => {
   const navigate = useNavigate()
+  const paths = useProjectScopedPaths()
   const domains = useAppStore((s) => s.domains)
   const createItem = useAppStore((s) => s.createItem)
 
-  const defaultDomain = walkDomainsFlat(domains)[0]?.id ?? ""
+  const defaultDomain = walkDomainsFlatForClassificationSelect(domains)[0]?.id ?? ""
 
   const [type, setType] = useState<ItemType>("information_request")
   const [domain, setDomain] = useState(defaultDomain)
@@ -31,7 +46,7 @@ export const NewItemModal = ({ open, onOpenChange }: Props) => {
     onOpenChange(next)
     if (!next) {
       setType("information_request")
-      setDomain(walkDomainsFlat(domains)[0]?.id ?? "")
+      setDomain(walkDomainsFlatForClassificationSelect(domains)[0]?.id ?? "")
       setPriority("P1")
       setOwner("")
       setDueDate("")
@@ -55,7 +70,7 @@ export const NewItemModal = ({ open, onOpenChange }: Props) => {
       description,
     })
     handleOpenChange(false)
-    navigate("/items")
+    navigate(paths.tasks)
   }
 
   return (
@@ -65,23 +80,29 @@ export const NewItemModal = ({ open, onOpenChange }: Props) => {
         <Dialog.Content className="modal" aria-describedby={undefined}>
           <div className="modal-head">
             <Dialog.Title asChild>
-              <h3>새 항목 만들기</h3>
+              <Heading as="h3" variant="modal">
+                새 항목 만들기
+              </Heading>
             </Dialog.Title>
-            <Dialog.Close
-              type="button"
-              className="icon-btn"
-              aria-label="닫기"
-            >
-              ×
+            <Dialog.Close asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-lg"
+                className={modalCloseIconClassName}
+                aria-label="닫기"
+              >
+                ×
+              </Button>
             </Dialog.Close>
           </div>
 
-          <div className="form-grid">
+          <div className={formStackStyles.formGrid}>
             <div>
-              <label htmlFor="new-type">유형</label>
+              <FormLabel htmlFor="new-type">유형</FormLabel>
               <select
                 id="new-type"
-                className="input"
+                className={clsx(inputControlClassName)}
                 value={type}
                 onChange={(e) => setType(e.target.value as ItemType)}
               >
@@ -93,14 +114,14 @@ export const NewItemModal = ({ open, onOpenChange }: Props) => {
               </select>
             </div>
             <div>
-              <label htmlFor="new-domain">도메인</label>
+              <FormLabel htmlFor="new-domain">도메인</FormLabel>
               <select
                 id="new-domain"
-                className="input"
+                className={clsx(inputControlClassName)}
                 value={domain}
                 onChange={(e) => setDomain(e.target.value)}
               >
-                {walkDomainsFlat(domains).map((d) => (
+                {walkDomainsFlatForClassificationSelect(domains).map((d) => (
                   <option key={d.id} value={d.id}>
                     {getDomainOptionLabel(domains, d.id)}
                   </option>
@@ -108,10 +129,10 @@ export const NewItemModal = ({ open, onOpenChange }: Props) => {
               </select>
             </div>
             <div>
-              <label htmlFor="new-priority">우선순위</label>
+              <FormLabel htmlFor="new-priority">우선순위</FormLabel>
               <select
                 id="new-priority"
-                className="input"
+                className={clsx(inputControlClassName)}
                 value={priority}
                 onChange={(e) =>
                   setPriority(e.target.value as Item["priority"])
@@ -127,20 +148,18 @@ export const NewItemModal = ({ open, onOpenChange }: Props) => {
               </select>
             </div>
             <div>
-              <label htmlFor="new-owner">담당자</label>
-              <input
+              <FormLabel htmlFor="new-owner">담당자</FormLabel>
+              <Input
                 id="new-owner"
-                className="input"
                 placeholder="예: 설해원 운영팀"
                 value={owner}
                 onChange={(e) => setOwner(e.target.value)}
               />
             </div>
             <div>
-              <label htmlFor="new-due">마감일</label>
-              <input
+              <FormLabel htmlFor="new-due">마감일</FormLabel>
+              <Input
                 id="new-due"
-                className="input"
                 type="date"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
@@ -148,22 +167,20 @@ export const NewItemModal = ({ open, onOpenChange }: Props) => {
             </div>
           </div>
 
-          <div className="form-section">
-            <label htmlFor="new-title">제목</label>
-            <input
+          <div className={formStackStyles.formSection}>
+            <FormLabel htmlFor="new-title">제목</FormLabel>
+            <Input
               id="new-title"
-              className="input"
               placeholder="예: PMS 책임경계 확정"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
           </div>
 
-          <div className="form-section">
-            <label htmlFor="new-desc">설명</label>
-            <textarea
+          <div className={formStackStyles.formSection}>
+            <FormLabel htmlFor="new-desc">설명</FormLabel>
+            <Textarea
               id="new-desc"
-              className="textarea"
               rows={3}
               placeholder="무엇을 확인/결정해야 하는지 적어 주세요."
               value={description}
@@ -172,13 +189,14 @@ export const NewItemModal = ({ open, onOpenChange }: Props) => {
           </div>
 
           <div className="modal-actions">
-            <button
+            <Button
               type="button"
-              className="btn primary"
+              appearance="fill"
+              dimension="hug"
               onClick={handleSubmit}
             >
               생성
-            </button>
+            </Button>
           </div>
         </Dialog.Content>
       </Dialog.Portal>
