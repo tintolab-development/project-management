@@ -18,17 +18,26 @@ type Props = {
 
 export const AppShellLayout = ({ variant }: Props) => {
   const { projectSlug = "" } = useParams<{ projectSlug?: string }>()
-  const navItems =
-    variant === "admin"
-      ? ADMIN_SIDEBAR_NAV
-      : buildProjectSidebarNav(projectSlug)
-  const projectBasePath =
-    variant === "project" && projectSlug ? `/p/${projectSlug}` : undefined
+
+  if (variant === "admin") {
+    return (
+      <SidebarProvider className={styles.shellWrapper} style={sidebarLayoutStyle}>
+        <AppSidebar variant="admin" navItems={ADMIN_SIDEBAR_NAV} />
+        <SidebarInset className={styles.main}>
+          <TopBar />
+          <Outlet />
+        </SidebarInset>
+      </SidebarProvider>
+    )
+  }
+
+  const navItems = buildProjectSidebarNav(projectSlug)
+  const projectBasePath = projectSlug ? `/p/${projectSlug}` : undefined
 
   return (
     <SidebarProvider className={styles.shellWrapper} style={sidebarLayoutStyle}>
       <AppSidebar
-        variant={variant}
+        variant="project"
         navItems={navItems}
         projectBasePath={projectBasePath}
       />

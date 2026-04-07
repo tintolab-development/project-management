@@ -16,8 +16,20 @@
   gap: 14px;
 }
 
+/* 어드민: 로고 마크(58px)와 ADMIN 텍스트 수직 중앙 정렬 */
+.brandAdmin {
+  align-items: center;
+}
+
 .brandCopy {
   padding-top: 2px;
+}
+
+.brandCopyAdmin {
+  padding-top: 0;
+  display: flex;
+  align-items: center;
+  min-height: 58px;
 }
 
 .brandMark {
@@ -36,6 +48,29 @@
   height: 100%;
   object-fit: cover;
   display: block;
+}
+
+.brandLetterT {
+  font-family: var(--font-login-title);
+  font-size: clamp(1.5rem, 1.35rem + 0.4vw, 1.75rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--text-on-primary);
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brandAdminTitle {
+  font-family: var(--font-login-title);
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: 0.06em;
+  color: var(--sidebar-text);
+  margin: 0;
 }
 
 .nav {

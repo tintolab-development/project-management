@@ -1,4 +1,7 @@
-export { AppSidebar, type AppSidebarShellVariant } from "./AppSidebar"
+export {
+  AppSidebar,
+  type AppSidebarShellVariant,
+} from "./AppSidebar"
 export {
   APP_SIDEBAR_NAV,
   buildProjectSidebarNav,

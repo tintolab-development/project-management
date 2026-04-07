@@ -7,22 +7,28 @@ import {
 import { cn } from "@/lib/utils"
 import { Text } from "@/shared/ui/typography"
 
-import type { AppSidebarNavItem } from "./app-sidebar-nav-config"
+import { PROTOTYPE_VERSION_LABEL } from "@/shared/config/storage"
 
-export type AppSidebarShellVariant = "admin" | "project"
+import type { AppSidebarNavItem } from "./app-sidebar-nav-config"
 import { AppSidebarBrand } from "./AppSidebarBrand"
 import { AppSidebarNav } from "./AppSidebarNav"
 import { AppSidebarPrinciples } from "./AppSidebarPrinciples"
 import { AppSidebarProjectPanel } from "./AppSidebarProjectPanel"
 import styles from "./AppSidebar.module.css"
 
+export type AppSidebarShellVariant = "admin" | "project"
+
 type Props = {
-  variant: AppSidebarShellVariant
+  variant?: AppSidebarShellVariant
   navItems: readonly AppSidebarNavItem[]
   projectBasePath?: string
 }
 
-export function AppSidebar({ variant, navItems, projectBasePath }: Props) {
+export function AppSidebar({
+  variant = "project",
+  navItems,
+  projectBasePath,
+}: Props) {
   return (
     <Sidebar
       collapsible="none"
@@ -30,7 +36,7 @@ export function AppSidebar({ variant, navItems, projectBasePath }: Props) {
       className={cn(styles.root, "shrink-0")}
     >
       <SidebarHeader className={styles.headerSlot}>
-        <AppSidebarBrand />
+        <AppSidebarBrand variant={variant} />
       </SidebarHeader>
       <SidebarContent className={styles.contentSlot}>
         {variant === "project" ? <AppSidebarProjectPanel /> : null}
@@ -39,7 +45,7 @@ export function AppSidebar({ variant, navItems, projectBasePath }: Props) {
       <SidebarFooter className={styles.footerSlot}>
         <AppSidebarPrinciples />
         <Text as="div" variant="sidebarFooter" className={styles.footerMeta}>
-          Prototype v7
+          {PROTOTYPE_VERSION_LABEL}
         </Text>
       </SidebarFooter>
     </Sidebar>
