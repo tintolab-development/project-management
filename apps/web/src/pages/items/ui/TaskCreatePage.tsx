@@ -11,7 +11,7 @@ import {
   useState,
 } from "react"
 import { Controller, useForm, useWatch } from "react-hook-form"
-import { useNavigate } from "react-router-dom"
+import { Navigate, useNavigate, useParams } from "react-router-dom"
 
 import { useAppStore } from "@/app/store/useAppStore"
 import { useProjectScopedPaths } from "@/shared/lib/projectScopedPaths"
@@ -22,7 +22,6 @@ import {
 } from "@/entities/domain/lib/domainTree"
 import { getNextItemCode } from "@/entities/item/lib/nextItemCode"
 import { PRIORITY_VALUES, type ItemType } from "@/entities/item/model/types"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -38,25 +37,34 @@ import { STATUS_LABELS, STATUS_VALUES, TYPE_LABELS } from "@/shared/constants/la
 import { ITEM_TYPE_VALUES } from "@/shared/lib/itemType"
 import { FilterDateField, filterFieldLabelStyles } from "@/shared/ui/filter-field"
 import { AppModalActions, AppModalBody, AppModalField, appModalStyles } from "@/shared/ui/app-modal"
+import { ModalPrimaryButton, ModalSecondaryButton } from "@/shared/ui/modal-dialog-buttons"
 import { Card } from "@/shared/ui/card"
 import { MarkdownTextEditor } from "@/shared/ui/markdown-text-editor"
-import { postTaskDraftComment, syncMockAppStateFromStore } from "@/shared/api"
+import type { Comment } from "@/entities/comment/model/types"
+import { postItemComment, postTaskDraftComment, syncMockAppStateFromStore } from "@/shared/api"
+import { appAlert } from "@/shared/lib/appDialog"
 import { formatDateTime } from "@/shared/lib/formatDateTime"
 import { uniqueId } from "@/shared/lib/ids"
-import {
-  FormLabel,
-  Heading,
-  Text,
-  modalCloseIconClassName,
-} from "@/shared/ui/typography"
+import { FormLabel, Heading, Text, modalCloseIconClassName } from "@/shared/ui/typography"
 import { cn } from "@/lib/utils"
 
-import { taskCreateFormSchema, type TaskCreateFormValues } from "../lib/taskCreateFormSchema"
+import { getStatusOptionsForItem } from "../lib/itemStatusOptions"
+import {
+  taskEditFormSchema,
+  taskNewFormSchema,
+  type TaskCreateFormValues,
+} from "../lib/taskCreateFormSchema"
 
 import pageStyles from "./TaskCreatePage.module.css"
 
 /** 담당자 Select 전용 — 목록 옵션 값과 충돌하지 않는 내부 토큰 */
 const ASSIGNEE_SELECT_CLEAR_VALUE = "__task_create_assignee_clear__"
+
+const parseAssigneesFromOwner = (owner: string): string[] =>
+  owner
+    .split("|")
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0)
 
 const filterLabelWithGap = cn(
   filterFieldLabelStyles.filterFieldLabel,
@@ -80,15 +88,28 @@ type TaskLocalHistoryEntry = {
 /** 연관 태스크/프로젝트는 도메인 모델에 없어 UI 상태로만 유지한다. */
 export const TaskCreatePage = () => {
   const navigate = useNavigate()
+  const { itemId } = useParams<{ itemId: string }>()
+  const isEditMode = Boolean(itemId)
   const paths = useProjectScopedPaths()
   const domains = useAppStore((s) => s.domains)
   const items = useAppStore((s) => s.items)
+  const comments = useAppStore((s) => s.comments)
+  const history = useAppStore((s) => s.history)
   const createItem = useAppStore((s) => s.createItem)
+  const getItemById = useAppStore((s) => s.getItemById)
+  const selectItem = useAppStore((s) => s.selectItem)
+  const saveSelectedItem = useAppStore((s) => s.saveSelectedItem)
+  const addCommentFromApi = useAppStore((s) => s.addCommentFromApi)
   const toggleLockSelectedItem = useAppStore((s) => s.toggleLockSelectedItem)
+
+  const editItem = useMemo(() => {
+    if (!itemId) return undefined
+    return getItemById(itemId)
+  }, [itemId, getItemById, items])
 
   const defaultDomain = useMemo(
     () => walkDomainsFlatForClassificationSelect(domains)[0]?.id ?? "",
-    [domains],
+    [domains]
   )
 
   const domainOptions = useMemo(
@@ -97,7 +118,7 @@ export const TaskCreatePage = () => {
         value: d.id,
         label: getDomainOptionLabel(domains, d.id),
       })),
-    [domains],
+    [domains]
   )
 
   const titleInputRef = useRef<HTMLInputElement | null>(null)
@@ -134,7 +155,7 @@ export const TaskCreatePage = () => {
         string,
         ReactNode
       >,
-    [ownerSelectOptions],
+    [ownerSelectOptions]
   )
 
   /** Base UI Select — `items`가 있어야 트리거에 한글 라벨이 표시됨(값 키 노출 방지) */
@@ -152,22 +173,11 @@ export const TaskCreatePage = () => {
     [domainOptions]
   )
   const prioritySelectItems = useMemo(
-    () =>
-      Object.fromEntries(PRIORITY_VALUES.map((p) => [p, p])) as Record<string, ReactNode>,
-    []
-  )
-  const statusSelectItems = useMemo(
-    () =>
-      Object.fromEntries(STATUS_VALUES.map((st) => [st, STATUS_LABELS[st]])) as Record<
-        string,
-        ReactNode
-      >,
+    () => Object.fromEntries(PRIORITY_VALUES.map((p) => [p, p])) as Record<string, ReactNode>,
     []
   )
 
-  const [assignees, setAssignees] = useState<string[]>([])
   const [assigneePicker, setAssigneePicker] = useState("")
-  const [relatedLabels, setRelatedLabels] = useState<string[]>([])
   const [assigneeOpen, setAssigneeOpen] = useState(false)
   const [relatedOpen, setRelatedOpen] = useState(false)
   const [assigneeNameDraft, setAssigneeNameDraft] = useState("")
@@ -176,17 +186,54 @@ export const TaskCreatePage = () => {
   const [draftComments, setDraftComments] = useState<TaskDraftComment[]>([])
   const [commentDraftBody, setCommentDraftBody] = useState("")
   const [commentDraftSubmitting, setCommentDraftSubmitting] = useState(false)
-  const [activeDraftDetail, setActiveDraftDetail] = useState<TaskDraftComment | null>(null)
+  const [activeDraftDetail, setActiveDraftDetail] = useState<
+    TaskDraftComment | Comment | null
+  >(null)
   const [localHistory, setLocalHistory] = useState<TaskLocalHistoryEntry[]>([])
+
+  const statusRowValues = useMemo(() => {
+    if (isEditMode && editItem) return getStatusOptionsForItem(editItem)
+    return [...STATUS_VALUES]
+  }, [isEditMode, editItem])
+
+  const statusSelectItems = useMemo(
+    () =>
+      Object.fromEntries(statusRowValues.map((st) => [st, STATUS_LABELS[st]])) as Record<
+        string,
+        ReactNode
+      >,
+    [statusRowValues]
+  )
+
+  const itemCommentsForEdit = useMemo(() => {
+    if (!isEditMode || !itemId) return []
+    return comments
+      .filter((c) => c.itemId === itemId)
+      .sort(
+        (a, b) =>
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      )
+  }, [isEditMode, itemId, comments])
+
+  const itemHistoryForEdit = useMemo(() => {
+    if (!isEditMode || !itemId) return []
+    return history
+      .filter((h) => h.itemId === itemId)
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      )
+  }, [isEditMode, itemId, history])
 
   const {
     register,
     control,
     handleSubmit,
     setValue,
+    reset,
     formState: { errors },
   } = useForm<TaskCreateFormValues>({
-    resolver: zodResolver(taskCreateFormSchema),
+    resolver: zodResolver(isEditMode ? taskEditFormSchema : taskNewFormSchema),
     defaultValues: {
       title: "",
       type: "decision",
@@ -197,29 +244,62 @@ export const TaskCreatePage = () => {
       description: "",
       clientResponse: "",
       finalConfirmedValue: "",
+      assignees: [],
+      relatedLabels: [],
     },
   })
 
+  const assignees = useWatch({ control, name: "assignees" }) ?? []
+  const relatedLabels = useWatch({ control, name: "relatedLabels" }) ?? []
+
+  const formLocked =
+    isEditMode && editItem ? editItem.status === "확정" || editItem.isLocked : false
+
   useEffect(() => {
+    if (!isEditMode || !itemId) return
+    selectItem(itemId)
+    return () => selectItem(null)
+  }, [isEditMode, itemId, selectItem])
+
+  useEffect(() => {
+    if (!isEditMode || !editItem) return
+    reset({
+      title: editItem.title,
+      type: editItem.type,
+      domain: editItem.domain,
+      priority: editItem.priority,
+      status: editItem.status,
+      dueDate: editItem.dueDate,
+      description: editItem.description,
+      clientResponse: editItem.clientResponse,
+      finalConfirmedValue: editItem.finalConfirmedValue,
+      assignees: parseAssigneesFromOwner(editItem.owner),
+      relatedLabels: [],
+    })
+    setDraftComments([])
+    setCommentDraftBody("")
+    setLocalHistory([])
+  }, [isEditMode, editItem, reset])
+
+  useEffect(() => {
+    if (isEditMode) return
     if (defaultDomain) {
       setValue("domain", defaultDomain)
     }
-  }, [defaultDomain, setValue])
+  }, [defaultDomain, setValue, isEditMode])
 
   const watchedType = useWatch({ control, name: "type" })
 
-  const previewCode = useMemo(
-    () => getNextItemCode(items, watchedType as ItemType),
-    [items, watchedType]
-  )
-
-  const ownerJoined = useMemo(() => assignees.join(" | "), [assignees])
+  const previewCode = useMemo(() => {
+    if (isEditMode && editItem) return editItem.code
+    return getNextItemCode(items, watchedType as ItemType)
+  }, [isEditMode, editItem, items, watchedType])
 
   const buildPayload = (data: TaskCreateFormValues) => ({
     type: data.type,
     domain: data.domain,
     priority: data.priority,
-    owner: ownerJoined,
+    owner: data.assignees.join(" | "),
     dueDate: data.dueDate,
     title: data.title,
     description: data.description,
@@ -228,6 +308,7 @@ export const TaskCreatePage = () => {
   })
 
   const handleNavigateList = () => {
+    selectItem(null)
     navigate(paths.tasks)
   }
 
@@ -238,11 +319,31 @@ export const TaskCreatePage = () => {
         body: c.body,
         createdAt: c.createdAt,
       })),
-    [draftComments],
+    [draftComments]
   )
 
-  const handleSave = handleSubmit((data) => {
-    const id = createItem({
+  const handleSave = handleSubmit(async (data) => {
+    if (isEditMode) {
+      const ok = await saveSelectedItem({
+        type: data.type,
+        title: data.title,
+        domain: data.domain,
+        priority: data.priority,
+        status: data.status,
+        owner: data.assignees.join(" | "),
+        dueDate: data.dueDate,
+        description: data.description,
+        clientResponse: data.clientResponse,
+        finalConfirmedValue: data.finalConfirmedValue,
+      })
+      if (!ok) return
+      void syncMockAppStateFromStore().catch((err) => {
+        console.error("[task-edit] mock app-state sync failed", err)
+      })
+      navigate(paths.tasks)
+      return
+    }
+    const id = await createItem({
       ...buildPayload(data),
       status: data.status,
       initialComments: draftCommentsForCreate,
@@ -257,8 +358,29 @@ export const TaskCreatePage = () => {
     navigate(paths.tasks)
   })
 
-  const handleFinalize = handleSubmit((data) => {
-    const id = createItem({
+  const handleFinalize = handleSubmit(async (data) => {
+    if (isEditMode) {
+      const ok = await saveSelectedItem({
+        type: data.type,
+        title: data.title,
+        domain: data.domain,
+        priority: data.priority,
+        status: "방향합의",
+        owner: data.assignees.join(" | "),
+        dueDate: data.dueDate,
+        description: data.description,
+        clientResponse: data.clientResponse,
+        finalConfirmedValue: data.finalConfirmedValue,
+      })
+      if (!ok) return
+      void syncMockAppStateFromStore().catch((err) => {
+        console.error("[task-edit] mock app-state sync failed", err)
+      })
+      const lockOk = await toggleLockSelectedItem()
+      if (lockOk) navigate(paths.tasks)
+      return
+    }
+    const id = await createItem({
       ...buildPayload(data),
       status: "방향합의",
       initialComments: draftCommentsForCreate,
@@ -267,7 +389,7 @@ export const TaskCreatePage = () => {
     setDraftComments([])
     setCommentDraftBody("")
     setLocalHistory([])
-    const ok = toggleLockSelectedItem()
+    const ok = await toggleLockSelectedItem()
     void syncMockAppStateFromStore().catch((err) => {
       console.error("[task-create] mock app-state sync failed", err)
     })
@@ -277,7 +399,30 @@ export const TaskCreatePage = () => {
   const handleAddDraftComment = async () => {
     const body = commentDraftBody.trim()
     if (!body) {
-      window.alert("질문, 보완 요청, 회의 메모 등 코멘트 내용을 입력해 주세요.")
+      await appAlert("질문, 보완 요청, 회의 메모 등 코멘트 내용을 입력해 주세요.")
+      return
+    }
+    if (isEditMode && itemId) {
+      setCommentDraftSubmitting(true)
+      try {
+        const comment = await postItemComment(itemId, {
+          author: commentAuthorityLabel,
+          body,
+        })
+        const ok = await addCommentFromApi(comment)
+        if (ok) {
+          setCommentDraftBody("")
+          void syncMockAppStateFromStore().catch((err) => {
+            console.error("[task-edit] mock app-state sync failed", err)
+          })
+        }
+      } catch (err) {
+        await appAlert(
+          err instanceof Error ? err.message : "코멘트 저장 요청에 실패했습니다.",
+        )
+      } finally {
+        setCommentDraftSubmitting(false)
+      }
       return
     }
     setCommentDraftSubmitting(true)
@@ -306,9 +451,7 @@ export const TaskCreatePage = () => {
       ])
       setCommentDraftBody("")
     } catch (err) {
-      window.alert(
-        err instanceof Error ? err.message : "코멘트 저장 요청에 실패했습니다.",
-      )
+      await appAlert(err instanceof Error ? err.message : "코멘트 저장 요청에 실패했습니다.")
     } finally {
       setCommentDraftSubmitting(false)
     }
@@ -317,7 +460,8 @@ export const TaskCreatePage = () => {
   const handleAssigneePlus = () => {
     const v = assigneePicker.trim()
     if (v) {
-      setAssignees((prev) => (prev.includes(v) ? prev : [...prev, v]))
+      const next = assignees.includes(v) ? assignees : [...assignees, v]
+      setValue("assignees", next, { shouldDirty: true, shouldValidate: true })
       setAssigneePicker("")
       return
     }
@@ -329,26 +473,38 @@ export const TaskCreatePage = () => {
     const org = assigneeOrgDraft.trim()
     if (!name && !org) return
     const v = name && org ? `${name} | ${org}` : name || org
-    setAssignees((prev) => (prev.includes(v) ? prev : [...prev, v]))
+    const next = assignees.includes(v) ? assignees : [...assignees, v]
+    setValue("assignees", next, { shouldDirty: true, shouldValidate: true })
     setAssigneeNameDraft("")
     setAssigneeOrgDraft("")
     setAssigneeOpen(false)
   }
 
   const handleRemoveAssignee = (index: number) => {
-    setAssignees((prev) => prev.filter((_, i) => i !== index))
+    setValue(
+      "assignees",
+      assignees.filter((_, i) => i !== index),
+      { shouldDirty: true, shouldValidate: true },
+    )
   }
 
   const handleAddRelated = () => {
     const v = relatedDraft.trim()
     if (!v) return
-    setRelatedLabels((prev) => [...prev, v])
+    setValue("relatedLabels", [...relatedLabels, v], {
+      shouldDirty: true,
+      shouldValidate: true,
+    })
     setRelatedDraft("")
     setRelatedOpen(false)
   }
 
   const handleRemoveRelated = (index: number) => {
-    setRelatedLabels((prev) => prev.filter((_, i) => i !== index))
+    setValue(
+      "relatedLabels",
+      relatedLabels.filter((_, i) => i !== index),
+      { shouldDirty: true, shouldValidate: true },
+    )
   }
 
   const { ref: titleRegisterRef, ...titleRegisterRest } = register("title")
@@ -362,15 +518,21 @@ export const TaskCreatePage = () => {
     input.focus()
   }
 
+  if (isEditMode && itemId && !editItem) {
+    return <Navigate to={paths.tasks} replace />
+  }
+
+  const pageAriaLabel = isEditMode ? "태스크 상세" : "새 태스크 작성"
+  const codeAriaLabel = isEditMode ? "항목 코드" : "신규 항목 코드 미리보기"
+
+  const commentRows = isEditMode ? itemCommentsForEdit : draftComments
+
   return (
-    <section className={pageStyles.page} aria-label="새 태스크 작성">
+    <section className={pageStyles.page} aria-label={pageAriaLabel}>
       <Card variant="panel" className={pageStyles.mainCardInner}>
         <div className={pageStyles.firstWidgetBlock}>
-          <div
-            className={pageStyles.firstWidgetTop}
-            onPointerDown={handleTitleTopPointerDown}
-          >
-            <p className={pageStyles.itemNumbering} aria-label="신규 항목 코드 미리보기">
+          <div className={pageStyles.firstWidgetTop} onPointerDown={handleTitleTopPointerDown}>
+            <p className={pageStyles.itemNumbering} aria-label={codeAriaLabel}>
               {previewCode}
             </p>
             <Input
@@ -381,6 +543,7 @@ export const TaskCreatePage = () => {
               placeholder="제목을 입력해 주세요."
               aria-label="제목"
               aria-invalid={errors.title ? true : undefined}
+              disabled={formLocked}
               {...titleRegisterRest}
               ref={(el) => {
                 titleRegisterRef(el)
@@ -405,6 +568,7 @@ export const TaskCreatePage = () => {
                   <Select
                     value={field.value}
                     items={typeSelectItems}
+                    disabled={formLocked}
                     onValueChange={(v) => {
                       field.onChange(v as ItemType)
                     }}
@@ -444,6 +608,7 @@ export const TaskCreatePage = () => {
                   <Select
                     value={field.value}
                     items={domainSelectItems}
+                    disabled={formLocked}
                     onValueChange={field.onChange}
                   >
                     <SelectTrigger
@@ -481,9 +646,14 @@ export const TaskCreatePage = () => {
                   <Select
                     value={field.value}
                     items={prioritySelectItems}
+                    disabled={formLocked}
                     onValueChange={(v) => field.onChange(v as TaskCreateFormValues["priority"])}
                   >
-                    <SelectTrigger id="task-new-priority" className={pageStyles.metaSelectTrigger}>
+                    <SelectTrigger
+                      id="task-new-priority"
+                      className={pageStyles.metaSelectTrigger}
+                      aria-invalid={Boolean(errors.priority)}
+                    >
                       <SelectValue placeholder="우선순위를 선택해 주세요" />
                     </SelectTrigger>
                     <SelectContent alignItemWithTrigger={false}>
@@ -496,6 +666,11 @@ export const TaskCreatePage = () => {
                   </Select>
                 )}
               />
+              {errors.priority ? (
+                <p className={pageStyles.errorText} role="alert">
+                  {errors.priority.message}
+                </p>
+              ) : null}
             </div>
 
             <div className={pageStyles.fieldStack}>
@@ -509,13 +684,18 @@ export const TaskCreatePage = () => {
                   <Select
                     value={field.value}
                     items={statusSelectItems}
+                    disabled={formLocked}
                     onValueChange={(v) => field.onChange(v as TaskCreateFormValues["status"])}
                   >
-                    <SelectTrigger id="task-new-status" className={pageStyles.metaSelectTrigger}>
+                    <SelectTrigger
+                      id="task-new-status"
+                      className={pageStyles.metaSelectTrigger}
+                      aria-invalid={Boolean(errors.status)}
+                    >
                       <SelectValue placeholder="상태를 선택해 주세요" />
                     </SelectTrigger>
                     <SelectContent alignItemWithTrigger={false}>
-                      {STATUS_VALUES.map((st) => (
+                      {statusRowValues.map((st) => (
                         <SelectItem key={st} value={st}>
                           {STATUS_LABELS[st]}
                         </SelectItem>
@@ -524,6 +704,11 @@ export const TaskCreatePage = () => {
                   </Select>
                 )}
               />
+              {errors.status ? (
+                <p className={pageStyles.errorText} role="alert">
+                  {errors.status.message}
+                </p>
+              ) : null}
             </div>
 
             <div className={pageStyles.fieldStack}>
@@ -538,127 +723,162 @@ export const TaskCreatePage = () => {
                     value={field.value}
                     onValueChange={field.onChange}
                     fullWidth
+                    disabled={formLocked}
                   />
                 )}
               />
+              {errors.dueDate ? (
+                <p className={pageStyles.errorText} role="alert">
+                  {errors.dueDate.message}
+                </p>
+              ) : null}
             </div>
-          </div>
-        </div>
 
-        <div className={pageStyles.assigneeRow}>
-          <div className={pageStyles.assigneeLabelControl}>
-            <p className={filterFieldLabelStyles.filterFieldLabel} id="task-assignees-label">
-              담당자
-            </p>
-            <div className={pageStyles.assigneePickRow}>
-              <div className={pageStyles.assigneeSelectField}>
-                <Select
-                  value={assigneePicker === "" ? null : assigneePicker}
-                  items={assigneeSelectItems}
-                  onValueChange={(v) => {
-                    if (v === ASSIGNEE_SELECT_CLEAR_VALUE) {
-                      setAssigneePicker("")
-                      return
-                    }
-                    setAssigneePicker(v ?? "")
-                  }}
-                >
-                  <SelectTrigger
-                    id={assigneeSelectId}
-                    className={pageStyles.metaSelectTrigger}
-                    aria-labelledby="task-assignees-label"
-                  >
-                    <SelectValue placeholder="담당자를 선택해 주세요" />
-                  </SelectTrigger>
-                  <SelectContent alignItemWithTrigger={false}>
-                    {ownerSelectOptions.map((o) => (
-                      <SelectItem key={o.value} value={o.value}>
-                        {o.label}
-                      </SelectItem>
-                    ))}
-                    {assigneePicker !== "" ? (
-                      <>
-                        <SelectSeparator />
-                        <SelectItem value={ASSIGNEE_SELECT_CLEAR_VALUE}>
-                          선택 해제
-                        </SelectItem>
-                      </>
-                    ) : null}
-                  </SelectContent>
-                </Select>
+            <div className={pageStyles.assigneeSubgridRow}>
+              <div className={pageStyles.assigneeLabelControl}>
+                <p className={filterFieldLabelStyles.filterFieldLabel} id="task-assignees-label">
+                  담당자
+                </p>
+                <div className={pageStyles.assigneePickRow}>
+                  <div className={pageStyles.assigneeSelectField}>
+                    <Select
+                      value={assigneePicker === "" ? null : assigneePicker}
+                      items={assigneeSelectItems}
+                      disabled={formLocked}
+                      onValueChange={(v) => {
+                        if (v === ASSIGNEE_SELECT_CLEAR_VALUE) {
+                          setAssigneePicker("")
+                          return
+                        }
+                        setAssigneePicker(v ?? "")
+                      }}
+                    >
+                      <SelectTrigger
+                        id={assigneeSelectId}
+                        className={pageStyles.metaSelectTrigger}
+                        aria-labelledby="task-assignees-label"
+                      >
+                        <SelectValue placeholder="담당자를 선택해 주세요" />
+                      </SelectTrigger>
+                      <SelectContent alignItemWithTrigger={false}>
+                        {ownerSelectOptions.map((o) => (
+                          <SelectItem key={o.value} value={o.value}>
+                            {o.label}
+                          </SelectItem>
+                        ))}
+                        {assigneePicker !== "" ? (
+                          <>
+                            <SelectSeparator />
+                            <SelectItem value={ASSIGNEE_SELECT_CLEAR_VALUE}>선택 해제</SelectItem>
+                          </>
+                        ) : null}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className={pageStyles.assigneePlusAndChips}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className={pageStyles.assigneePlusBtn}
+                      aria-label="선택한 담당자 추가. 목록이 비어 있으면 직접 입력"
+                      disabled={formLocked}
+                      onClick={handleAssigneePlus}
+                    >
+                      <Plus className="size-5" strokeWidth={1.75} aria-hidden />
+                    </Button>
+                    <div
+                      className={pageStyles.badgeList}
+                      role="list"
+                      aria-labelledby="task-assignees-label"
+                    >
+                      {assignees.map((label, index) => (
+                        <div
+                          key={`${label}-${index}`}
+                          className={pageStyles.relatedTaskChip}
+                          role="listitem"
+                        >
+                          <span className={pageStyles.relatedTaskChipText}>{label}</span>
+                          <button
+                            type="button"
+                            className={pageStyles.relatedTaskChipRemove}
+                            aria-label={`담당자 ${label} 제거`}
+                            disabled={formLocked}
+                            onClick={() => handleRemoveAssignee(index)}
+                          >
+                            <X
+                              className={pageStyles.relatedTaskChipIcon}
+                              strokeWidth={2}
+                              aria-hidden
+                            />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                {errors.assignees ? (
+                  <p className={pageStyles.errorText} role="alert">
+                    {errors.assignees.message}
+                  </p>
+                ) : null}
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                className={pageStyles.assigneePlusBtn}
-                aria-label="선택한 담당자 추가. 목록이 비어 있으면 직접 입력"
-                onClick={handleAssigneePlus}
-              >
-                <Plus className="size-5" strokeWidth={1.75} aria-hidden />
-              </Button>
             </div>
-          </div>
-          <div className={pageStyles.badgeList} role="list" aria-labelledby="task-assignees-label">
-            {assignees.map((label, index) => (
-              <div key={`${label}-${index}`} className={pageStyles.badgeWithRemove} role="listitem">
-                <Badge variant="pillDark">{label}</Badge>
-                <button
-                  type="button"
-                  className={pageStyles.removeIconBtn}
-                  aria-label={`담당자 ${label} 제거`}
-                  onClick={() => handleRemoveAssignee(index)}
-                >
-                  <X className="size-3.5" strokeWidth={2} aria-hidden />
-                </button>
-              </div>
-            ))}
           </div>
         </div>
       </Card>
 
-      <div
-        className={cn(
-          pageStyles.sectionBar,
-          pageStyles.relatedTasksBar,
-          relatedLabels.length > 0 && pageStyles.relatedTasksBarWithChips,
-        )}
-        aria-label="연관 태스크 영역"
-      >
-        <div className={pageStyles.sectionBarLeft}>
-          <p className={cn(filterFieldLabelStyles.filterFieldLabel, pageStyles.sectionBarTitle)}>
-            연관 태스크
-          </p>
-          <div
-            className={cn(pageStyles.sectionBarChips, pageStyles.relatedTasksChips)}
-            role="list"
-            aria-label="연관 태스크"
-          >
-            {relatedLabels.map((label, index) => (
-              <div key={`${label}-${index}`} className={pageStyles.relatedTaskChip} role="listitem">
-                <span className={pageStyles.relatedTaskChipText}>{label}</span>
-                <button
-                  type="button"
-                  className={pageStyles.relatedTaskChipRemove}
-                  aria-label={`연관 태스크 ${label} 제거`}
-                  onClick={() => handleRemoveRelated(index)}
-                >
-                  <X className={pageStyles.relatedTaskChipIcon} strokeWidth={2} aria-hidden />
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-        <Button
-          type="button"
-          appearance="fill"
-          dimension="fixedMd"
-          onClick={() => setRelatedOpen(true)}
-          aria-haspopup="dialog"
+      <>
+        <div
+          className={cn(
+            pageStyles.sectionBar,
+            pageStyles.relatedTasksBar,
+            relatedLabels.length > 0 && pageStyles.relatedTasksBarWithChips
+          )}
+          aria-label="연관 태스크 영역"
         >
-          연관 프로젝트 추가
-        </Button>
-      </div>
+          <div className={pageStyles.sectionBarLeft}>
+            <p className={cn(filterFieldLabelStyles.filterFieldLabel, pageStyles.sectionBarTitle)}>
+              연관 태스크
+            </p>
+            <div
+              className={cn(pageStyles.sectionBarChips, pageStyles.relatedTasksChips)}
+              role="list"
+              aria-label="연관 태스크"
+            >
+              {relatedLabels.map((label, index) => (
+                <div key={`${label}-${index}`} className={pageStyles.relatedTaskChip} role="listitem">
+                  <span className={pageStyles.relatedTaskChipText}>{label}</span>
+                  <button
+                    type="button"
+                    className={pageStyles.relatedTaskChipRemove}
+                    aria-label={`연관 태스크 ${label} 제거`}
+                    disabled={formLocked}
+                    onClick={() => handleRemoveRelated(index)}
+                  >
+                    <X className={pageStyles.relatedTaskChipIcon} strokeWidth={2} aria-hidden />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+          <Button
+            type="button"
+            appearance="fill"
+            dimension="fixedMd"
+            disabled={formLocked}
+            onClick={() => setRelatedOpen(true)}
+            aria-haspopup="dialog"
+          >
+            연관 프로젝트 추가
+          </Button>
+        </div>
+        {errors.relatedLabels ? (
+          <p className={pageStyles.errorText} role="alert">
+            {errors.relatedLabels.message}
+          </p>
+        ) : null}
+      </>
 
       <Card
         variant="panel"
@@ -682,12 +902,18 @@ export const TaskCreatePage = () => {
                   minHeight="280px"
                   initialEditType="wysiwyg"
                   hideModeSwitch
+                  disabled={formLocked}
                 />
               )}
             />
+            {errors.description ? (
+              <p className={pageStyles.errorText} role="alert">
+                {errors.description.message}
+              </p>
+            ) : null}
           </div>
           <div className={pageStyles.editorColumn}>
-            <p className={filterFieldLabelStyles.filterFieldLabel}>고객 회신 영역</p>
+            <p className={filterFieldLabelStyles.filterFieldLabel}>고객 회신 영역 (선택)</p>
             <Controller
               control={control}
               name="clientResponse"
@@ -702,6 +928,7 @@ export const TaskCreatePage = () => {
                   minHeight="280px"
                   initialEditType="wysiwyg"
                   hideModeSwitch
+                  disabled={formLocked}
                 />
               )}
             />
@@ -714,7 +941,7 @@ export const TaskCreatePage = () => {
           className={cn(filterFieldLabelStyles.filterFieldLabel, pageStyles.finalConfirmLabel)}
           htmlFor="task-final"
         >
-          최종 확인값
+          최종 확인값 (선택)
         </label>
         <Input
           id="task-final"
@@ -723,6 +950,7 @@ export const TaskCreatePage = () => {
           className={cn(pageStyles.finalConfirmInput, "shadow-none")}
           placeholder="최종 확인값을 입력해 주세요."
           aria-label="최종 확인값"
+          disabled={formLocked}
           {...register("finalConfirmedValue")}
         />
       </Card>
@@ -734,7 +962,7 @@ export const TaskCreatePage = () => {
             role="region"
             aria-label="코멘트"
           >
-            <p className={pageStyles.commentHistoryPanelHead}>코멘트</p>
+            <p className={pageStyles.commentHistoryPanelHead}>코멘트 (선택)</p>
             <div className={pageStyles.commentDraftWriteAndListStack}>
               <div className={pageStyles.commentDraftCompose}>
                 <div
@@ -761,14 +989,14 @@ export const TaskCreatePage = () => {
                     placeholder="질문, 보완 요청, 회의 메모를 입력하세요."
                     aria-label="코멘트 내용"
                     className={pageStyles.commentDraftTextarea}
-                    disabled={commentDraftSubmitting}
+                    disabled={formLocked || commentDraftSubmitting}
                   />
                 </div>
                 <Button
                   type="button"
                   appearance="outline"
                   dimension="hug"
-                  disabled={commentDraftSubmitting}
+                  disabled={formLocked || commentDraftSubmitting}
                   onClick={() => void handleAddDraftComment()}
                 >
                   코멘트 추가
@@ -776,40 +1004,59 @@ export const TaskCreatePage = () => {
               </div>
               <hr className={pageStyles.commentDraftDivider} aria-hidden="true" />
               <div className={pageStyles.commentDraftList}>
-              {draftComments.map((c) => (
-                <button
-                  key={c.id}
-                  type="button"
-                  className={pageStyles.commentDraftCard}
-                  aria-label={`${c.author} 코멘트 상세 보기`}
-                  onClick={() => setActiveDraftDetail(c)}
-                >
-                  <Text as="div" variant="commentAuthor">
-                    {c.author}
-                  </Text>
-                  <Text as="div" variant="commentMeta">
-                    {formatDateTime(c.createdAt)}
-                  </Text>
-                  <p className={pageStyles.commentDraftCardBody}>{c.body}</p>
-                </button>
-              ))}
+                {commentRows.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    className={pageStyles.commentDraftCard}
+                    aria-label={`${c.author} 코멘트 상세 보기`}
+                    onClick={() => setActiveDraftDetail(c)}
+                  >
+                    <Text as="div" variant="commentAuthor">
+                      {c.author}
+                    </Text>
+                    <Text as="div" variant="commentMeta">
+                      {formatDateTime(c.createdAt)}
+                    </Text>
+                    <p className={pageStyles.commentDraftCardBody}>{c.body}</p>
+                  </button>
+                ))}
               </div>
             </div>
           </div>
           <div
-            className={cn(
-              pageStyles.commentHistoryPanel,
-              pageStyles.commentHistoryPanelHistory,
-            )}
+            className={cn(pageStyles.commentHistoryPanel, pageStyles.commentHistoryPanelHistory)}
             role="region"
             aria-label="변경 이력"
           >
             <p className={pageStyles.commentHistoryPanelHead}>변경 이력</p>
             <div className={pageStyles.localHistoryList}>
-              {localHistory.length === 0 ? (
+              {isEditMode ? (
+                itemHistoryForEdit.length === 0 ? (
+                  <Text as="p" variant="muted" className={pageStyles.localHistoryEmpty}>
+                    변경 이력이 없습니다.
+                  </Text>
+                ) : (
+                  itemHistoryForEdit.map((h) => (
+                    <Card key={h.id} variant="history">
+                      <div>
+                        <Text as="div" variant="emphasis">
+                          {h.summary}
+                        </Text>
+                      </div>
+                      <Text as="div" variant="small">
+                        {h.actor}
+                      </Text>
+                      <Text as="div" variant="caption" className="mt-1">
+                        {formatDateTime(h.createdAt)}
+                      </Text>
+                    </Card>
+                  ))
+                )
+              ) : localHistory.length === 0 ? (
                 <Text as="p" variant="muted" className={pageStyles.localHistoryEmpty}>
-                  작성 중인 코멘트는 여기에 기록됩니다. 저장 후에는 항목 상세에서 전체 이력을 확인할 수
-                  있습니다.
+                  작성 중인 코멘트는 여기에 기록됩니다. 저장 후에는 항목 상세에서 전체 이력을 확인할
+                  수 있습니다.
                 </Text>
               ) : (
                 localHistory.map((h) => (
@@ -886,10 +1133,22 @@ export const TaskCreatePage = () => {
           목록으로
         </Button>
         <div className={pageStyles.footerActions}>
-          <Button type="button" appearance="outline" dimension="fixedMd" onClick={handleSave}>
+          <Button
+            type="button"
+            appearance="outline"
+            dimension="fixedMd"
+            disabled={formLocked}
+            onClick={handleSave}
+          >
             저장
           </Button>
-          <Button type="button" appearance="fill" dimension="fixedMd" onClick={handleFinalize}>
+          <Button
+            type="button"
+            appearance="fill"
+            dimension="fixedMd"
+            disabled={formLocked}
+            onClick={handleFinalize}
+          >
             확정처리
           </Button>
         </div>
@@ -948,7 +1207,7 @@ export const TaskCreatePage = () => {
                       className={cn(pageStyles.filterFormControl, appModalStyles.singleLineField)}
                       value={assigneeOrgDraft}
                       onChange={(e) => setAssigneeOrgDraft(e.target.value)}
-                      placeholder="예: 설해원"
+                      placeholder="예: 고객사"
                       autoComplete="organization"
                       onKeyDown={(e) => {
                         if (e.key === "Enter") {
@@ -962,18 +1221,13 @@ export const TaskCreatePage = () => {
               </AppModalField>
               <AppModalActions>
                 <Dialog.Close asChild>
-                  <Button type="button" appearance="outline" dimension="fixedMd">
+                  <ModalSecondaryButton actionSize="fixedMd" type="button">
                     취소
-                  </Button>
+                  </ModalSecondaryButton>
                 </Dialog.Close>
-                <Button
-                  type="button"
-                  appearance="fill"
-                  dimension="fixedMd"
-                  onClick={handleAddAssignee}
-                >
+                <ModalPrimaryButton type="button" actionSize="fixedMd" onClick={handleAddAssignee}>
                   추가
-                </Button>
+                </ModalPrimaryButton>
               </AppModalActions>
             </AppModalBody>
           </Dialog.Content>
@@ -1025,18 +1279,13 @@ export const TaskCreatePage = () => {
               </AppModalField>
               <AppModalActions>
                 <Dialog.Close asChild>
-                  <Button type="button" appearance="outline" dimension="fixedMd">
+                  <ModalSecondaryButton actionSize="fixedMd" type="button">
                     취소
-                  </Button>
+                  </ModalSecondaryButton>
                 </Dialog.Close>
-                <Button
-                  type="button"
-                  appearance="fill"
-                  dimension="fixedMd"
-                  onClick={handleAddRelated}
-                >
+                <ModalPrimaryButton type="button" actionSize="fixedMd" onClick={handleAddRelated}>
                   추가
-                </Button>
+                </ModalPrimaryButton>
               </AppModalActions>
             </AppModalBody>
           </Dialog.Content>
