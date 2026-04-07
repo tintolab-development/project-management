@@ -1,15 +1,16 @@
-import { Navigate, Outlet, useParams } from "react-router-dom"
+import { Navigate, Outlet } from "react-router-dom"
 
 import {
   canAccessProjectSlug,
   resolvePostLoginPath,
   useAuthSessionStore,
 } from "@/features/auth"
+import { useProjectRouteSlug } from "@/shared/lib/projectRouteSlug"
 
 const authBypassed = import.meta.env.VITE_REQUIRE_AUTH === "false"
 
 export const RequireProjectAccess = () => {
-  const { projectSlug = "" } = useParams()
+  const projectSlug = useProjectRouteSlug()
   const user = useAuthSessionStore((s) => s.user)
 
   if (authBypassed) {
