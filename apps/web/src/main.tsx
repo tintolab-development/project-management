@@ -8,7 +8,7 @@ import { AppProviders } from "@/app/providers/AppProviders"
 import { AppRoutes } from "@/app/AppRoutes"
 
 async function bootstrap() {
-  if (import.meta.env.DEV && import.meta.env.VITE_ENABLE_MSW !== "false") {
+  if (import.meta.env.VITE_ENABLE_MSW !== "false") {
     const { enableMsw } = await import("@/app/mocks/enableMsw")
     await enableMsw()
   }
