@@ -1,5 +1,16 @@
 .root {
   padding: 24px;
   max-width: 720px;
-  color: var(--foreground);
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 8px;
+}
+
+.lead {
+  margin: 0;
+  color: var(--sidebar-muted, #52525b);
+  line-height: 1.5;
 }

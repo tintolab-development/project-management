@@ -25,7 +25,7 @@ export const LegacyPathRedirect = () => {
   }
 
   if (hasAdminPortalAccess(user)) {
-    return <Navigate to="/admin/dashboard" replace />
+    return <Navigate to="/admin/projects" replace />
   }
 
   const slug =

@@ -6,7 +6,6 @@ import { RequireAuth } from "@/app/RequireAuth"
 import { RequireProjectAccess } from "@/app/RequireProjectAccess"
 import { AppShellLayout } from "@/widgets/app-shell/AppShellLayout"
 import { AdminAccountsPage } from "@/pages/admin/ui/AdminAccountsPage"
-import { AdminDashboardPage } from "@/pages/admin/ui/AdminDashboardPage"
 import { AdminLogsPage } from "@/pages/admin/ui/AdminLogsPage"
 import { AdminProjectsPage } from "@/pages/admin/ui/AdminProjectsPage"
 import { AdminSchedulePage } from "@/pages/admin/ui/AdminSchedulePage"
@@ -30,8 +29,7 @@ export const AppRoutes = () => (
       <Route element={<RequireAdmin />}>
         <Route element={<AppShellLayout variant="admin" />}>
           <Route path="admin">
-            <Route index element={<Navigate to="dashboard" replace />} />
-            <Route path="dashboard" element={<AdminDashboardPage />} />
+            <Route index element={<Navigate to="projects" replace />} />
             <Route path="projects" element={<AdminProjectsPage />} />
             <Route path="accounts" element={<AdminAccountsPage />} />
             <Route path="schedule" element={<AdminSchedulePage />} />
