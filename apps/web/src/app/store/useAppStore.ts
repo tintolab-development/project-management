@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from "zustand/middleware"
 import { normalizeAppState } from "@/entities/app-state/lib/normalizeAppState"
 import { createSeedData } from "@/entities/app-state/model/seed"
 import type { AppState, UiState } from "@/entities/app-state/model/types"
+import type { Comment } from "@/entities/comment/model/types"
 import type { Item, ItemType } from "@/entities/item/model/types"
 import type { Domain } from "@/entities/domain/model/types"
 import { findDomainByAny } from "@/entities/domain/lib/findDomain"
@@ -27,8 +28,13 @@ import {
   sortItemsByBoardRank,
   sortItemsForGlobalList,
 } from "@/entities/item/lib/sortItemsByBoard"
+import { getNextItemCode } from "@/entities/item/lib/nextItemCode"
+import { useAuthSessionStore } from "@/features/auth"
 
 const nowIso = () => new Date().toISOString()
+
+const resolveHistoryActor = () =>
+  useAuthSessionStore.getState().user?.displayName?.trim() || "틴토랩 사용자"
 
 const nextBoardRankForStatus = (
   items: Item[],
@@ -41,25 +47,24 @@ const nextBoardRankForStatus = (
   return ranks.length ? Math.max(...ranks) + 1 : 0
 }
 
-const getNextCode = (items: Item[], type: ItemType) => {
-  const prefix =
-    type === "information_request"
-      ? "IR"
-      : type === "decision"
-        ? "D"
-        : type === "review"
-          ? "R"
-          : type === "issue"
-            ? "ISS"
-            : "CR"
-
-  const nums = items
-    .filter((item) => item.code.startsWith(prefix))
-    .map((item) => Number(item.code.split("-")[1] || "0"))
-    .filter((num) => !Number.isNaN(num))
-
-  const next = (nums.length ? Math.max(...nums) : 0) + 1
-  return `${prefix}-${String(next).padStart(3, "0")}`
+export type CreateItemInput = {
+  type: ItemType
+  domain: string
+  priority: Item["priority"]
+  owner: string
+  dueDate: string
+  title: string
+  description: string
+  /** 미지정 시 `논의` */
+  status?: string
+  clientResponse?: string
+  finalConfirmedValue?: string
+  /** 태스크 생성 화면에서 저장 시 함께 반영할 초안 코멘트 */
+  initialComments?: ReadonlyArray<{
+    author: string
+    body: string
+    createdAt: string
+  }>
 }
 
 export type ItemDetailPatch = {
@@ -74,6 +79,14 @@ export type ItemDetailPatch = {
   finalConfirmedValue: string
 }
 
+export type TasksListFiltersPayload = {
+  itemsQuery: string
+  priorityFilters: Item["priority"][]
+  typeFilters: ItemType[]
+  domainFilter: string
+  ownerFilter: string
+}
+
 export type AppStore = AppState & {
   getSortedItems: () => Item[]
   getItemById: (id: string) => Item | undefined
@@ -81,11 +94,11 @@ export type AppStore = AppState & {
   setActiveWorkspace: (w: UiState["activeWorkspace"]) => void
   setItemsQuery: (q: string) => void
   setTreeQuery: (q: string) => void
-  setTypeFilter: (v: string) => void
   setDomainFilter: (v: string) => void
   setStatusFilter: (v: string) => void
-  setPriorityFilter: (v: string) => void
   setDueDateFilter: (v: string) => void
+  /** Tasks 좌측 패널 조회 — 검색·배지·분류·담당자 일괄 반영, 상태·마감 필터는 초기화 */
+  applyTasksListFilters: (p: TasksListFiltersPayload) => void
   selectItem: (id: string | null) => void
   toggleDomainExpanded: (domainId: string) => void
   setTreeExpandAll: (expand: boolean) => void
@@ -93,6 +106,8 @@ export type AppStore = AppState & {
   saveSelectedItem: (patch: ItemDetailPatch) => boolean
   toggleLockSelectedItem: () => boolean
   addComment: (author: string, body: string) => boolean
+  /** MSW/백엔드가 부여한 `id`·`createdAt`으로 코멘트를 반영할 때 사용 */
+  addCommentFromApi: (comment: Comment) => boolean
   deleteItem: (itemId: string) => void
   moveItemToDomain: (itemId: string, targetDomainId: string) => void
   moveDomainNode: (
@@ -105,15 +120,7 @@ export type AppStore = AppState & {
     targetDomainId: string,
     position: "before" | "after" | "inside",
   ) => string | undefined
-  createItem: (input: {
-    type: ItemType
-    domain: string
-    priority: Item["priority"]
-    owner: string
-    dueDate: string
-    title: string
-    description: string
-  }) => void
+  createItem: (input: CreateItemInput) => string | undefined
   createDomain: (name: string, parentId?: string) => Domain | null
   createChildDomain: (parentDomainId: string) => void
   renameDomain: (domainId: string) => void
@@ -137,6 +144,7 @@ const addHistory = (
   eventType: string,
   summary: string,
   actor = "시스템",
+  createdAtIso?: string,
 ) => {
   history.unshift({
     id: uniqueId("H"),
@@ -144,7 +152,7 @@ const addHistory = (
     eventType,
     summary,
     actor,
-    createdAt: nowIso(),
+    createdAt: createdAtIso ?? nowIso(),
   })
 }
 
@@ -171,19 +179,28 @@ export const useAppStore = create<AppStore>()(
 
       setTreeQuery: (treeQuery) => set((s) => ({ ui: { ...s.ui, treeQuery } })),
 
-      setTypeFilter: (typeFilter) => set((s) => ({ ui: { ...s.ui, typeFilter } })),
-
       setDomainFilter: (domainFilter) =>
         set((s) => ({ ui: { ...s.ui, domainFilter } })),
 
       setStatusFilter: (statusFilter) =>
         set((s) => ({ ui: { ...s.ui, statusFilter } })),
 
-      setPriorityFilter: (priorityFilter) =>
-        set((s) => ({ ui: { ...s.ui, priorityFilter } })),
-
       setDueDateFilter: (dueDateFilter) =>
         set((s) => ({ ui: { ...s.ui, dueDateFilter } })),
+
+      applyTasksListFilters: (p) =>
+        set((s) => ({
+          ui: {
+            ...s.ui,
+            itemsQuery: p.itemsQuery,
+            priorityFilters: p.priorityFilters,
+            typeFilters: p.typeFilters,
+            domainFilter: p.domainFilter,
+            ownerFilter: p.ownerFilter,
+            statusFilter: "",
+            dueDateFilter: "",
+          },
+        })),
 
       selectItem: (selectedItemId) => set((s) => ({ ui: { ...s.ui, selectedItemId } })),
 
@@ -258,7 +275,13 @@ export const useAppStore = create<AppStore>()(
             before !== JSON.stringify(updated)
               ? (() => {
                   const h = [...s.history]
-                  addHistory(h, id, "item.updated", `${updated.code} 항목을 수정`, "틴토랩 사용자")
+                  addHistory(
+                    h,
+                    id,
+                    "item.updated",
+                    `${updated.code} 항목을 수정`,
+                    resolveHistoryActor(),
+                  )
                   return h
                 })()
               : s.history,
@@ -291,7 +314,7 @@ export const useAppStore = create<AppStore>()(
               id,
               "item.locked",
               `${item.code} 항목을 최종 기준으로 확정`,
-              "틴토랩 사용자",
+              resolveHistoryActor(),
             )
             return {
               items: s.items.map((i) => (i.id === id ? updated : i)),
@@ -315,7 +338,7 @@ export const useAppStore = create<AppStore>()(
             id,
             "item.unlocked",
             `${item.code} 항목 확정 해제`,
-            "틴토랩 사용자",
+            resolveHistoryActor(),
           )
           return {
             items: s.items.map((i) => (i.id === id ? updated : i)),
@@ -351,8 +374,38 @@ export const useAppStore = create<AppStore>()(
             history,
             id,
             "comment.added",
-            `${item.code} 항목에 코멘트 추가`,
-            author.trim(),
+            `${item.code} 항목에 코멘트`,
+            resolveHistoryActor(),
+          )
+          return { comments, history }
+        })
+        return true
+      },
+
+      addCommentFromApi: (comment) => {
+        const item = get().items.find((i) => i.id === comment.itemId)
+        if (!item) return false
+        const author = comment.author?.trim()
+        const body = comment.body?.trim()
+        if (!author || !body) {
+          window.alert("작성자와 코멘트 내용을 입력해 주세요.")
+          return false
+        }
+        const normalized: Comment = {
+          ...comment,
+          author,
+          body,
+        }
+        set((s) => {
+          const comments = [...s.comments, normalized]
+          const history = [...s.history]
+          addHistory(
+            history,
+            normalized.itemId,
+            "comment.added",
+            `${item.code} 항목에 코멘트`,
+            resolveHistoryActor(),
+            normalized.createdAt,
           )
           return { comments, history }
         })
@@ -451,9 +504,10 @@ export const useAppStore = create<AppStore>()(
       createItem: (input) => {
         if (!input.title.trim()) {
           window.alert("제목을 입력해 주세요.")
-          return
+          return undefined
         }
-        const code = getNextCode(get().items, input.type)
+        const nextStatus = normalizeStatusValue(input.status ?? "논의")
+        const code = getNextItemCode(get().items, input.type)
         const item: Item = {
           id: code,
           code,
@@ -462,32 +516,56 @@ export const useAppStore = create<AppStore>()(
           title: input.title.trim(),
           description: input.description.trim(),
           priority: input.priority,
-          status: "논의",
+          status: nextStatus,
           owner: input.owner.trim(),
           dueDate: input.dueDate,
-          clientResponse: "",
-          finalConfirmedValue: "",
-          isLocked: false,
-          boardRank: nextBoardRankForStatus(get().items, "논의"),
+          clientResponse: (input.clientResponse ?? "").trim(),
+          finalConfirmedValue: (input.finalConfirmedValue ?? "").trim(),
+          isLocked: nextStatus === "확정",
+          boardRank: nextBoardRankForStatus(get().items, nextStatus),
           createdAt: nowIso(),
           updatedAt: nowIso(),
         }
 
+        const normalizedInitial =
+          input.initialComments
+            ?.map((c) => ({
+              author: c.author.trim(),
+              body: c.body.trim(),
+              createdAt: c.createdAt,
+            }))
+            .filter((c) => c.author && c.body) ?? []
+
+        const newComments: Comment[] = normalizedInitial.map((c) => ({
+          id: uniqueId("C"),
+          itemId: item.id,
+          author: c.author,
+          body: c.body,
+          createdAt: c.createdAt,
+        }))
+
         set((s) => {
           const history = [...s.history]
-          addHistory(
-            history,
-            item.id,
-            "item.created",
-            `${item.code} 항목 생성`,
-            "틴토랩 사용자",
-          )
+          const actor = resolveHistoryActor()
+          addHistory(history, item.id, "item.created", `${item.code} 항목을 저장`, actor)
+          for (const c of newComments) {
+            addHistory(
+              history,
+              item.id,
+              "comment.added",
+              `${item.code} 항목에 코멘트`,
+              actor,
+              c.createdAt,
+            )
+          }
           return {
             items: [...s.items, item],
+            comments: [...s.comments, ...newComments],
             ui: { ...s.ui, selectedItemId: item.id },
             history,
           }
         })
+        return item.id
       },
 
       createDomain: (name, parentId = "") => {
@@ -666,7 +744,7 @@ export const useAppStore = create<AppStore>()(
               const resolvedDomainId = resolveDomainValue(data.domain, domains, {
                 createIfMissing: true,
               })
-              const code = data.code || getNextCode(items, data.type as ItemType)
+              const code = data.code || getNextItemCode(items, data.type as ItemType)
               const nextStatus = normalizeStatusValue(data.status)
               const item: Item = {
                 id: code,
