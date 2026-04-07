@@ -15,7 +15,7 @@ import {
   getDomainOptionLabel,
   walkDomainsFlatForClassificationSelect,
 } from "@/entities/domain/lib/domainTree"
-import type { ItemType, Priority } from "@/entities/item/model/types"
+import { PRIORITY_VALUES, type ItemType, type Priority } from "@/entities/item/model/types"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -43,7 +43,7 @@ const EMPTY_TASKS_FILTERS = {
   ownerFilter: "",
 }
 
-const PRIORITY_OPTIONS: Priority[] = ["P0", "P1", "P2"]
+const PRIORITY_OPTIONS: Priority[] = [...PRIORITY_VALUES]
 
 type TasksFilterPanelProps = {
   domains: Domain[]
@@ -174,10 +174,7 @@ export const TasksFilterPanel = ({ domains, onFiltersApplied }: TasksFilterPanel
   return (
     <form className={styles.panel} aria-label="작업 검색 및 필터" onSubmit={handleFormSubmit}>
       <div className={styles.searchFieldDividerColumn}>
-        <div
-          className={cn(styles.field, styles.filterStandardWidth)}
-          onPointerDown={handleSearchFieldPointerDown}
-        >
+        <div className={styles.field} onPointerDown={handleSearchFieldPointerDown}>
           <label className={filterFieldLabelStyles.filterFieldLabel} htmlFor={searchId}>
             제목/코드
           </label>
@@ -291,6 +288,7 @@ export const TasksFilterPanel = ({ domains, onFiltersApplied }: TasksFilterPanel
           value={draftDomain}
           onValueChange={setDraftDomain}
           resolveDisplayLabel={(id) => getDomainOptionLabel(domains, id)}
+          fullWidth
         />
 
         <FilterSelectField
@@ -300,6 +298,7 @@ export const TasksFilterPanel = ({ domains, onFiltersApplied }: TasksFilterPanel
           options={ownerSelectOptions}
           value={draftOwner}
           onValueChange={setDraftOwner}
+          fullWidth
         />
 
         <Button type="submit" variant="default" className={styles.submitBtn}>
