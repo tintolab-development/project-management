@@ -14,20 +14,13 @@ export function AppSidebarBrand({ variant }: AppSidebarBrandProps) {
     <div className={cn(styles.brand, isAdmin && styles.brandAdmin)}>
       <div
         className={styles.brandMark}
-        {...(isAdmin ? { "aria-label": "Tintolab 관리자 로고" } : {})}
+        {...(isAdmin
+          ? { "aria-label": "Tintolab 관리자 로고" }
+          : { "aria-label": "프로젝트 작업공간 로고" })}
       >
-        {isAdmin ? (
-          <span className={styles.brandLetterT} aria-hidden="true">
-            T
-          </span>
-        ) : (
-          <img
-            src="/seol-logo.png"
-            alt="설해원 로고"
-            className={styles.brandLogo}
-            decoding="async"
-          />
-        )}
+        <span className={styles.brandLetterMark} aria-hidden="true">
+          {isAdmin ? "T" : "P"}
+        </span>
       </div>
       <div className={cn(styles.brandCopy, isAdmin && styles.brandCopyAdmin)}>
         {isAdmin ? (
@@ -39,7 +32,7 @@ export function AppSidebarBrand({ variant }: AppSidebarBrandProps) {
         )}
         {isAdmin ? null : (
           <Text as="div" variant="sidebarBrandSub">
-            Issue Item management
+            Task Management
           </Text>
         )}
       </div>
