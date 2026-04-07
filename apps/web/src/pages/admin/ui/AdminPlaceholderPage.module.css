@@ -1,0 +1,5 @@
+.root {
+  padding: 24px;
+  max-width: 720px;
+  color: var(--foreground);
+}
