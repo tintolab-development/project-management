@@ -1,9 +1,8 @@
-import { useMemo } from "react"
 import { Bell, LogOut } from "lucide-react"
-import { matchPath, useLocation, useNavigate } from "react-router-dom"
+import { useLocation, useNavigate } from "react-router-dom"
 // import { Button } from "@/shared/ui/button"
 import { Heading } from "@/shared/ui/typography"
-import { APP_SIDEBAR_NAV } from "@/widgets/app-sidebar/app-sidebar-nav-config"
+import { resolveShellPageTitle } from "@/widgets/app-sidebar/shellPageTitle"
 // import { useAppStore } from "@/app/store/useAppStore"
 import { logoutRequest, useAuthSessionStore } from "@/features/auth"
 // import { NewItemModal } from "@/features/new-item/ui/NewItemModal"
@@ -11,20 +10,10 @@ import { logoutRequest, useAuthSessionStore } from "@/features/auth"
 
 import styles from "./TopBar.module.css"
 
-function useNavCategoryTitle(): string {
-  const { pathname } = useLocation()
-  return useMemo(() => {
-    for (const item of APP_SIDEBAR_NAV) {
-      const m = matchPath({ path: item.to, end: item.end ?? false }, pathname)
-      if (m) return item.label
-    }
-    return "App"
-  }, [pathname])
-}
-
 export const TopBar = () => {
   const navigate = useNavigate()
-  const pageTitle = useNavCategoryTitle()
+  const { pathname } = useLocation()
+  const pageTitle = resolveShellPageTitle(pathname)
   // const [newOpen, setNewOpen] = useState(false)
   // const [importOpen, setImportOpen] = useState(false)
   // const exportStateJson = useAppStore((s) => s.exportStateJson)

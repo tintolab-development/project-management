@@ -15,9 +15,10 @@ import styles from "./AppSidebar.module.css"
 
 type Props = {
   items: readonly AppSidebarNavItem[]
+  projectBasePath?: string
 }
 
-export function AppSidebarNav({ items }: Props) {
+export function AppSidebarNav({ items, projectBasePath }: Props) {
   return (
     <nav className={styles.nav} aria-label="페이지">
       <SidebarGroup className={styles.navGroup}>
@@ -27,6 +28,7 @@ export function AppSidebarNav({ items }: Props) {
               <AppSidebarNavRow
                 key={item.to + String(item.end ?? false)}
                 item={item}
+                projectBasePath={projectBasePath}
               />
             ))}
           </SidebarMenu>
@@ -36,13 +38,20 @@ export function AppSidebarNav({ items }: Props) {
   )
 }
 
-function AppSidebarNavRow({ item }: { item: AppSidebarNavItem }) {
+function AppSidebarNavRow({
+  item,
+  projectBasePath,
+}: {
+  item: AppSidebarNavItem
+  projectBasePath?: string
+}) {
   const match = useMatch({ path: item.to, end: item.end ?? false })
   const activeWorkspace = useAppStore((s) => s.ui.activeWorkspace)
-  const to =
-    item.to === "/workspaces"
-      ? buildWorkspacesPath(activeWorkspace)
-      : item.to
+  const isWorkspaces =
+    item.to === "/workspaces" || item.to.endsWith("/workspaces")
+  const to = isWorkspaces
+    ? buildWorkspacesPath(activeWorkspace, { projectBasePath })
+    : item.to
 
   return (
     <SidebarMenuItem>

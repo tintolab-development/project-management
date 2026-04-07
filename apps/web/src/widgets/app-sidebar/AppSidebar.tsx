@@ -7,14 +7,22 @@ import {
 import { cn } from "@/lib/utils"
 import { Text } from "@/shared/ui/typography"
 
-import { APP_SIDEBAR_NAV } from "./app-sidebar-nav-config"
+import type { AppSidebarNavItem } from "./app-sidebar-nav-config"
+
+export type AppSidebarShellVariant = "admin" | "project"
 import { AppSidebarBrand } from "./AppSidebarBrand"
 import { AppSidebarNav } from "./AppSidebarNav"
 import { AppSidebarPrinciples } from "./AppSidebarPrinciples"
 import { AppSidebarProjectPanel } from "./AppSidebarProjectPanel"
 import styles from "./AppSidebar.module.css"
 
-export function AppSidebar() {
+type Props = {
+  variant: AppSidebarShellVariant
+  navItems: readonly AppSidebarNavItem[]
+  projectBasePath?: string
+}
+
+export function AppSidebar({ variant, navItems, projectBasePath }: Props) {
   return (
     <Sidebar
       collapsible="none"
@@ -25,8 +33,8 @@ export function AppSidebar() {
         <AppSidebarBrand />
       </SidebarHeader>
       <SidebarContent className={styles.contentSlot}>
-        <AppSidebarProjectPanel />
-        <AppSidebarNav items={APP_SIDEBAR_NAV} />
+        {variant === "project" ? <AppSidebarProjectPanel /> : null}
+        <AppSidebarNav items={navItems} projectBasePath={projectBasePath} />
       </SidebarContent>
       <SidebarFooter className={styles.footerSlot}>
         <AppSidebarPrinciples />
