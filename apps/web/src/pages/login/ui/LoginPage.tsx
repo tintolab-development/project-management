@@ -20,14 +20,12 @@ import styles from "./LoginPage.module.css"
 const authBypassed = import.meta.env.VITE_REQUIRE_AUTH === "false"
 
 /** MSW `mockUsersStore` 시드와 동일 — 개발 모드 빠른 입력 전용 */
-const TINTOLAB_ADMIN_EMAIL = "admin@tinto.co.kr"
-const TINTOLAB_ADMIN_PASSWORD = "!Tinto0527"
-const TINTOLAB_MASTER_PM_EMAIL = "master-pm@tinto.co.kr"
-const TINTOLAB_MASTER_PM_PASSWORD = "MasterPm2026!"
-const TINTOLAB_PM_EMAIL = "pm@tinto.co.kr"
-const TINTOLAB_PM_PASSWORD = "PmTinto2026!"
+const TINTOLAB_MASTER_ADMIN_EMAIL = "master-pm@tinto.co.kr"
+const TINTOLAB_MASTER_ADMIN_PASSWORD = "MasterPm2026!"
 const SEOHAEWON_STAFF_EMAIL = "staff@seohaewon.co.kr"
 const SEOHAEWON_STAFF_PASSWORD = "SeohaeStaff2026!"
+const MULTI_SAMPLE_EMAIL = "multi@demo.local"
+const MULTI_SAMPLE_PASSWORD = "MultiDemo2026!"
 
 export const LoginPage = () => {
   const navigate = useNavigate()
@@ -131,55 +129,17 @@ export const LoginPage = () => {
                   className={styles.quickLoginButton}
                   onClick={() => {
                     clearErrors()
-                    setValue("email", TINTOLAB_ADMIN_EMAIL, {
+                    setValue("email", TINTOLAB_MASTER_ADMIN_EMAIL, {
                       shouldDirty: true,
                       shouldValidate: true,
                     })
-                    setValue("password", TINTOLAB_ADMIN_PASSWORD, {
-                      shouldDirty: true,
-                      shouldValidate: true,
-                    })
-                  }}
-                >
-                  틴토랩 관리자
-                </Button>
-                <Button
-                  type="button"
-                  appearance="fill"
-                  dimension="stretchSm"
-                  className={styles.quickLoginButton}
-                  onClick={() => {
-                    clearErrors()
-                    setValue("email", TINTOLAB_MASTER_PM_EMAIL, {
-                      shouldDirty: true,
-                      shouldValidate: true,
-                    })
-                    setValue("password", TINTOLAB_MASTER_PM_PASSWORD, {
+                    setValue("password", TINTOLAB_MASTER_ADMIN_PASSWORD, {
                       shouldDirty: true,
                       shouldValidate: true,
                     })
                   }}
                 >
-                  틴토랩 마스터 PM
-                </Button>
-                <Button
-                  type="button"
-                  appearance="fill"
-                  dimension="stretchSm"
-                  className={styles.quickLoginButton}
-                  onClick={() => {
-                    clearErrors()
-                    setValue("email", TINTOLAB_PM_EMAIL, {
-                      shouldDirty: true,
-                      shouldValidate: true,
-                    })
-                    setValue("password", TINTOLAB_PM_PASSWORD, {
-                      shouldDirty: true,
-                      shouldValidate: true,
-                    })
-                  }}
-                >
-                  틴토랩 PM (알파·베타)
+                  틴토랩 마스터 관리자
                 </Button>
                 <Button
                   type="button"
@@ -199,6 +159,25 @@ export const LoginPage = () => {
                   }}
                 >
                   설해원 담당자
+                </Button>
+                <Button
+                  type="button"
+                  appearance="fill"
+                  dimension="stretchSm"
+                  className={styles.quickLoginButton}
+                  onClick={() => {
+                    clearErrors()
+                    setValue("email", MULTI_SAMPLE_EMAIL, {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    })
+                    setValue("password", MULTI_SAMPLE_PASSWORD, {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    })
+                  }}
+                >
+                  샘플 멀티 프로젝트
                 </Button>
               </div>
             ) : null}

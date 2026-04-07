@@ -8,9 +8,7 @@ const coerceRoles = (raw: unknown, email: string): AuthRole[] => {
     if (parsed.length) return parsed
   }
   const key = email.trim().toLowerCase()
-  if (key === "admin@tinto.co.kr") return ["tintolab_super_admin"]
-  if (key === "master-pm@tinto.co.kr") return ["tintolab_master_pm"]
-  if (key === "pm@tinto.co.kr") return ["tintolab_pm"]
+  if (key === "master-pm@tinto.co.kr") return ["tintolab_master_admin"]
   return ["project_stakeholder"]
 }
 

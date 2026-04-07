@@ -1,9 +1,4 @@
-export const AUTH_ROLES = [
-  "tintolab_super_admin",
-  "tintolab_master_pm",
-  "tintolab_pm",
-  "project_stakeholder",
-] as const
+export const AUTH_ROLES = ["tintolab_master_admin", "project_stakeholder"] as const
 
 export type AuthRole = (typeof AUTH_ROLES)[number]
 
