@@ -21,7 +21,7 @@ import {
   walkDomainsFlatForClassificationSelect,
 } from "@/entities/domain/lib/domainTree"
 import { getNextItemCode } from "@/entities/item/lib/nextItemCode"
-import type { ItemType } from "@/entities/item/model/types"
+import { PRIORITY_VALUES, type ItemType } from "@/entities/item/model/types"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -54,8 +54,6 @@ import { cn } from "@/lib/utils"
 import { taskCreateFormSchema, type TaskCreateFormValues } from "../lib/taskCreateFormSchema"
 
 import pageStyles from "./TaskCreatePage.module.css"
-
-const PRIORITY_OPTIONS = ["P0", "P1", "P2"] as const
 
 /** 담당자 Select 전용 — 목록 옵션 값과 충돌하지 않는 내부 토큰 */
 const ASSIGNEE_SELECT_CLEAR_VALUE = "__task_create_assignee_clear__"
@@ -154,7 +152,8 @@ export const TaskCreatePage = () => {
     [domainOptions]
   )
   const prioritySelectItems = useMemo(
-    () => Object.fromEntries(PRIORITY_OPTIONS.map((p) => [p, p])) as Record<string, ReactNode>,
+    () =>
+      Object.fromEntries(PRIORITY_VALUES.map((p) => [p, p])) as Record<string, ReactNode>,
     []
   )
   const statusSelectItems = useMemo(
@@ -488,7 +487,7 @@ export const TaskCreatePage = () => {
                       <SelectValue placeholder="우선순위를 선택해 주세요" />
                     </SelectTrigger>
                     <SelectContent alignItemWithTrigger={false}>
-                      {PRIORITY_OPTIONS.map((p) => (
+                      {PRIORITY_VALUES.map((p) => (
                         <SelectItem key={p} value={p}>
                           {p}
                         </SelectItem>

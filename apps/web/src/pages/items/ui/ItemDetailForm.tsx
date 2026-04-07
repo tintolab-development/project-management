@@ -7,7 +7,7 @@ import {
 } from "react-hook-form"
 import clsx from "clsx"
 
-import type { Item } from "@/entities/item/model/types"
+import { PRIORITY_VALUES, type Item } from "@/entities/item/model/types"
 import type { Domain } from "@/entities/domain/model/types"
 import type { Comment } from "@/entities/comment/model/types"
 import type { HistoryEntry } from "@/entities/history/model/types"
@@ -160,7 +160,7 @@ export const ItemDetailForm = ({
             disabled={locked}
             {...register("priority")}
           >
-            {(["P0", "P1", "P2"] as const).map((p) => (
+            {PRIORITY_VALUES.map((p) => (
               <option key={p} value={p}>
                 {p}
               </option>

@@ -5,15 +5,13 @@ import {
   getDomainOptionLabel,
   walkDomainsFlatForClassificationSelect,
 } from "@/entities/domain/lib/domainTree"
-import type { Item, ItemType, Priority } from "@/entities/item/model/types"
+import { PRIORITY_VALUES, type Item, type ItemType, type Priority } from "@/entities/item/model/types"
 import { FilterSelectField } from "@/shared/ui/filter-field"
 import { TYPE_LABELS } from "@/shared/constants/labels"
 import { ITEM_TYPE_VALUES } from "@/shared/lib/itemType"
 import { cn } from "@/lib/utils"
 
 import styles from "./CalendarFiltersPanel.module.css"
-
-const PRIORITY_VALUES: Priority[] = ["P0", "P1", "P2"]
 
 export type CalendarFiltersPanelProps = {
   domains: Domain[]

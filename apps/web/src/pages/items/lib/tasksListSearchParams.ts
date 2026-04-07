@@ -1,5 +1,5 @@
 import type { TasksListFiltersPayload } from "@/app/store/useAppStore"
-import type { ItemType, Priority } from "@/entities/item/model/types"
+import { PRIORITY_VALUES, type ItemType, type Priority } from "@/entities/item/model/types"
 import { ITEM_TYPE_VALUES } from "@/shared/lib/itemType"
 
 /** Tasks 목록 필터 — URL 쿼리 키 */
@@ -13,7 +13,7 @@ export const TASK_LIST_SEARCH_PARAM_KEYS = {
 
 const ALL_PARAM_KEYS = Object.values(TASK_LIST_SEARCH_PARAM_KEYS)
 
-const PRIORITY_ORDER: Priority[] = ["P0", "P1", "P2"]
+const PRIORITY_ORDER: Priority[] = [...PRIORITY_VALUES]
 
 /** URL·스토어에 넣기 전: 전 우선순위 선택은 필터 없음([])과 동일 */
 export const normalizePriorityFilters = (filters: Priority[]): Priority[] => {

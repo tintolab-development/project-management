@@ -21,7 +21,12 @@ export const STATUS_STYLE: Record<ItemStatus, string> = {
   확정: "success",
 }
 
-export const PRIORITY_LABELS = { P0: "P0", P1: "P1", P2: "P2" } as const
+export const PRIORITY_LABELS = {
+  P0: "P0",
+  P1: "P1",
+  P2: "P2",
+  P3: "P3",
+} as const
 
 export const WORKSPACE_TYPES = ["information_request", "decision"] as const
 

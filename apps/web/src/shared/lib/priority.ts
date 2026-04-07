@@ -1,7 +1,9 @@
-import type { Priority } from "@/entities/item/model/types"
+import { PRIORITY_VALUES, type Priority } from "@/entities/item/model/types"
+
+const ALLOWED = new Set<string>(PRIORITY_VALUES)
 
 export const normalizePriority = (raw: unknown): Priority => {
   const p = String(raw ?? "").trim().toUpperCase()
-  if (p === "P0" || p === "P1" || p === "P2") return p
+  if (ALLOWED.has(p)) return p as Priority
   return "P1"
 }

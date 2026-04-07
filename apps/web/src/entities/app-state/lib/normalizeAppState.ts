@@ -5,7 +5,7 @@ import { createSeedData } from "@/entities/app-state/model/seed"
 import type { AppState, ProjectState, UiState } from "@/entities/app-state/model/types"
 import type { Comment } from "@/entities/comment/model/types"
 import type { HistoryEntry } from "@/entities/history/model/types"
-import type { Item, ItemType, Priority } from "@/entities/item/model/types"
+import { PRIORITY_VALUES, type Item, type ItemType, type Priority } from "@/entities/item/model/types"
 import { normalizeDateInput } from "@/shared/lib/dates"
 import { uniqueId } from "@/shared/lib/ids"
 import {
@@ -19,6 +19,8 @@ import {
   STATUS_VALUES,
   type ItemStatus,
 } from "@/shared/constants/labels"
+
+const PRIORITY_FILTER_SET = new Set<string>(PRIORITY_VALUES)
 
 const parseWorkspaceColumnOrder = (
   raw: unknown,
@@ -61,11 +63,11 @@ const parsePriorityFilters = (raw: unknown, legacy: unknown): Priority[] => {
   if (Array.isArray(raw)) {
     return raw
       .map((x) => String(x))
-      .filter((x): x is Priority => x === "P0" || x === "P1" || x === "P2")
+      .filter((x): x is Priority => PRIORITY_FILTER_SET.has(x))
   }
   const legacyNorm = normalizeTextValue(legacy ?? "")
-  if (legacyNorm === "P0" || legacyNorm === "P1" || legacyNorm === "P2") {
-    return [legacyNorm]
+  if (PRIORITY_FILTER_SET.has(legacyNorm)) {
+    return [legacyNorm as Priority]
   }
   return []
 }
