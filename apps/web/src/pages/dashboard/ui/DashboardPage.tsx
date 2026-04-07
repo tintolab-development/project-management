@@ -1,6 +1,7 @@
 import { useMemo } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAppStore } from "@/app/store/useAppStore"
+import { useProjectScopedPaths } from "@/shared/lib/projectScopedPaths"
 import { sortItemsForGlobalList } from "@/entities/item/lib/sortItemsByBoard"
 import { Card } from "@/shared/ui/card"
 import { ItemBoardCard } from "@/entities/item/ui/ItemBoardCard"
@@ -26,6 +27,7 @@ const getStatusDoneCount = (items: { status: string }[]) =>
 
 export const DashboardPage = () => {
   const navigate = useNavigate()
+  const paths = useProjectScopedPaths()
   const domains = useAppStore((s) => s.domains)
   const history = useAppStore((s) => s.history)
   const selectItem = useAppStore((s) => s.selectItem)
@@ -72,7 +74,7 @@ export const DashboardPage = () => {
 
   const handleOpenItem = (itemId: string) => {
     selectItem(itemId)
-    navigate("/items")
+    navigate(paths.tasks)
   }
 
   return (
@@ -96,21 +98,23 @@ export const DashboardPage = () => {
               즉시 확인할 P0 항목
             </Heading>
           </div>
-          <div className={cn(styles.listStack, styles.panelBodyScroll)}>
-            {urgent.length === 0 ? (
-              <Text variant="dashboardEmpty" as="div">
-                표시할 항목이 없습니다.
-              </Text>
-            ) : (
-              urgent.map((item) => (
-                <ItemBoardCard
-                  key={item.id}
-                  item={item}
-                  getDomainLabel={getDomainLabel}
-                  onOpen={handleOpenItem}
-                />
-              ))
-            )}
+          <div className={styles.panelBodyScroll}>
+            <div className={styles.listStack}>
+              {urgent.length === 0 ? (
+                <Text variant="dashboardEmpty" as="div">
+                  표시할 항목이 없습니다.
+                </Text>
+              ) : (
+                urgent.map((item) => (
+                  <ItemBoardCard
+                    key={item.id}
+                    item={item}
+                    getDomainLabel={getDomainLabel}
+                    onOpen={handleOpenItem}
+                  />
+                ))
+              )}
+            </div>
           </div>
         </Card>
 

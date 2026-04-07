@@ -20,11 +20,16 @@
   margin-bottom: var(--space-6);
 }
 
-/** P0 / 도메인 패널: 카드 전체 높이 상한, 본문만 세로 스크롤 */
+/**
+ * P0 / 도메인 패널: 고정 캡 높이( min = max )로 플렉스 본문에 남는 높이를 줘
+ * `max-height`만 있으면 카드 높이가 헤더만 잡히고 본문(`flex:1`)이 0px로 붕괴될 수 있음
+ */
 .panelCardCapped {
+  --dashboard-panel-cap: min(560px, calc(100vh - 220px));
   display: flex;
   flex-direction: column;
-  max-height: 514px;
+  min-height: var(--dashboard-panel-cap);
+  max-height: var(--dashboard-panel-cap);
   overflow: hidden;
 }
 
@@ -33,13 +38,16 @@
 }
 
 .panelBodyScroll {
-  /* basis auto: 콘텐츠가 적을 때 높이 0으로 붕괴하지 않음. max-height(카드) 초과 시만 스크롤 */
-  flex: 1 1 auto;
+  /* flex: 1 1 0 — 상위 max-height 안에서 본문이 확실히 남는 높이를 받고 overflow-y 스크롤이 동작하도록 */
+  flex: 1 1 0;
   min-height: 0;
   min-width: 0;
   overflow-x: auto;
   overflow-y: auto;
   overscroll-behavior: contain;
+  /* 스크롤 끝에서 마지막 카드(태그 줄)가 패널 하단에 붙어 잘리는 것처럼 보이지 않게 */
+  padding-bottom: var(--space-5);
+  box-sizing: border-box;
 }
 
 .listStack {
