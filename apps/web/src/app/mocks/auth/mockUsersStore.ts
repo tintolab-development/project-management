@@ -22,7 +22,7 @@ export type MockUserRecord = {
 }
 
 const allMockProjects: AssignedProjectRecord[] = [
-  { id: "PRJ-001", name: "DEMO Project", slug: "demo" },
+  { id: "PRJ-001", name: "Seolhaewon Project", slug: "seohaewon" },
   { id: "PRJ-SAMPLE-1", name: "샘플 프로젝트 1", slug: "sample-1" },
   { id: "PRJ-SAMPLE-2", name: "샘플 프로젝트 2", slug: "sample-2" },
 ]
@@ -30,7 +30,7 @@ const allMockProjects: AssignedProjectRecord[] = [
 /**
  * MSW 로그인 QA
  * - 틴토랩 마스터 관리자: master-pm@tinto.co.kr / MasterPm2026! (역할: 관리자 포털 기본 진입)
- * - 프로젝트 담당자: pm@project.com / ProjectPm2026!
+ * - 설해원 담당자: staff@seohaewon.co.kr / SeohaeStaff2026!
  * - 멀티 프로젝트(샘플): multi@demo.local / MultiDemo2026!
  */
 const seedUsers: MockUserRecord[] = [
@@ -46,15 +46,15 @@ const seedUsers: MockUserRecord[] = [
     defaultProjectSlug: null,
   },
   {
-    id: "usr-project-main-stakeholder",
-    email: "pm@project.com",
-    password: "ProjectPm2026!",
-    displayName: "프로젝트 담당자 (임시)",
-    organization: "프로젝트",
+    id: "usr-seohaewon-temp",
+    email: "staff@seohaewon.co.kr",
+    password: "SeohaeStaff2026!",
+    displayName: "설해원 담당자 (임시)",
+    organization: "설해원",
     roles: ["project_stakeholder"],
     assignedProjects: [allMockProjects[0]],
     accessibleProjectIds: ["PRJ-001"],
-    defaultProjectSlug: "demo",
+    defaultProjectSlug: "seohaewon",
   },
   {
     id: "usr-multi-sample",

@@ -39,19 +39,15 @@ export const normalizeAuthUser = (raw: AuthUser | Record<string, unknown>): Auth
   const assignedProjects = (r.assignedProjects ?? []).map((p) =>
     normalizeAssignedProject(p as Partial<AssignedProject> & { id: string; name: string }),
   )
-  const migratedProjects = assignedProjects.map((p) =>
-    p.slug === "main" ? { ...p, slug: "demo" } : p,
-  )
   const accessibleProjectIds =
     r.accessibleProjectIds?.length && r.accessibleProjectIds.every((x) => typeof x === "string")
       ? r.accessibleProjectIds
-      : migratedProjects.map((p) => p.id)
+      : assignedProjects.map((p) => p.id)
   const roles = coerceRoles(r.roles, r.email)
-  let defaultProjectSlug =
+  const defaultProjectSlug =
     typeof r.defaultProjectSlug === "string" && r.defaultProjectSlug.trim()
       ? r.defaultProjectSlug.trim()
       : null
-  if (defaultProjectSlug === "main") defaultProjectSlug = "demo"
 
   return {
     id: r.id,
@@ -59,7 +55,7 @@ export const normalizeAuthUser = (raw: AuthUser | Record<string, unknown>): Auth
     displayName: r.displayName,
     organization: r.organization,
     roles,
-    assignedProjects: migratedProjects,
+    assignedProjects,
     accessibleProjectIds,
     defaultProjectSlug,
   }
