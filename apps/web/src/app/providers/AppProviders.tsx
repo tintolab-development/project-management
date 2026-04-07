@@ -3,6 +3,7 @@ import { useEffect, useState, type ReactNode } from "react"
 
 import { useAuthSessionStore } from "@/features/auth"
 import { setHttpClientAuthTokenGetter } from "@/shared/api"
+import { AppDialogHost } from "@/shared/ui/app-dialog-host"
 import { TooltipProvider } from "@/shared/ui/tooltip"
 
 export function AppProviders({ children }: { children: ReactNode }) {
@@ -24,7 +25,10 @@ export function AppProviders({ children }: { children: ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>{children}</TooltipProvider>
+      <TooltipProvider>
+        {children}
+        <AppDialogHost />
+      </TooltipProvider>
     </QueryClientProvider>
   )
 }

@@ -9,6 +9,7 @@ alwaysApply: true
 - Before creating a custom primitive, check whether shadcn/ui already provides the component.
 - Prefer extending or composing shadcn/ui primitives over replacing them.
 - Shared reusable primitives belong in `shared/ui`.
+- **모달·시트 하단 주요/보조 액션**은 `Button` `variant` 단독이 아니라 `ModalPrimaryButton` / `ModalSecondaryButton`로 DS를 고정한다 (`11-modal-sheet-actions.mdc`).
 - Business-specific compositions belong in `entities`, `features`, or `widgets`.
 - Do not create parallel internal design-system primitives that duplicate shadcn/ui.
 - During migration, replace old primitives with shadcn/ui incrementally while preserving behavior and accessibility.
