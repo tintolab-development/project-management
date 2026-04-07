@@ -8,7 +8,6 @@ import {
   KeyboardSensor,
   PointerSensor,
   closestCenter,
-  closestCorners,
   pointerWithin,
   rectIntersection,
   useDroppable,
@@ -18,24 +17,18 @@ import {
 import {
   SortableContext,
   arrayMove,
-  horizontalListSortingStrategy,
   sortableKeyboardCoordinates,
   useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import { GripVertical } from "lucide-react"
 import { useCallback, useMemo, useRef, useState } from "react"
 
 import { useAppStore } from "@/app/store/useAppStore"
 import { ItemBoardCard } from "@/entities/item/ui/ItemBoardCard"
 import { sortItemsByBoardRank } from "@/entities/item/lib/sortItemsByBoard"
 import type { Item } from "@/entities/item/model/types"
-import {
-  STATUS_LABELS,
-  STATUS_VALUES,
-  type ItemStatus,
-} from "@/shared/constants/labels"
+import { STATUS_LABELS, type ItemStatus } from "@/shared/constants/labels"
 import { Text } from "@/shared/ui/typography"
 import { cn } from "@/lib/utils"
 
@@ -49,9 +42,6 @@ export type WorkspaceBoardProps = {
   getDomainLabel: (domainId: string) => string
   onOpenItem: (itemId: string) => void
 }
-
-const isItemStatus = (v: string): v is ItemStatus =>
-  (STATUS_VALUES as readonly string[]).includes(v)
 
 type WorkspaceOverHint = {
   kind?: string
@@ -104,21 +94,25 @@ function SortableWorkspaceCard({
         isDragging && styles.sortableCardRowPlaceholder,
       )}
     >
-      <button
-        type="button"
-        className={styles.cardDragHandle}
-        {...listeners}
-        {...attributes}
-        disabled={cannotDragCard}
-        aria-label={`${item.code} 순서 변경`}
+      <div
+        className={cn(
+          styles.cardGrow,
+          !cannotDragCard && styles.cardDragSurface,
+        )}
+        {...(!cannotDragCard
+          ? {
+              ...listeners,
+              ...attributes,
+              "aria-label": `${item.code} 카드를 드래그해 컬럼이나 순서를 바꿀 수 있습니다. 클릭하면 상세로 이동합니다.`,
+            }
+          : {})}
       >
-        <GripVertical className="size-4" aria-hidden />
-      </button>
-      <div className={styles.cardGrow}>
         <ItemBoardCard
           item={item}
           getDomainLabel={getDomainLabel}
           onOpen={onOpenItem}
+          tabIndex={cannotDragCard ? 0 : -1}
+          cardRole={cannotDragCard ? "button" : "group"}
         />
       </div>
     </div>
@@ -138,24 +132,6 @@ function WorkspaceStatusColumn({
   getDomainLabel: (domainId: string) => string
   onOpenItem: (itemId: string) => void
 }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
-    id: status,
-    disabled: dndDisabled,
-    data: { kind: "column" as const },
-  })
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  }
-
   const ids = columnItems.map((i) => i.id)
 
   const { setNodeRef: setDropRef, isOver } = useDroppable({
@@ -165,14 +141,7 @@ function WorkspaceStatusColumn({
   })
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={cn(
-        styles.boardColumn,
-        isDragging && styles.boardColumnDragging,
-      )}
-    >
+    <div className={styles.boardColumn}>
       <div
         ref={setDropRef}
         className={cn(
@@ -181,16 +150,6 @@ function WorkspaceStatusColumn({
         )}
       >
         <div className={styles.boardColumnHead}>
-          <button
-            type="button"
-            className={styles.columnDragHandle}
-            {...listeners}
-            {...attributes}
-            disabled={dndDisabled}
-            aria-label={`${STATUS_LABELS[status]} 컬럼 옮기기`}
-          >
-            <GripVertical className="size-4" aria-hidden />
-          </button>
           <div className={styles.boardColumnHeadTitles}>
             <Text as="span" variant="boardColumnHead">
               {STATUS_LABELS[status]}
@@ -225,7 +184,6 @@ export function WorkspaceBoard({
   onOpenItem,
 }: WorkspaceBoardProps) {
   const columnOrder = useAppStore((s) => s.ui.workspaceColumnOrder)
-  const setWorkspaceColumnOrder = useAppStore((s) => s.setWorkspaceColumnOrder)
   const reorderWorkspaceItemsInStatus = useAppStore(
     (s) => s.reorderWorkspaceItemsInStatus,
   )
@@ -249,8 +207,6 @@ export function WorkspaceBoard({
     const k = over.data.current?.kind as string | undefined
     let status: ItemStatus | undefined
     if (k === "columnDrop") status = over.data.current?.status as ItemStatus
-    else if (k === "column" && isItemStatus(String(over.id)))
-      status = over.id as ItemStatus
     else if (k === "card") status = over.data.current?.status as ItemStatus
     const hint: WorkspaceOverHint = { kind: k, status, overId: String(over.id) }
     overHintRef.current = hint
@@ -259,48 +215,29 @@ export function WorkspaceBoard({
     }
   }, [])
 
-  /**
-   * 컬럼 전체가 useSortable(setNodeRef)로 감싸져 있으면, 카드 드래그 시 충돌이
-   * 항상 출발 컬럼(부모)로 잡혀 컬럼 간 이동이 막힌다.
-   * 카드 드래그일 때는 column 래퍼를 충돌 후보에서 제외하고 card·columnDrop만 본다.
-   */
+  /** 카드만 드래그 가능 — 충돌 후보는 card·columnDrop 만 */
   const collisionDetection = useMemo<CollisionDetection>(
     () => (args) => {
       const activeKind = args.active.data.current?.kind
-
-      if (activeKind === "card") {
-        const containers = args.droppableContainers.filter((c) => {
-          const k = c.data.current?.kind
-          return k === "card" || k === "columnDrop"
-        })
-        const scoped = { ...args, droppableContainers: containers }
-        const fromPointer = pointerWithin(scoped)
-        if (fromPointer.length > 0) return fromPointer
-        const fromRect = rectIntersection(scoped)
-        if (fromRect.length > 0) return fromRect
-        /**
-         * 카드가 0개인 컬럼은 드롭 면적이 거의 없어 pointer/rect 충돌이 비는 경우가 많다.
-         * 컬럼 드롭 존만 모아 포인터에 가장 가까운 컬럼을 고른다.
-         */
-        const columnDrops = containers.filter(
-          (c) => c.data.current?.kind === "columnDrop",
-        )
-        if (columnDrops.length > 0) {
-          return closestCenter({ ...args, droppableContainers: columnDrops })
-        }
+      if (activeKind !== "card") {
         return []
       }
-
-      if (activeKind === "column") {
-        const containers = args.droppableContainers.filter(
-          (c) => c.data.current?.kind === "column",
-        )
-        if (containers.length > 0) {
-          return closestCorners({ ...args, droppableContainers: containers })
-        }
+      const containers = args.droppableContainers.filter((c) => {
+        const k = c.data.current?.kind
+        return k === "card" || k === "columnDrop"
+      })
+      const scoped = { ...args, droppableContainers: containers }
+      const fromPointer = pointerWithin(scoped)
+      if (fromPointer.length > 0) return fromPointer
+      const fromRect = rectIntersection(scoped)
+      if (fromRect.length > 0) return fromRect
+      const columnDrops = containers.filter(
+        (c) => c.data.current?.kind === "columnDrop",
+      )
+      if (columnDrops.length > 0) {
+        return closestCenter({ ...args, droppableContainers: columnDrops })
       }
-
-      return closestCorners(args)
+      return []
     },
     [],
   )
@@ -364,17 +301,6 @@ export function WorkspaceBoard({
       const { active, over } = event
       const activeKind = active.data.current?.kind as string | undefined
 
-      if (activeKind === "column") {
-        if (!over || active.id === over.id) return
-        if (over.data.current?.kind !== "column") return
-        const oldIndex = columnOrder.indexOf(active.id as ItemStatus)
-        const newIndex = columnOrder.indexOf(over.id as ItemStatus)
-        if (oldIndex < 0 || newIndex < 0) return
-        setWorkspaceColumnOrder(arrayMove(columnOrder, oldIndex, newIndex))
-        commitAndSync()
-        return
-      }
-
       if (activeKind !== "card") return
 
       const itemId = String(active.id)
@@ -392,9 +318,6 @@ export function WorkspaceBoard({
         const ok = over.data.current?.kind as string | undefined
         if (ok === "columnDrop") {
           targetStatus = over.data.current?.status as ItemStatus
-          beforeCardId = null
-        } else if (ok === "column" && isItemStatus(String(over.id))) {
-          targetStatus = over.id as ItemStatus
           beforeCardId = null
         } else if (ok === "card") {
           targetStatus = over.data.current?.status as ItemStatus
@@ -512,12 +435,10 @@ export function WorkspaceBoard({
       commitAndSync()
     },
     [
-      columnOrder,
       commitAndSync,
       dndDisabled,
       moveWorkspaceCardToStatus,
       reorderWorkspaceItemsInStatus,
-      setWorkspaceColumnOrder,
       visibleIdSet,
       workspaceItems,
     ],
@@ -527,8 +448,8 @@ export function WorkspaceBoard({
     <>
       {dndDisabled ? (
         <p className={styles.dndHint}>
-          필터가 적용된 상태에서는 보드(컬럼·카드) 순서를 바꿀 수 없습니다. 필터를
-          해제한 뒤 순서를 변경해 주세요.
+          필터가 적용된 상태에서는 카드 순서를 바꿀 수 없습니다. 필터를 해제한 뒤
+          순서를 변경해 주세요.
         </p>
       ) : null}
       <DndContext
@@ -540,51 +461,38 @@ export function WorkspaceBoard({
         onDragCancel={handleDragCancel}
         onDragEnd={handleDragEnd}
       >
-        <SortableContext
-          items={columnOrder}
-          strategy={horizontalListSortingStrategy}
+        <div
+          className={styles.board}
+          style={{
+            gridTemplateColumns: `repeat(${columnOrder.length}, minmax(0, 1fr))`,
+          }}
         >
-          <div
-            className={styles.board}
-            style={{
-              gridTemplateColumns: `repeat(${columnOrder.length}, minmax(0, 1fr))`,
-            }}
-          >
-            {columnOrder.map((status) => {
-              const columnItems = [...workspaceItems]
-                .filter((item) => item.status === status)
-                .sort(sortItemsByBoardRank)
-              return (
-                <WorkspaceStatusColumn
-                  key={status}
-                  status={status}
-                  columnItems={columnItems}
-                  dndDisabled={dndDisabled}
-                  getDomainLabel={getDomainLabel}
-                  onOpenItem={onOpenItem}
-                />
-              )
-            })}
-          </div>
-        </SortableContext>
+          {columnOrder.map((status) => {
+            const columnItems = [...workspaceItems]
+              .filter((item) => item.status === status)
+              .sort(sortItemsByBoardRank)
+            return (
+              <WorkspaceStatusColumn
+                key={status}
+                status={status}
+                columnItems={columnItems}
+                dndDisabled={dndDisabled}
+                getDomainLabel={getDomainLabel}
+                onOpenItem={onOpenItem}
+              />
+            )
+          })}
+        </div>
         <DragOverlay adjustScale={false} dropAnimation={null}>
           {overlayCard ? (
             <div className={styles.dragOverlayRoot}>
-              <div className={styles.dragOverlayRow}>
-                <div
-                  className={styles.dragOverlayHandle}
-                  aria-hidden
-                >
-                  <GripVertical className="size-4" aria-hidden />
-                </div>
-                <div className={styles.cardGrow}>
-                  <ItemBoardCard
-                    item={overlayCard}
-                    getDomainLabel={getDomainLabel}
-                    onOpen={() => {}}
-                    className={styles.dragOverlayCard}
-                  />
-                </div>
+              <div className={styles.dragOverlayCardWrap}>
+                <ItemBoardCard
+                  item={overlayCard}
+                  getDomainLabel={getDomainLabel}
+                  onOpen={() => {}}
+                  className={styles.dragOverlayCard}
+                />
               </div>
             </div>
           ) : null}

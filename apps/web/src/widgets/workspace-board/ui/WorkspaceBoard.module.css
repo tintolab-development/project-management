@@ -19,14 +19,7 @@
   min-height: 420px;
 }
 
-.boardColumnDragging {
-  opacity: 0.85;
-}
-
 .boardColumnHead {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
   margin-bottom: var(--space-4);
 }
 
@@ -38,32 +31,7 @@
   min-width: 0;
 }
 
-.columnDragHandle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  border: none;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--muted-foreground, #737373);
-  cursor: grab;
-  touch-action: none;
-}
-
-.columnDragHandle:active {
-  cursor: grabbing;
-}
-
-.columnDragHandle:disabled {
-  cursor: not-allowed;
-  opacity: 0.4;
-}
-
-/* 컬럼 헤더+카드 영역 전체를 드롭 존으로 씀(다른 컬럼 헤더에 놓아도 인식). */
+/* 컬럼 헤더+카드 영역 전체를 드롭 존으로 씀 */
 .columnDropSurface {
   display: flex;
   flex-direction: column;
@@ -92,9 +60,7 @@
 }
 
 .sortableCardRow {
-  display: flex;
-  gap: 8px;
-  align-items: flex-start;
+  min-width: 0;
 }
 
 /* DragOverlay로 미리보기를 보여 주므로 원본 행은 자리 표시만 */
@@ -112,55 +78,22 @@
   cursor: grabbing;
 }
 
-.dragOverlayRow {
-  display: flex;
-  gap: 8px;
-  align-items: flex-start;
+.dragOverlayCardWrap {
   box-shadow: var(--shadow);
   border-radius: 10px;
-}
-
-.dragOverlayHandle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 28px;
-  height: 28px;
-  margin-top: 2px;
-  border-radius: 6px;
-  background: color-mix(in srgb, var(--muted) 55%, transparent);
-  color: var(--muted-foreground, #737373);
 }
 
 .dragOverlayCard {
   box-shadow: none;
 }
 
-.cardDragHandle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 28px;
-  height: 28px;
-  margin-top: 2px;
-  padding: 0;
-  border: none;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--muted-foreground, #737373);
+.cardDragSurface {
   cursor: grab;
   touch-action: none;
 }
 
-.cardDragHandle:active {
+.cardDragSurface:active {
   cursor: grabbing;
-}
-
-.cardDragHandle:disabled {
-  cursor: not-allowed;
-  opacity: 0.35;
 }
 
 .cardGrow {
