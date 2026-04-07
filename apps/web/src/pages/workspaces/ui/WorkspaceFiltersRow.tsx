@@ -97,7 +97,7 @@ export function WorkspaceFiltersRow({
         }
       />
       <WorkspaceMultiSelectFilter
-        label="담당자"
+        label="프로젝트 담당자"
         options={ownerOptions}
         selected={selections.owners}
         onSelectedChange={(owners) =>

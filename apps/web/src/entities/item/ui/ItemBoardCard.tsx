@@ -1,10 +1,10 @@
 import type { Item, Priority } from "@/entities/item/model/types"
 import { Card } from "@/shared/ui/card"
-import { Pill, type PillTone, pillToneFromLegacyClass } from "@/shared/ui/pill"
+import { Pill, type PillTone } from "@/shared/ui/pill"
 import { Text } from "@/shared/ui/typography"
 import {
   STATUS_LABELS,
-  STATUS_STYLE,
+  statusToPillTone,
   TYPE_LABELS,
 } from "@/shared/constants/labels"
 import { cn } from "@/lib/utils"
@@ -68,9 +68,7 @@ export function ItemBoardCard({
         <Pill tone="dark">{TYPE_LABELS[item.type]}</Pill>
         <Pill tone="primary">{getDomainLabel(item.domain)}</Pill>
         <Pill
-          tone={pillToneFromLegacyClass(
-            STATUS_STYLE[item.status] || "dark",
-          )}
+          tone={statusToPillTone(item.status)}
         >
           {STATUS_LABELS[item.status] || item.status}
         </Pill>

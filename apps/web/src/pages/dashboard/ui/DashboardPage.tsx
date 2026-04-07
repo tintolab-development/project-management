@@ -30,7 +30,6 @@ export const DashboardPage = () => {
   const paths = useProjectScopedPaths()
   const domains = useAppStore((s) => s.domains)
   const history = useAppStore((s) => s.history)
-  const selectItem = useAppStore((s) => s.selectItem)
   const itemsRaw = useAppStore((s) => s.items)
 
   const items = useMemo(
@@ -73,8 +72,7 @@ export const DashboardPage = () => {
         })
 
   const handleOpenItem = (itemId: string) => {
-    selectItem(itemId)
-    navigate(paths.tasks)
+    navigate(paths.taskDetail(itemId))
   }
 
   return (

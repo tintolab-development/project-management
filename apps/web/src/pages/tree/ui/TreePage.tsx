@@ -1,6 +1,7 @@
-import { useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import clsx from "clsx"
+import { ChevronDown, ChevronRight, X } from "lucide-react"
 import { useAppStore } from "@/app/store/useAppStore"
 import { useProjectScopedPaths } from "@/shared/lib/projectScopedPaths"
 import {
@@ -12,17 +13,23 @@ import {
 } from "@/entities/domain/lib/domainTree"
 import { normalizeKey } from "@/shared/lib/text"
 import { itemMatchesSearch } from "@/shared/lib/itemSearch"
-import { STATUS_LABELS, STATUS_STYLE } from "@/shared/constants/labels"
+import { STATUS_LABELS, statusToPillTone } from "@/shared/constants/labels"
+import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/shared/ui/button"
-import { Pill, pillToneFromLegacyClass } from "@/shared/ui/pill"
+import { Pill } from "@/shared/ui/pill"
 import { panelHeadStyles } from "@/shared/ui/page-chrome"
+import { cn } from "@/lib/utils"
 
 import "./tree-explorer.css"
 import { Heading, Text, textVariants } from "@/shared/ui/typography"
 import { Card } from "@/shared/ui/card"
+import { appAlert } from "@/shared/lib/appDialog"
 
 type DropPos = "before" | "after" | "inside" | null
+
+/** 트리 검색: 스토어 반영 지연 — 필터·트리 재계산 부하 완화 */
+const TREE_SEARCH_DEBOUNCE_MS = 300
 
 export const TreePage = () => {
   const navigate = useNavigate()
@@ -30,6 +37,10 @@ export const TreePage = () => {
   const domains = useAppStore((s) => s.domains)
   const items = useAppStore((s) => s.items)
   const treeQuery = useAppStore((s) => s.ui.treeQuery)
+  const [searchDraft, setSearchDraft] = useState(
+    () => useAppStore.getState().ui.treeQuery,
+  )
+  const searchDebounceBootRef = useRef(true)
   const expandedDomainIds = useAppStore((s) => s.ui.expandedDomainIds)
   const selectedItemId = useAppStore((s) => s.ui.selectedItemId)
   const treePreviewItemId = useAppStore((s) => s.ui.treePreviewItemId)
@@ -48,12 +59,43 @@ export const TreePage = () => {
   const renameDomain = useAppStore((s) => s.renameDomain)
   const deleteDomainNode = useAppStore((s) => s.deleteDomainNode)
 
+  useEffect(() => {
+    setTreeExpandAll(false)
+  }, [setTreeExpandAll])
+
+  useEffect(() => {
+    if (searchDebounceBootRef.current) {
+      searchDebounceBootRef.current = false
+      return
+    }
+    const id = window.setTimeout(() => {
+      setTreeQuery(searchDraft)
+    }, TREE_SEARCH_DEBOUNCE_MS)
+    return () => window.clearTimeout(id)
+  }, [searchDraft, setTreeQuery])
+
+  useEffect(() => {
+    return () => {
+      setTreeQuery("")
+    }
+  }, [setTreeQuery])
+
+  const newDomainInputRef = useRef<HTMLInputElement>(null)
   const draggedItemIdRef = useRef("")
   const draggedDomainIdRef = useRef("")
   const [dropState, setDropState] = useState<{
     domainId: string
     pos: DropPos
   } | null>(null)
+  const [itemDragOverDomainId, setItemDragOverDomainId] = useState<
+    string | null
+  >(null)
+  const [draggingItemRowId, setDraggingItemRowId] = useState<string | null>(
+    null,
+  )
+  const [draggingDomainHeadId, setDraggingDomainHeadId] = useState<
+    string | null
+  >(null)
   const [itemDropInsideId, setItemDropInsideId] = useState<string | null>(null)
   const [rootZoneActive, setRootZoneActive] = useState<"start" | "end" | null>(
     null,
@@ -93,19 +135,33 @@ export const TreePage = () => {
     draggedItemIdRef.current = ""
     draggedDomainIdRef.current = ""
     setDropState(null)
+    setItemDragOverDomainId(null)
+    setDraggingItemRowId(null)
+    setDraggingDomainHeadId(null)
     setItemDropInsideId(null)
     setRootZoneActive(null)
   }
 
-  const runDrop = (action: () => void) => {
-    try {
-      action()
-    } catch (e) {
-      console.error(e)
-      window.alert("드래그앤드롭 처리 중 오류가 발생했습니다. 다시 시도해 주세요.")
-    } finally {
-      clearDragVisual()
-    }
+  const runDrop = (action: () => void | Promise<void>) => {
+    void (async () => {
+      try {
+        await action()
+      } catch (e) {
+        console.error(e)
+        await appAlert(
+          "드래그앤드롭 처리 중 오류가 발생했습니다. 다시 시도해 주세요.",
+        )
+      } finally {
+        clearDragVisual()
+      }
+    })()
+  }
+
+  const submitNewDomain = async () => {
+    const input = newDomainInputRef.current
+    if (!input) return
+    await createDomain(input.value)
+    input.value = ""
   }
 
   const handleDomainDragOver = (
@@ -115,7 +171,7 @@ export const TreePage = () => {
     e.preventDefault()
     e.stopPropagation()
     if (draggedItemIdRef.current) {
-      e.currentTarget.classList.add("drag-over")
+      setItemDragOverDomainId(domainId)
       return
     }
     if (!draggedDomainIdRef.current) return
@@ -128,14 +184,14 @@ export const TreePage = () => {
 
   const handleDomainDragLeave = (e: React.DragEvent) => {
     e.stopPropagation()
-    e.currentTarget.classList.remove("drag-over")
+    setItemDragOverDomainId(null)
     setDropState(null)
   }
 
   const handleDomainDrop = (domainId: string, e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    e.currentTarget.classList.remove("drag-over")
+    setItemDragOverDomainId(null)
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
     const ratio = (e.clientY - rect.top) / Math.max(rect.height, 1)
     const position: "before" | "after" | "inside" =
@@ -148,9 +204,9 @@ export const TreePage = () => {
     }
     if (!draggedDomainIdRef.current) return
     const dragId = draggedDomainIdRef.current
-    runDrop(() => {
+    runDrop(async () => {
       const msg = applyDomainDrop(dragId, domainId, position)
-      if (msg) window.alert(msg)
+      if (msg) await appAlert(msg)
     })
   }
 
@@ -175,38 +231,31 @@ export const TreePage = () => {
         <div className="tree-toolbar-search">
           <Input
             type="search"
+            className="tree-toolbar-input-control"
             placeholder="이슈 검색"
             aria-label="트리에서 이슈 검색"
-            value={treeQuery}
-            onChange={(e) => setTreeQuery(e.target.value)}
+            value={searchDraft}
+            onChange={(e) => setSearchDraft(e.target.value)}
           />
         </div>
         <div className="tree-toolbar-actions">
           <div className="tree-toolbar-create">
             <Input
-              id="newDomainInput"
+              ref={newDomainInputRef}
               type="text"
+              className="tree-toolbar-input-control"
               placeholder="도메인(트리) 추가"
               aria-label="새 도메인 이름"
               onKeyDown={(e) => {
                 if (e.key !== "Enter") return
-                const input = e.currentTarget
-                createDomain(input.value)
-                input.value = ""
+                submitNewDomain()
               }}
             />
             <Button
               type="button"
               appearance="outline"
               dimension="hug"
-              onClick={() => {
-                const input = document.getElementById(
-                  "newDomainInput",
-                ) as HTMLInputElement | null
-                if (!input) return
-                createDomain(input.value)
-                input.value = ""
-              }}
+              onClick={submitNewDomain}
             >
               추가
             </Button>
@@ -254,7 +303,8 @@ export const TreePage = () => {
         aria-label="도메인 및 아이템 트리"
       >
         <div
-          className={clsx("tree-root-dropzone", rootZoneActive === "start" && "active")}
+          className="tree-root-dropzone"
+          data-drop-active={rootZoneActive === "start" ? "" : undefined}
           onDragOver={(e) => {
             if (!draggedDomainIdRef.current) return
             e.preventDefault()
@@ -265,9 +315,9 @@ export const TreePage = () => {
             if (!draggedDomainIdRef.current) return
             e.preventDefault()
             const dragId = draggedDomainIdRef.current
-            runDrop(() => {
+            runDrop(async () => {
               const msg = moveDomainNode(dragId, "", 0)
-              if (msg) window.alert(msg)
+              if (msg) await appAlert(msg)
             })
           }}
         />
@@ -283,6 +333,9 @@ export const TreePage = () => {
             selectedItemId={selectedItemId}
             treePreviewItemId={treePreviewItemId}
             dropState={dropState}
+            itemDragOverDomainId={itemDragOverDomainId}
+            draggingDomainHeadId={draggingDomainHeadId}
+            draggingItemRowId={draggingItemRowId}
             itemDropInsideId={itemDropInsideId}
             onToggleDomain={toggleDomainExpanded}
             onPreviewItem={toggleTreeItemPreview}
@@ -313,13 +366,25 @@ export const TreePage = () => {
               e.stopPropagation()
               setItemDropInsideId(null)
               const dragId = draggedDomainIdRef.current
-              runDrop(() => {
+              runDrop(async () => {
                 const insertAt = getChildDomains(domains, itemDomainId).filter(
                   (d) => d.id !== dragId,
                 ).length
                 const msg = moveDomainNode(dragId, itemDomainId, insertAt)
-                if (msg) window.alert(msg)
+                if (msg) await appAlert(msg)
               })
+            }}
+            onItemDragStart={(itemId) => {
+              setDraggingItemRowId(itemId)
+            }}
+            onItemDragEnd={() => {
+              setDraggingItemRowId(null)
+            }}
+            onDomainHeadDragStart={(domainId) => {
+              setDraggingDomainHeadId(domainId)
+            }}
+            onDomainHeadDragEnd={() => {
+              setDraggingDomainHeadId(null)
             }}
             domains={domains}
             items={items}
@@ -329,7 +394,8 @@ export const TreePage = () => {
           />
         ))}
         <div
-          className={clsx("tree-root-dropzone", rootZoneActive === "end" && "active")}
+          className="tree-root-dropzone"
+          data-drop-active={rootZoneActive === "end" ? "" : undefined}
           onDragOver={(e) => {
             if (!draggedDomainIdRef.current) return
             e.preventDefault()
@@ -341,13 +407,13 @@ export const TreePage = () => {
             e.preventDefault()
             const dragId = draggedDomainIdRef.current
             const roots = domains.filter((d) => !(d.parentId || ""))
-            runDrop(() => {
+            runDrop(async () => {
               const msg = moveDomainNode(
                 dragId,
                 "",
                 roots.filter((r) => r.id !== dragId).length,
               )
-              if (msg) window.alert(msg)
+              if (msg) await appAlert(msg)
             })
           }}
         />
@@ -366,6 +432,9 @@ type BranchProps = {
   selectedItemId: string | null
   treePreviewItemId: string
   dropState: { domainId: string; pos: DropPos } | null
+  itemDragOverDomainId: string | null
+  draggingDomainHeadId: string | null
+  draggingItemRowId: string | null
   itemDropInsideId: string | null
   onToggleDomain: (id: string) => void
   onPreviewItem: (id: string) => void
@@ -383,8 +452,12 @@ type BranchProps = {
   onItemRowDragOver: (itemDomainId: string, e: React.DragEvent) => void
   onItemRowDragLeave: (e: React.DragEvent) => void
   onItemRowDrop: (itemDomainId: string, e: React.DragEvent) => void
+  onItemDragStart: (itemId: string) => void
+  onItemDragEnd: () => void
+  onDomainHeadDragStart: (domainId: string) => void
+  onDomainHeadDragEnd: () => void
   clearDragVisual: () => void
-  runDrop: (fn: () => void) => void
+  runDrop: (fn: () => void | Promise<void>) => void
   domains: import("@/entities/domain/model/types").Domain[]
   items: import("@/entities/item/model/types").Item[]
   applyDomainDrop: (
@@ -404,6 +477,9 @@ const TreeDomainBranch = ({
   selectedItemId,
   treePreviewItemId,
   dropState,
+  itemDragOverDomainId,
+  draggingDomainHeadId,
+  draggingItemRowId,
   itemDropInsideId,
   onToggleDomain,
   onPreviewItem,
@@ -421,6 +497,10 @@ const TreeDomainBranch = ({
   onItemRowDragOver,
   onItemRowDragLeave,
   onItemRowDrop,
+  onItemDragStart,
+  onItemDragEnd,
+  onDomainHeadDragStart,
+  onDomainHeadDragEnd,
   clearDragVisual,
   runDrop,
   domains,
@@ -459,6 +539,9 @@ const TreeDomainBranch = ({
         selectedItemId={selectedItemId}
         treePreviewItemId={treePreviewItemId}
         dropState={dropState}
+        itemDragOverDomainId={itemDragOverDomainId}
+        draggingDomainHeadId={draggingDomainHeadId}
+        draggingItemRowId={draggingItemRowId}
         itemDropInsideId={itemDropInsideId}
         onToggleDomain={onToggleDomain}
         onPreviewItem={onPreviewItem}
@@ -476,6 +559,10 @@ const TreeDomainBranch = ({
         onItemRowDragOver={onItemRowDragOver}
         onItemRowDragLeave={onItemRowDragLeave}
         onItemRowDrop={onItemRowDrop}
+        onItemDragStart={onItemDragStart}
+        onItemDragEnd={onItemDragEnd}
+        onDomainHeadDragStart={onDomainHeadDragStart}
+        onDomainHeadDragEnd={onDomainHeadDragEnd}
         domains={domains}
         items={items}
         applyDomainDrop={applyDomainDrop}
@@ -499,16 +586,17 @@ const TreeDomainBranch = ({
             item.id === selectedItemId && "active",
             itemDropInsideId === item.domain && "drop-inside",
           )}
+          data-dragging={draggingItemRowId === item.id ? "" : undefined}
           draggable
           onDragStart={(e) => {
             draggedItemIdRef.current = item.id
             draggedDomainIdRef.current = ""
-            e.currentTarget.classList.add("dragging")
+            onItemDragStart(item.id)
             e.dataTransfer.effectAllowed = "move"
             e.dataTransfer.setData("application/x-tdw-item", item.id)
           }}
-          onDragEnd={(e) => {
-            e.currentTarget.classList.remove("dragging")
+          onDragEnd={() => {
+            onItemDragEnd()
             clearDragVisual()
           }}
           onDragOver={(e) => onItemRowDragOver(item.domain, e)}
@@ -520,10 +608,14 @@ const TreeDomainBranch = ({
               {item.code}
             </Text>
             <div className="tree-item-meta">
-              <Text as="div" variant="treeTitle">
+              <Text
+                as="div"
+                variant="treeTitle"
+                className="tree-item-title-truncate"
+              >
                 {item.title}
               </Text>
-              <Pill tone={pillToneFromLegacyClass(STATUS_STYLE[item.status] || "dark")}>
+              <Pill tone={statusToPillTone(item.status)}>
                 {STATUS_LABELS[item.status]}
               </Pill>
             </div>
@@ -540,8 +632,8 @@ const TreeDomainBranch = ({
             <Button
               type="button"
               variant="ghost"
-              size="icon"
-              className="tree-item-delete"
+              size="icon-sm"
+              className="tree-icon-danger"
               title="아이템 삭제"
               aria-label={`${item.code} 삭제`}
               onClick={(e) => {
@@ -549,7 +641,7 @@ const TreeDomainBranch = ({
                 onDeleteItem(item.id)
               }}
             >
-              ×
+              <X className="size-3.5" aria-hidden />
             </Button>
           </div>
         </div>
@@ -567,17 +659,17 @@ const TreeDomainBranch = ({
               {finalValue || "아직 최종 확인값이 입력되지 않았습니다."}
             </Text>
             <div className="tree-preview-actions">
-            <Button
-              type="button"
-              appearance="outline"
-              dimension="treeInline"
-              onClick={() => {
-                onSelectItem(item.id)
-                onGoItem()
-              }}
-            >
-              더보기
-            </Button>
+              <Button
+                type="button"
+                appearance="outline"
+                dimension="treeInline"
+                onClick={() => {
+                  onSelectItem(item.id)
+                  onGoItem()
+                }}
+              >
+                더보기
+              </Button>
             </div>
           </div>
         ) : null}
@@ -597,6 +689,13 @@ const TreeDomainBranch = ({
       </Text>
     )
 
+  const setDropzoneActive = (el: EventTarget | null, active: boolean) => {
+    const zone = el as HTMLElement | null
+    if (!zone) return
+    if (active) zone.dataset.dropActive = ""
+    else delete zone.dataset.dropActive
+  }
+
   return (
     <div
       className="tree-domain-node"
@@ -608,36 +707,42 @@ const TreeDomainBranch = ({
           if (!draggedDomainIdRef.current) return
           e.preventDefault()
           e.stopPropagation()
-          e.currentTarget.classList.add("active")
+          setDropzoneActive(e.currentTarget, true)
         }}
         onDragLeave={(e) => {
           e.stopPropagation()
-          e.currentTarget.classList.remove("active")
+          setDropzoneActive(e.currentTarget, false)
         }}
         onDrop={(e) => {
           if (!draggedDomainIdRef.current) return
           e.preventDefault()
           e.stopPropagation()
-          e.currentTarget.classList.remove("active")
-          runDrop(() => {
+          setDropzoneActive(e.currentTarget, false)
+          runDrop(async () => {
             const dragId = draggedDomainIdRef.current
             const msg = applyDomainDrop(dragId, node.domain.id, "before")
-            if (msg) window.alert(msg)
+            if (msg) await appAlert(msg)
           })
         }}
       />
       <div
         className={headClass}
+        data-item-drag-over={
+          itemDragOverDomainId === node.domain.id ? "" : undefined
+        }
+        data-dragging={
+          draggingDomainHeadId === node.domain.id ? "" : undefined
+        }
         draggable
         onDragStart={(e) => {
           draggedDomainIdRef.current = node.domain.id
           draggedItemIdRef.current = ""
-          e.currentTarget.classList.add("dragging")
+          onDomainHeadDragStart(node.domain.id)
           e.dataTransfer.effectAllowed = "move"
           e.dataTransfer.setData("application/x-tdw-domain", node.domain.id)
         }}
-        onDragEnd={(e) => {
-          e.currentTarget.classList.remove("dragging")
+        onDragEnd={() => {
+          onDomainHeadDragEnd()
           clearDragVisual()
         }}
         onDragOver={(e) => onDomainDragOver(node.domain.id, e)}
@@ -646,27 +751,39 @@ const TreeDomainBranch = ({
       >
         <Button
           type="button"
-          variant="ghost"
-          className="tree-toggle"
+          variant="outline"
+          size="icon-sm"
+          className="tree-toggle shrink-0"
           aria-expanded={isOpen}
           aria-label={isOpen ? "접기" : "펼치기"}
           onClick={() => onToggleDomain(node.domain.id)}
         >
-          {isOpen ? "▾" : "▸"}
+          {isOpen ? (
+            <ChevronDown className="size-4" aria-hidden />
+          ) : (
+            <ChevronRight className="size-4" aria-hidden />
+          )}
         </Button>
         <div className="tree-domain-main">
           <Button
             type="button"
             variant="ghost"
             className={clsx(
-              "tree-domain-link",
+              "tree-domain-link h-auto min-h-0 min-w-0 justify-start px-1 py-0.5 font-bold",
               textVariants({ variant: "treeDomainButton" }),
             )}
             onClick={() => onToggleDomain(node.domain.id)}
           >
             {node.domain.name}
           </Button>
-          <span className="tree-count">{countLabel}</span>
+          <Badge
+            variant="outline"
+            className={cn(
+              "tree-count-badge max-w-full min-w-0 shrink font-normal text-muted-foreground",
+            )}
+          >
+            {countLabel}
+          </Badge>
         </div>
         <div className="tree-domain-actions">
           <Button
@@ -694,8 +811,8 @@ const TreeDomainBranch = ({
           <Button
             type="button"
             variant="ghost"
-            size="icon"
-            className="tree-item-delete tree-domain-delete"
+            size="icon-sm"
+            className="tree-icon-danger tree-domain-delete"
             title="도메인 삭제"
             aria-label={`${node.domain.name} 도메인 삭제`}
             onClick={(e) => {
@@ -703,7 +820,7 @@ const TreeDomainBranch = ({
               onDeleteDomain(node.domain.id)
             }}
           >
-            ×
+            <X className="size-3.5" aria-hidden />
           </Button>
         </div>
       </div>
@@ -716,21 +833,21 @@ const TreeDomainBranch = ({
           if (!draggedDomainIdRef.current) return
           e.preventDefault()
           e.stopPropagation()
-          e.currentTarget.classList.add("active")
+          setDropzoneActive(e.currentTarget, true)
         }}
         onDragLeave={(e) => {
           e.stopPropagation()
-          e.currentTarget.classList.remove("active")
+          setDropzoneActive(e.currentTarget, false)
         }}
         onDrop={(e) => {
           if (!draggedDomainIdRef.current) return
           e.preventDefault()
           e.stopPropagation()
-          e.currentTarget.classList.remove("active")
-          runDrop(() => {
+          setDropzoneActive(e.currentTarget, false)
+          runDrop(async () => {
             const dragId = draggedDomainIdRef.current
             const msg = applyDomainDrop(dragId, node.domain.id, "after")
-            if (msg) window.alert(msg)
+            if (msg) await appAlert(msg)
           })
         }}
       />
