@@ -5,6 +5,10 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { formStackStyles } from "@/shared/ui/form-stack"
 import { Button } from "@/shared/ui/button"
+import {
+  ModalPrimaryButton,
+  ModalSecondaryButton,
+} from "@/shared/ui/modal-dialog-buttons"
 import { Pill, type PillTone } from "@/shared/ui/pill"
 import {
   FormLabel,
@@ -13,6 +17,7 @@ import {
   modalCloseIconClassName,
 } from "@/shared/ui/typography"
 import { useAppStore } from "@/app/store/useAppStore"
+import { appAlert } from "@/shared/lib/appDialog"
 import {
   prepareImport,
   type ImportRowResult,
@@ -72,10 +77,10 @@ export const BulkImportModal = ({ open, onOpenChange }: Props) => {
     setFileText(text)
   }
 
-  const handlePreview = () => {
+  const handlePreview = async () => {
     const source = fileText ?? paste.trim()
     if (!source) {
-      window.alert("CSV 파일을 선택하거나 엑셀 데이터를 붙여넣어 주세요.")
+      await appAlert("CSV 파일을 선택하거나 엑셀 데이터를 붙여넣어 주세요.")
       return
     }
     const result = prepareImport(source, items)
@@ -86,12 +91,12 @@ export const BulkImportModal = ({ open, onOpenChange }: Props) => {
     triggerDownloadImportTemplateCsv()
   }
 
-  const handleExecute = () => {
+  const handleExecute = async () => {
     if (!parsed?.results.length) return
     const actionable = parsed.results.filter(
       (row) => row.action === "create" || row.action === "update",
     )
-    executeBulkImport(actionable)
+    await executeBulkImport(actionable)
     handleOpenChange(false)
   }
 
@@ -167,15 +172,12 @@ export const BulkImportModal = ({ open, onOpenChange }: Props) => {
               dueDate, clientResponse, finalConfirmedValue, code
             </Text>
             <div className="import-template-action mt-app-3">
-              <Button
-                type="button"
-                appearance="outline"
-                dimension="hug"
+              <ModalSecondaryButton
                 onClick={handleDownloadTemplateCsv}
                 aria-label="일괄등록용 템플릿 CSV 파일 다운로드"
               >
                 템플릿 CSV 다운로드
-              </Button>
+              </ModalSecondaryButton>
             </div>
           </div>
 
@@ -209,23 +211,15 @@ export const BulkImportModal = ({ open, onOpenChange }: Props) => {
               </div>
 
               <div className="import-inline-actions">
-                <Button
-                  type="button"
-                  appearance="outline"
-                  dimension="hug"
-                  onClick={handlePreview}
-                >
+                <ModalSecondaryButton onClick={handlePreview}>
                   미리보기
-                </Button>
-                <Button
-                  type="button"
-                  appearance="fill"
-                  dimension="hug"
+                </ModalSecondaryButton>
+                <ModalPrimaryButton
                   disabled={!parsed || parsed.actionableCount === 0}
                   onClick={handleExecute}
                 >
                   실행
-                </Button>
+                </ModalPrimaryButton>
               </div>
             </div>
 

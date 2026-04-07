@@ -3,16 +3,18 @@ import { useNavigate } from "react-router-dom"
 import { useState } from "react"
 import { useProjectScopedPaths } from "@/shared/lib/projectScopedPaths"
 import clsx from "clsx"
+import { Button } from "@/components/ui/button"
 import { Input, inputControlClassName } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { formStackStyles } from "@/shared/ui/form-stack"
-import { Button } from "@/shared/ui/button"
+import { ModalPrimaryButton } from "@/shared/ui/modal-dialog-buttons"
 import {
   FormLabel,
   Heading,
   modalCloseIconClassName,
 } from "@/shared/ui/typography"
 import { useAppStore } from "@/app/store/useAppStore"
+import { appAlert } from "@/shared/lib/appDialog"
 import { PRIORITY_LABELS, TYPE_LABELS } from "@/shared/constants/labels"
 import type { ItemType } from "@/entities/item/model/types"
 import type { Item } from "@/entities/item/model/types"
@@ -55,12 +57,12 @@ export const NewItemModal = ({ open, onOpenChange }: Props) => {
     }
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!title.trim()) {
-      window.alert("제목을 입력해 주세요.")
+      await appAlert("제목을 입력해 주세요.")
       return
     }
-    createItem({
+    await createItem({
       type,
       domain,
       priority,
@@ -151,7 +153,7 @@ export const NewItemModal = ({ open, onOpenChange }: Props) => {
               <FormLabel htmlFor="new-owner">담당자</FormLabel>
               <Input
                 id="new-owner"
-                placeholder="예: 설해원 운영팀"
+                placeholder="예: 고객사 운영팀"
                 value={owner}
                 onChange={(e) => setOwner(e.target.value)}
               />
@@ -189,14 +191,7 @@ export const NewItemModal = ({ open, onOpenChange }: Props) => {
           </div>
 
           <div className="modal-actions">
-            <Button
-              type="button"
-              appearance="fill"
-              dimension="hug"
-              onClick={handleSubmit}
-            >
-              생성
-            </Button>
+            <ModalPrimaryButton onClick={handleSubmit}>생성</ModalPrimaryButton>
           </div>
         </Dialog.Content>
       </Dialog.Portal>
