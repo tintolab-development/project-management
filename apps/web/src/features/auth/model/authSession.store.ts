@@ -7,7 +7,7 @@ import type { AuthRole } from "../lib/authRoles"
 export type AssignedProject = {
   id: string
   name: string
-  /** URL 경로 `/p/:projectSlug` 에 사용 */
+  /** URL 경로 `/project/:projectSlug` 에 사용 */
   slug: string
 }
 
@@ -48,15 +48,9 @@ export const useAuthSessionStore = create<AuthSessionState>()(
     }),
     {
       name: "tdw-auth-session",
-      version: 1,
-      migrate: (persisted, fromVersion): PersistedAuthSlice => {
+      version: 2,
+      migrate: (persisted): PersistedAuthSlice => {
         const p = (persisted ?? {}) as Partial<PersistedAuthSlice>
-        if (fromVersion === 0 && p.user) {
-          return {
-            accessToken: p.accessToken ?? null,
-            user: normalizeAuthUser(p.user as Record<string, unknown>),
-          }
-        }
         return {
           accessToken: p.accessToken ?? null,
           user: p.user ? normalizeAuthUser(p.user as Record<string, unknown>) : null,
