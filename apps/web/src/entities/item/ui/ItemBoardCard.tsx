@@ -23,6 +23,10 @@ export type ItemBoardCardProps = {
   getDomainLabel: (domainId: string) => string
   onOpen: (itemId: string) => void
   className?: string
+  /** 보드에서 드래그 앵커와 포커스 링이 겹치지 않게 할 때 -1 */
+  tabIndex?: number
+  /** 드래그 래퍼가 버튼 역할일 때 중첩 버튼 방지용 */
+  cardRole?: "button" | "group"
 }
 
 export function ItemBoardCard({
@@ -30,6 +34,8 @@ export function ItemBoardCard({
   getDomainLabel,
   onOpen,
   className,
+  tabIndex = 0,
+  cardRole = "button",
 }: ItemBoardCardProps) {
   const onKeyDown = (e: React.KeyboardEvent) => {
     if (e.key !== "Enter" && e.key !== " ") return
@@ -40,8 +46,8 @@ export function ItemBoardCard({
   return (
     <Card
       variant="compact"
-      role="button"
-      tabIndex={0}
+      role={cardRole}
+      tabIndex={tabIndex}
       className={cn(interactiveClass, className)}
       onClick={() => onOpen(item.id)}
       onKeyDown={onKeyDown}

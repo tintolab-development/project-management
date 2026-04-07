@@ -10,17 +10,18 @@ export const createSeedData = (): AppState => {
   return {
     ui: {
       activeWorkspace: "information_request",
-      selectedItemId: "IR-001",
+      selectedItemId: null,
       expandedDomainIds: baseDomains.map((d) => d.id),
       itemsQuery: "",
       treeQuery: "",
       treePreviewItemId: "",
       treeManageDomainId: baseDomains[0]?.id ?? "common",
-      typeFilter: "",
+      typeFilters: [],
       domainFilter: "",
       statusFilter: "",
-      priorityFilter: "",
+      priorityFilters: [],
       dueDateFilter: "",
+      ownerFilter: "",
       workspaceColumnOrder: [...STATUS_VALUES],
     },
     project: {

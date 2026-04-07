@@ -5,10 +5,13 @@ import { createSeedData } from "@/entities/app-state/model/seed"
 import type { AppState, ProjectState, UiState } from "@/entities/app-state/model/types"
 import type { Comment } from "@/entities/comment/model/types"
 import type { HistoryEntry } from "@/entities/history/model/types"
-import type { Item } from "@/entities/item/model/types"
+import type { Item, ItemType, Priority } from "@/entities/item/model/types"
 import { normalizeDateInput } from "@/shared/lib/dates"
 import { uniqueId } from "@/shared/lib/ids"
-import { normalizeItemType } from "@/shared/lib/itemType"
+import {
+  ITEM_TYPE_VALUES,
+  normalizeItemType,
+} from "@/shared/lib/itemType"
 import { normalizePriority } from "@/shared/lib/priority"
 import { normalizeStatusValue } from "@/shared/lib/status"
 import { normalizeTextValue } from "@/shared/lib/text"
@@ -52,6 +55,31 @@ export const normalizeWorkspaceBoardRanks = (items: Item[]): Item[] => {
     sorted.forEach((item, idx) => rankById.set(item.id, idx))
   }
   return items.map((i) => ({ ...i, boardRank: rankById.get(i.id) ?? 0 }))
+}
+
+const parsePriorityFilters = (raw: unknown, legacy: unknown): Priority[] => {
+  if (Array.isArray(raw)) {
+    return raw
+      .map((x) => String(x))
+      .filter((x): x is Priority => x === "P0" || x === "P1" || x === "P2")
+  }
+  const legacyNorm = normalizeTextValue(legacy ?? "")
+  if (legacyNorm === "P0" || legacyNorm === "P1" || legacyNorm === "P2") {
+    return [legacyNorm]
+  }
+  return []
+}
+
+const parseTypeFilters = (raw: unknown, legacy: unknown): ItemType[] => {
+  if (Array.isArray(raw)) {
+    const allowed = new Set<ItemType>(ITEM_TYPE_VALUES)
+    return raw
+      .map((x) => normalizeItemType(x))
+      .filter((t) => allowed.has(t))
+  }
+  const legacyNorm = normalizeTextValue(legacy ?? "")
+  if (!legacyNorm) return []
+  return [normalizeItemType(legacyNorm)]
 }
 
 const normalizeRawItem = (item: unknown, workingDomains: Domain[]): Item => {
@@ -118,10 +146,12 @@ export const normalizeAppState = (raw: unknown): AppState => {
   const ui: UiState = {
     activeWorkspace:
       uiRaw.activeWorkspace === "decision" ? "decision" : "information_request",
-    selectedItemId:
-      typeof uiRaw.selectedItemId === "string"
-        ? uiRaw.selectedItemId
-        : seed.ui.selectedItemId,
+    selectedItemId: (() => {
+      const raw = uiRaw.selectedItemId
+      if (raw === null) return null
+      if (typeof raw === "string") return raw
+      return seed.ui.selectedItemId
+    })(),
     expandedDomainIds: Array.isArray(uiRaw.expandedDomainIds)
       ? uiRaw.expandedDomainIds.map(String)
       : seed.ui.expandedDomainIds,
@@ -131,11 +161,15 @@ export const normalizeAppState = (raw: unknown): AppState => {
       uiRaw.treePreviewItemId ?? uiRaw.selectedItemId ?? "",
     ),
     treeManageDomainId: normalizeTextValue(uiRaw.treeManageDomainId ?? ""),
-    typeFilter: normalizeTextValue(uiRaw.typeFilter ?? ""),
+    typeFilters: parseTypeFilters(uiRaw.typeFilters, uiRaw.typeFilter),
     domainFilter: normalizeTextValue(uiRaw.domainFilter ?? ""),
     statusFilter: normalizeTextValue(uiRaw.statusFilter ?? ""),
-    priorityFilter: normalizeTextValue(uiRaw.priorityFilter ?? ""),
+    priorityFilters: parsePriorityFilters(
+      uiRaw.priorityFilters,
+      uiRaw.priorityFilter,
+    ),
     dueDateFilter: normalizeTextValue(uiRaw.dueDateFilter ?? ""),
+    ownerFilter: normalizeTextValue(uiRaw.ownerFilter ?? ""),
     workspaceColumnOrder: parseWorkspaceColumnOrder(
       uiRaw.workspaceColumnOrder,
       seed.ui.workspaceColumnOrder,
@@ -171,8 +205,11 @@ export const normalizeAppState = (raw: unknown): AppState => {
     ? nextExpandedIds
     : workingDomains.map((domain) => domain.id)
 
-  if (!items.some((item) => item.id === ui.selectedItemId)) {
-    ui.selectedItemId = items[0]?.id ?? null
+  if (
+    ui.selectedItemId !== null &&
+    !items.some((item) => item.id === ui.selectedItemId)
+  ) {
+    ui.selectedItemId = null
   }
 
   if (
