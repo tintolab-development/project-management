@@ -7,14 +7,19 @@ import { cn } from "@/lib/utils"
 function Separator({
   className,
   orientation = "horizontal",
+  tabIndex = -1,
   ...props
 }: SeparatorPrimitive.Props) {
   return (
     <SeparatorPrimitive
       data-slot="separator"
       orientation={orientation}
+      tabIndex={tabIndex}
       className={cn(
-        "shrink-0 bg-border data-horizontal:h-px data-horizontal:w-full data-vertical:w-px data-vertical:self-stretch",
+        "shrink-0 bg-border",
+        orientation === "vertical"
+          ? "w-px self-stretch"
+          : "h-px w-full",
         className
       )}
       {...props}

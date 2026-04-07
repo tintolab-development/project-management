@@ -18,13 +18,21 @@ function PopoverContent({
   align = "center",
   alignOffset = 0,
   side = "bottom",
-  sideOffset = 4,
+  sideOffset = 6,
+  matchTriggerWidth = false,
+  anchor,
   ...props
 }: PopoverPrimitive.Popup.Props &
   Pick<
     PopoverPrimitive.Positioner.Props,
-    "align" | "alignOffset" | "side" | "sideOffset"
-  >) {
+    "align" | "alignOffset" | "side" | "sideOffset" | "anchor"
+  > & {
+    /**
+     * true일 때 너비는 Floating UI `--anchor-width`(기본: 트리거 요소)에 맞춤.
+     * 필터 박스(`FilterFieldShell` `.body`) 전체와 맞추려면 `anchor`에 해당 래퍼 ref를 넘기세요.
+     */
+    matchTriggerWidth?: boolean
+  }) {
   return (
     <PopoverPrimitive.Portal>
       <PopoverPrimitive.Positioner
@@ -32,13 +40,19 @@ function PopoverContent({
         alignOffset={alignOffset}
         side={side}
         sideOffset={sideOffset}
-        className="isolate z-50"
+        anchor={anchor}
+        className={cn(
+          "isolate z-50",
+          matchTriggerWidth &&
+            "box-border min-w-0 w-[min(var(--anchor-width,18rem),calc(100vw-2rem))]",
+        )}
       >
         <PopoverPrimitive.Popup
           data-slot="popover-content"
           className={cn(
-            "z-50 flex w-72 origin-(--transform-origin) flex-col gap-2.5 rounded-lg bg-popover p-2.5 text-sm text-popover-foreground shadow-md ring-1 ring-foreground/10 outline-hidden duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
-            className
+            "z-50 flex origin-[var(--transform-origin)] flex-col gap-2.5 rounded-[var(--filter-control-radius)] bg-popover p-2.5 text-sm text-popover-foreground shadow-md ring-1 ring-[color:var(--filter-control-border)] outline-hidden duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+            matchTriggerWidth ? "w-full max-w-none min-w-0" : "w-72",
+            className,
           )}
           {...props}
         />

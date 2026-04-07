@@ -47,15 +47,40 @@ button {
   top: 50%;
   transform: translate(-50%, -50%);
   z-index: 50;
-  max-height: min(90vh, 960px);
-  overflow: auto;
   box-sizing: border-box;
   margin: 0;
   width: min(760px, 100%);
+  /* 높이는 콘텐츠 기본(auto). `fit-content`+플렉스 조합에서 일부 엔진이 자식을 한 줄로 붙이는 이슈 방지 */
+  max-height: var(--modal-max-height);
+  overflow-x: hidden;
+  overflow-y: auto;
   background: var(--panel);
   border-radius: 22px;
   padding: 20px;
   box-shadow: var(--shadow-modal);
+  /**
+   * 명시적 세로 스택 — 부모/포털 플렉스 컨텍스트에서 자식이 가로 한 줄로 잡히면
+   * 필드와 액션 버튼이 인풋 위에 겹쳐 보일 수 있음
+   * `!important`: 라이브러리/유틸이 `flex-direction`을 덮는 경우 방지
+   */
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  min-width: 0;
+}
+
+/** 헤더 아래 블록은 항상 전체 너비·세로 흐름(인풋과 액션이 옆으로 붙지 않도록) */
+[role="dialog"].modal > .modal-head {
+  flex-shrink: 0;
+  width: 100%;
+  min-width: 0;
+}
+
+[role="dialog"].modal > :not(.modal-head) {
+  flex: 0 1 auto;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
 }
 
 [role="dialog"].modal.import-modal {
@@ -79,6 +104,9 @@ button {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 14px;
+  flex-shrink: 0;
+  width: 100%;
+  min-width: 0;
 }
 
 .modal-actions {
@@ -87,6 +115,9 @@ button {
   margin-top: 14px;
   gap: 10px;
   flex-wrap: wrap;
+  flex-shrink: 0;
+  width: 100%;
+  min-width: 0;
 }
 
 .import-help {
@@ -368,4 +399,45 @@ button {
   font-weight: 800;
   font-size: 22px;
   color: var(--text);
+}
+
+/**
+ * `Input` 컴포넌트 래퍼 — flex 열 안에서 실제 `<input>` 높이만큼 세로 공간을 잡아야 `gap`이 맞음.
+ * `container-type: size` 는 블록 축 size containment 로 자식 높이를 박스 높이에 반영하지 않는 환경이 있어
+ * 로그인 등 폼에서 인풋·라벨·버튼이 겹쳐 보일 수 있어 사용하지 않음.
+ * 플레이스홀더 크기는 `--input-placeholder-*` 고정 토큰 사용.
+ */
+.input-field-cq {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/*
+ * `:where()`로 특이도 0에 가깝게 — `.input-field-cq > input`에 `min-height:0` 등을 두면
+ * 단일 클래스인 `min-h-[var(--filter-control-height)]`보다 우선해 인풋·필터 높이가 무너짐.
+ * (번들 순서·특이도 싸움을 구조적으로 막기 위함)
+ */
+:where(.input-field-cq) > :where([data-slot="input"]) {
+  width: 100%;
+  min-width: 0;
+}
+
+[data-slot="input"]::placeholder {
+  color: var(--input-placeholder-fg);
+  font-family: var(--font-login-title);
+  font-style: normal;
+  font-weight: var(--input-placeholder-weight);
+  line-height: var(--input-placeholder-line-height);
+  opacity: var(--input-placeholder-opacity);
+  font-size: var(--input-placeholder-max-size);
+}
+
+@supports (height: 1dvh) {
+  :root {
+    --modal-max-height: min(90dvh, 960px);
+  }
 }

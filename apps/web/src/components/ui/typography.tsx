@@ -91,7 +91,7 @@ export const textVariants = cva("", {
       lead: "text-base leading-relaxed text-muted-foreground",
       /** 폼 라벨: 16px / 500 / 150% / -0.32px / Pretendard / default-BK */
       formLabel:
-        "mb-2 block text-[16px] font-medium leading-[150%] tracking-[-0.32px] text-[var(--default-BK)] [font-family:var(--font-login-title)]",
+        "block text-[16px] font-medium leading-[150%] tracking-[-0.32px] text-[var(--default-BK)] [font-family:var(--font-login-title)] [margin-bottom:var(--filter-field-label-input-gap)]",
       cardTitle: "mb-1.5 font-bold text-card-foreground",
       cardDescription: "text-app-sm text-muted-foreground",
       detailCode:
@@ -270,4 +270,4 @@ export function StatSub({
 
 /** Shared class for modal close icon buttons (×). */
 export const modalCloseIconClassName =
-  "border-none bg-transparent text-app-stat leading-none font-light"
+  "border-none bg-transparent p-0 !text-2xl font-normal leading-none text-muted-foreground hover:text-foreground"
