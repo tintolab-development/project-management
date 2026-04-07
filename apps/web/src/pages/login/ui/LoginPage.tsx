@@ -19,7 +19,7 @@ import styles from "./LoginPage.module.css"
 
 const authBypassed = import.meta.env.VITE_REQUIRE_AUTH === "false"
 
-/** MSW `mockUsersStore` 시드와 동일 — 개발 모드 빠른 입력 전용 */
+/** MSW `mockUsersStore` 시드와 동일 — 로그인 폼 빠른 입력 */
 const TINTOLAB_MASTER_ADMIN_EMAIL = "master-pm@tinto.co.kr"
 const TINTOLAB_MASTER_ADMIN_PASSWORD = "MasterPm2026!"
 const SEOHAEWON_STAFF_EMAIL = "staff@seohaewon.co.kr"
@@ -120,67 +120,65 @@ export const LoginPage = () => {
             >
               {isSubmitting ? "로그인 중…" : "로그인"}
             </Button>
-            {import.meta.env.DEV ? (
-              <div className={styles.quickLoginRow}>
-                <Button
-                  type="button"
-                  appearance="fill"
-                  dimension="stretchSm"
-                  className={styles.quickLoginButton}
-                  onClick={() => {
-                    clearErrors()
-                    setValue("email", TINTOLAB_MASTER_ADMIN_EMAIL, {
-                      shouldDirty: true,
-                      shouldValidate: true,
-                    })
-                    setValue("password", TINTOLAB_MASTER_ADMIN_PASSWORD, {
-                      shouldDirty: true,
-                      shouldValidate: true,
-                    })
-                  }}
-                >
-                  틴토랩 마스터 관리자
-                </Button>
-                <Button
-                  type="button"
-                  appearance="fill"
-                  dimension="stretchSm"
-                  className={styles.quickLoginButton}
-                  onClick={() => {
-                    clearErrors()
-                    setValue("email", SEOHAEWON_STAFF_EMAIL, {
-                      shouldDirty: true,
-                      shouldValidate: true,
-                    })
-                    setValue("password", SEOHAEWON_STAFF_PASSWORD, {
-                      shouldDirty: true,
-                      shouldValidate: true,
-                    })
-                  }}
-                >
-                  설해원 담당자
-                </Button>
-                <Button
-                  type="button"
-                  appearance="fill"
-                  dimension="stretchSm"
-                  className={styles.quickLoginButton}
-                  onClick={() => {
-                    clearErrors()
-                    setValue("email", MULTI_SAMPLE_EMAIL, {
-                      shouldDirty: true,
-                      shouldValidate: true,
-                    })
-                    setValue("password", MULTI_SAMPLE_PASSWORD, {
-                      shouldDirty: true,
-                      shouldValidate: true,
-                    })
-                  }}
-                >
-                  샘플 멀티 프로젝트
-                </Button>
-              </div>
-            ) : null}
+            <div className={styles.quickLoginRow}>
+              <Button
+                type="button"
+                appearance="fill"
+                dimension="stretchSm"
+                className={styles.quickLoginButton}
+                onClick={() => {
+                  clearErrors()
+                  setValue("email", TINTOLAB_MASTER_ADMIN_EMAIL, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  })
+                  setValue("password", TINTOLAB_MASTER_ADMIN_PASSWORD, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  })
+                }}
+              >
+                틴토랩 마스터 관리자
+              </Button>
+              <Button
+                type="button"
+                appearance="fill"
+                dimension="stretchSm"
+                className={styles.quickLoginButton}
+                onClick={() => {
+                  clearErrors()
+                  setValue("email", SEOHAEWON_STAFF_EMAIL, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  })
+                  setValue("password", SEOHAEWON_STAFF_PASSWORD, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  })
+                }}
+              >
+                설해원 담당자
+              </Button>
+              <Button
+                type="button"
+                appearance="fill"
+                dimension="stretchSm"
+                className={styles.quickLoginButton}
+                onClick={() => {
+                  clearErrors()
+                  setValue("email", MULTI_SAMPLE_EMAIL, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  })
+                  setValue("password", MULTI_SAMPLE_PASSWORD, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  })
+                }}
+              >
+                샘플 멀티 프로젝트
+              </Button>
+            </div>
           </form>
         </CardContent>
       </Card>
