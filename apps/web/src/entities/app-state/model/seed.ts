@@ -27,7 +27,7 @@ export const createSeedData = (): AppState => {
     },
     project: {
       id: "PRJ-001",
-      name: "Seolhaewon Project",
+      name: "DEMO Project",
       subtitle: "예약엔진 · 웹 · 앱 · 운영정책 협의",
     },
     domains: baseDomains,

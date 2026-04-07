@@ -12,7 +12,7 @@ export const LegacyPPathPrefixRedirect = () => {
     return <Navigate to="/" replace />
   }
   const slugRaw = segments[1]
-  const slug = slugRaw === "main" ? "seohaewon" : slugRaw
+  const slug = slugRaw === "main" ? "demo" : slugRaw
   const tail = segments.slice(2).join("/")
   const target = tail ? `/project/${slug}/${tail}` : `/project/${slug}`
   return <Navigate to={`${target}${search}`} replace />
@@ -31,7 +31,7 @@ export const LegacyPathRedirect = () => {
 
   if (authBypassed) {
     const rest = legacyRestSegment(pathname)
-    return <Navigate to={`/project/seohaewon/${rest}${search}`} replace />
+    return <Navigate to={`/project/demo/${rest}${search}`} replace />
   }
 
   if (!user) {
