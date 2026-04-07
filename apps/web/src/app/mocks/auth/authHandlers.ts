@@ -2,6 +2,7 @@ import { http, HttpResponse } from "msw"
 
 import { apiBasePath } from "@/shared/config/apiBase"
 import { createMockAccessToken, parseMockAccessToken } from "./mockJwt"
+import type { MockUserRecord } from "./mockUsersStore"
 import { mockUsersStore } from "./mockUsersStore"
 
 const url = (path: string) => {
@@ -12,19 +13,16 @@ const url = (path: string) => {
 const unauthorized = () =>
   HttpResponse.json({ error: "인증이 필요합니다." }, { status: 401 })
 
-function userPayload(u: {
-  id: string
-  email: string
-  displayName: string
-  organization: string
-  assignedProjects: { id: string; name: string }[]
-}) {
+function userPayload(u: MockUserRecord) {
   return {
     id: u.id,
     email: u.email,
     displayName: u.displayName,
     organization: u.organization,
+    roles: u.roles,
     assignedProjects: u.assignedProjects,
+    accessibleProjectIds: u.accessibleProjectIds,
+    defaultProjectSlug: u.defaultProjectSlug,
   }
 }
 
