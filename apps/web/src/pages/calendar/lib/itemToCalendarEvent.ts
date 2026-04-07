@@ -35,6 +35,7 @@ const priorityTagClass: Record<Item["priority"], string> = {
   P0: "bg-red-100 text-red-900 ring-1 ring-red-200",
   P1: "bg-orange-100 text-orange-900 ring-1 ring-orange-200",
   P2: "bg-slate-100 text-slate-800 ring-1 ring-slate-200",
+  P3: "bg-zinc-100 text-zinc-800 ring-1 ring-zinc-200",
 }
 
 export const itemToCalendarEvent = (item: Item): EventCalendarItem | null => {
