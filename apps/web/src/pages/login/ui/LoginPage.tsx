@@ -5,6 +5,7 @@ import { Navigate, useNavigate } from "react-router-dom"
 import {
   loginFormSchema,
   loginRequest,
+  resolvePostLoginPath,
   type LoginFormValues,
   useAuthSessionStore,
 } from "@/features/auth"
@@ -18,13 +19,20 @@ import styles from "./LoginPage.module.css"
 
 const authBypassed = import.meta.env.VITE_REQUIRE_AUTH === "false"
 
-/** MSW 시드와 동일 — 개발용 자동 입력만 */
-const DEV_ADMIN_EMAIL = "admin@tinto.co.kr"
-const DEV_ADMIN_PASSWORD = "!Tinto0527"
+/** MSW `mockUsersStore` 시드와 동일 — 개발 모드 빠른 입력 전용 */
+const TINTOLAB_ADMIN_EMAIL = "admin@tinto.co.kr"
+const TINTOLAB_ADMIN_PASSWORD = "!Tinto0527"
+const TINTOLAB_MASTER_PM_EMAIL = "master-pm@tinto.co.kr"
+const TINTOLAB_MASTER_PM_PASSWORD = "MasterPm2026!"
+const TINTOLAB_PM_EMAIL = "pm@tinto.co.kr"
+const TINTOLAB_PM_PASSWORD = "PmTinto2026!"
+const SEOHAEWON_STAFF_EMAIL = "staff@seohaewon.co.kr"
+const SEOHAEWON_STAFF_PASSWORD = "SeohaeStaff2026!"
 
 export const LoginPage = () => {
   const navigate = useNavigate()
   const accessToken = useAuthSessionStore((s) => s.accessToken)
+  const sessionUser = useAuthSessionStore((s) => s.user)
   const setSession = useAuthSessionStore((s) => s.setSession)
 
   const {
@@ -42,15 +50,15 @@ export const LoginPage = () => {
     },
   })
 
-  if (!authBypassed && accessToken) {
-    return <Navigate to="/" replace />
+  if (!authBypassed && accessToken && sessionUser) {
+    return <Navigate to={resolvePostLoginPath(sessionUser)} replace />
   }
 
   const onSubmit = handleSubmit(async (values) => {
     try {
       const res = await loginRequest(values)
       setSession({ accessToken: res.accessToken, user: res.user })
-      navigate("/", { replace: true })
+      navigate(resolvePostLoginPath(res.user), { replace: true })
     } catch (e) {
       setError("root", {
         message: e instanceof Error ? e.message : "로그인에 실패했습니다.",
@@ -69,7 +77,7 @@ export const LoginPage = () => {
         <CardContent className={cn(styles.content, "px-0")}>
           <form className={styles.form} onSubmit={onSubmit} noValidate>
             <div className={styles.field}>
-              <FormLabel htmlFor="login-email">Email</FormLabel>
+              <FormLabel htmlFor="login-email">이메일</FormLabel>
               <Input
                 id="login-email"
                 type="email"
@@ -105,27 +113,6 @@ export const LoginPage = () => {
             {errors.root ? (
               <p className={styles.rootError}>{errors.root.message}</p>
             ) : null}
-            {import.meta.env.DEV ? (
-              <Button
-                type="button"
-                appearance="fill"
-                dimension="hug"
-                className={styles.devAdminFill}
-                onClick={() => {
-                  clearErrors()
-                  setValue("email", DEV_ADMIN_EMAIL, {
-                    shouldDirty: true,
-                    shouldValidate: true,
-                  })
-                  setValue("password", DEV_ADMIN_PASSWORD, {
-                    shouldDirty: true,
-                    shouldValidate: true,
-                  })
-                }}
-              >
-                개발용 관리자 로그인
-              </Button>
-            ) : null}
             <Button
               type="submit"
               appearance="fill"
@@ -135,6 +122,86 @@ export const LoginPage = () => {
             >
               {isSubmitting ? "로그인 중…" : "로그인"}
             </Button>
+            {import.meta.env.DEV ? (
+              <div className={styles.quickLoginRow}>
+                <Button
+                  type="button"
+                  appearance="fill"
+                  dimension="stretchSm"
+                  className={styles.quickLoginButton}
+                  onClick={() => {
+                    clearErrors()
+                    setValue("email", TINTOLAB_ADMIN_EMAIL, {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    })
+                    setValue("password", TINTOLAB_ADMIN_PASSWORD, {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    })
+                  }}
+                >
+                  틴토랩 관리자
+                </Button>
+                <Button
+                  type="button"
+                  appearance="fill"
+                  dimension="stretchSm"
+                  className={styles.quickLoginButton}
+                  onClick={() => {
+                    clearErrors()
+                    setValue("email", TINTOLAB_MASTER_PM_EMAIL, {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    })
+                    setValue("password", TINTOLAB_MASTER_PM_PASSWORD, {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    })
+                  }}
+                >
+                  틴토랩 마스터 PM
+                </Button>
+                <Button
+                  type="button"
+                  appearance="fill"
+                  dimension="stretchSm"
+                  className={styles.quickLoginButton}
+                  onClick={() => {
+                    clearErrors()
+                    setValue("email", TINTOLAB_PM_EMAIL, {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    })
+                    setValue("password", TINTOLAB_PM_PASSWORD, {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    })
+                  }}
+                >
+                  틴토랩 PM (알파·베타)
+                </Button>
+                <Button
+                  type="button"
+                  appearance="fill"
+                  dimension="stretchSm"
+                  className={styles.quickLoginButton}
+                  onClick={() => {
+                    clearErrors()
+                    setValue("email", SEOHAEWON_STAFF_EMAIL, {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    })
+                    setValue("password", SEOHAEWON_STAFF_PASSWORD, {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    })
+                  }}
+                >
+                  설해원 담당자
+                </Button>
+              </div>
+            ) : null}
           </form>
         </CardContent>
       </Card>

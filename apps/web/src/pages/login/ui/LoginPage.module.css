@@ -6,6 +6,9 @@
   background-color: var(--bg);
   padding: 16px;
   box-sizing: border-box;
+  /* 카드가 뷰포트보다 길면 상·하단까지 스크롤로 볼 수 있게 */
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .widget {
@@ -13,8 +16,9 @@
   display: flex;
   width: 560px;
   max-width: min(560px, calc(100vw - 32px));
-  min-height: 578px;
-  max-height: min(578px, calc(100vh - 32px));
+  /* 콘텐츠 높이에 맞춤 — 내부 스크롤·상단 라벨 잘림 방지 (페이지/바디 스크롤 사용) */
+  min-height: 0;
+  max-height: none;
   flex-direction: column;
   align-items: flex-start;
   gap: 10px;
@@ -22,6 +26,8 @@
   border-radius: 32px !important;
   background: var(--WT) !important;
   box-shadow: var(--shadow-login-widget) !important;
+  overflow-x: hidden !important;
+  overflow-y: visible !important;
 }
 
 .header {
@@ -36,10 +42,11 @@
 .content {
   box-sizing: border-box;
   width: 100%;
-  min-height: 0;
-  flex: 1;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
+  justify-content: flex-start;
+  overflow: visible;
 }
 
 .form {
@@ -47,15 +54,23 @@
   flex-direction: column;
   gap: 32px;
   width: 100%;
-  flex: 1;
-  min-height: 0;
+  /* 높이를 내용 이하로 줄이지 않음 — flex shrink + min-height:0 조합이 인풋·버튼 겹침을 유발할 수 있음 */
+  flex: 0 0 auto;
+  min-height: min-content;
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--filter-field-label-input-gap);
   width: 100%;
+  flex-shrink: 0;
+  min-height: min-content;
+}
+
+/** `FormLabel` 마진과 flex `gap` 이중 간격 방지 — 라벨↔인풋은 `gap`만 사용 */
+.field > label {
+  margin-bottom: 0;
 }
 
 .fieldInput {
@@ -83,6 +98,7 @@
 /* DS primary(fill) — 토큰과 동일한 중립 primary */
 .submit {
   width: 100%;
+  flex-shrink: 0;
   height: 60px !important;
   min-height: 60px;
   padding: 10px 16px !important;
@@ -106,19 +122,31 @@
   opacity: 0.55;
 }
 
-.devAdminFill {
-  align-self: center;
+.quickLoginRow {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.quickLoginButton {
+  flex: 1 1 0;
+  min-width: min(100%, 160px);
   height: auto !important;
   min-height: 40px;
-  padding: 8px 16px !important;
+  padding: 8px 10px !important;
   border-radius: 8px !important;
   border-color: transparent !important;
   background-color: var(--default-BK) !important;
   font-size: var(--font-size-sm);
-  color: #ffffff !important;
+  color: var(--text-on-primary) !important;
+  white-space: normal;
+  text-align: center;
 }
 
-.devAdminFill:hover:not(:disabled) {
+.quickLoginButton:hover:not(:disabled) {
   filter: brightness(1.08);
 }
 
@@ -126,6 +154,7 @@
   margin: 0;
   font-size: var(--font-size-sm);
   color: var(--danger);
+  flex-shrink: 0;
 }
 
 .fieldError {
