@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import clsx from "clsx"
 import { useAppStore } from "@/app/store/useAppStore"
+import { useProjectScopedPaths } from "@/shared/lib/projectScopedPaths"
 import {
   buildDomainTree,
   getChildDomains,
@@ -25,6 +26,7 @@ type DropPos = "before" | "after" | "inside" | null
 
 export const TreePage = () => {
   const navigate = useNavigate()
+  const paths = useProjectScopedPaths()
   const domains = useAppStore((s) => s.domains)
   const items = useAppStore((s) => s.items)
   const treeQuery = useAppStore((s) => s.ui.treeQuery)
@@ -284,7 +286,7 @@ export const TreePage = () => {
             itemDropInsideId={itemDropInsideId}
             onToggleDomain={toggleDomainExpanded}
             onPreviewItem={toggleTreeItemPreview}
-            onGoItem={() => navigate("/items")}
+            onGoItem={() => navigate(paths.tasks)}
             onSelectItem={selectItem}
             onDeleteItem={deleteItem}
             onAddChild={createChildDomain}
