@@ -217,6 +217,32 @@
   /* UI copy (Pretendard stack; login title, 폼 라벨·플레이스홀더 등) */
   --font-login-title: Pretendard, "Segoe UI", "Malgun Gothic", sans-serif;
 
+  /**
+   * 캘린더 상단 월·년도 캡션 (중앙)
+   * #1B1B1B / Pretendard / 24px / 700 / line-height 150%
+   */
+  --calendar-caption-fg: #1b1b1b;
+  --calendar-caption-font-family: var(--font-login-title);
+  --calendar-caption-font-size: 24px;
+  --calendar-caption-font-weight: 700;
+  --calendar-caption-line-height: 1.5;
+  /** 캡션 라벨 최소 너비 — 월·연도 문자열 길이 차이로 네비 줄이 흔들리지 않도록 */
+  --calendar-caption-min-width: 10.5rem;
+  /** 요일 행(tr) 높이 */
+  --calendar-weekday-row-height: 2.25rem;
+  /** 날짜 그리드 tbody 주(행) 고정 높이 — 월·주 수와 무관하게 동일 */
+  --calendar-body-row-height: 140px;
+  /** 그리드 스크롤 뷰포트 하단 안쪽 여백(스크롤 끝에서 표와의 숨통) */
+  --calendar-grid-scroll-padding: 12px;
+  /** 캡션과 이전/다음 네비 버튼 사이 가로 간격(날짜 텍스트 양옆) */
+  --calendar-nav-caption-gap: 15px;
+  /** 캘린더 월 이전/다음 버튼 터치 영역 */
+  --calendar-nav-button-size: 25px;
+  /** 버튼 안 화살표 아이콘 */
+  --calendar-nav-icon-size: 18px;
+  /** 날짜·요일 셀 안쪽 여백 */
+  --calendar-cell-padding: 10px;
+
   /** shadcn Badge 공통 높이 — 너비는 콘텐츠(w-fit) */
   --badge-height: 22px;
 
