@@ -6,11 +6,11 @@
   flex: 1 1 auto;
   min-height: 0;
   flex-direction: column;
-  gap: 0;
-  padding: 0;
-  border-radius: var(--radius-lg, 12px);
-  background: var(--surface-subtle);
-  box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
+  min-height: min(560px, calc(100svh - 7rem));
+  min-width: 0;
+  padding: var(--space-6) var(--space-4);
 }
 
 .calendarSection {

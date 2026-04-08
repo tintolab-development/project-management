@@ -73,6 +73,12 @@ const parseAssigneesFromOwner = (owner: string): string[] =>
     .map((part) => part.trim())
     .filter((part) => part.length > 0)
 
+const parseAssigneesFromOwner = (owner: string): string[] =>
+  owner
+    .split("|")
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0)
+
 const filterLabelWithGap = cn(
   filterFieldLabelStyles.filterFieldLabel,
   filterFieldLabelStyles.filterFieldLabelGapBelow

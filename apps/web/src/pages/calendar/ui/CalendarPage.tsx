@@ -20,30 +20,9 @@ import { itemToCalendarEvent } from "../lib/itemToCalendarEvent"
 import { CalendarFiltersPanel } from "./CalendarFiltersPanel"
 
 
-const filterEvents = (
-  events: EventCalendarItem[],
-  typeFilter: ItemType | "",
-  priorityFilter: Priority | "",
-  domainFilter: string,
-  ownerFilter: string,
-): EventCalendarItem[] =>
-  events.filter((ev) => {
-    const f = ev.calendarFilter
-    if (!f) return true
-    if (typeFilter !== "" && f.itemType !== typeFilter) {
-      return false
-    }
-    if (priorityFilter !== "" && f.priority !== priorityFilter) {
-      return false
-    }
-    if (domainFilter !== "" && f.domainId !== domainFilter) {
-      return false
-    }
-    if (ownerFilter !== "" && f.owner !== ownerFilter) {
-      return false
-    }
-    return true
-  })
+export const CalendarPage = () => {
+  const navigate = useNavigate()
+  const paths = useProjectScopedPaths()
 
 export const CalendarPage = () => {
   const items = useAppStore((s) => s.items)
