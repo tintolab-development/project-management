@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils"
 
 const inputVariants = cva(
   [
-    "box-border overflow-hidden text-ellipsis rounded-lg border border-input bg-transparent text-[length:var(--font-size-base)] font-normal leading-normal transition-colors outline-none [font-family:var(--font-login-title)]",
+    "box-border overflow-hidden text-ellipsis rounded-[var(--filter-control-radius)] border border-input bg-transparent text-[length:var(--font-size-base)] font-normal leading-normal transition-colors outline-none [font-family:var(--font-login-title)]",
     "placeholder:overflow-hidden placeholder:text-ellipsis placeholder:not-italic placeholder:font-normal",
     "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40",
   ].join(" "),

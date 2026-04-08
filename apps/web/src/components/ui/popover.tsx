@@ -20,6 +20,7 @@ function PopoverContent({
   side = "bottom",
   sideOffset = 6,
   matchTriggerWidth = false,
+  portalContainer,
   anchor,
   ...props
 }: PopoverPrimitive.Popup.Props &
@@ -32,9 +33,11 @@ function PopoverContent({
      * 필터 박스(`FilterFieldShell` `.body`) 전체와 맞추려면 `anchor`에 해당 래퍼 ref를 넘기세요.
      */
     matchTriggerWidth?: boolean
+    /** 모달/드로어 내부 상호작용 보장을 위해 포털 컨테이너를 지정 */
+    portalContainer?: HTMLElement | null
   }) {
   return (
-    <PopoverPrimitive.Portal>
+    <PopoverPrimitive.Portal container={portalContainer ?? undefined}>
       <PopoverPrimitive.Positioner
         align={align}
         alignOffset={alignOffset}
@@ -42,7 +45,7 @@ function PopoverContent({
         sideOffset={sideOffset}
         anchor={anchor}
         className={cn(
-          "isolate z-50",
+          "isolate z-[60]",
           matchTriggerWidth &&
             "box-border min-w-0 w-[min(var(--anchor-width,18rem),calc(100vw-2rem))]",
         )}
@@ -50,7 +53,7 @@ function PopoverContent({
         <PopoverPrimitive.Popup
           data-slot="popover-content"
           className={cn(
-            "z-50 flex origin-[var(--transform-origin)] flex-col gap-2.5 rounded-[var(--filter-control-radius)] bg-popover p-2.5 text-sm text-popover-foreground shadow-md ring-1 ring-[color:var(--filter-control-border)] outline-hidden duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+            "z-[60] flex origin-[var(--transform-origin)] flex-col gap-2.5 rounded-[var(--filter-control-radius)] bg-popover p-2.5 text-sm text-popover-foreground shadow-md ring-1 ring-[color:var(--filter-control-border)] outline-hidden duration-100 data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
             matchTriggerWidth ? "w-full max-w-none min-w-0" : "w-72",
             className,
           )}

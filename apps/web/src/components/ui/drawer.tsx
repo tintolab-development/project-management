@@ -9,10 +9,17 @@ import { XIcon } from "lucide-react"
 
 function Drawer({
   shouldScaleBackground = false,
+  dismissible = true,
+  handleOnly = true,
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Root>) {
   return (
-    <DrawerPrimitive.Root shouldScaleBackground={shouldScaleBackground} {...props} />
+    <DrawerPrimitive.Root
+      shouldScaleBackground={shouldScaleBackground}
+      dismissible={dismissible}
+      handleOnly={handleOnly}
+      {...props}
+    />
   )
 }
 
