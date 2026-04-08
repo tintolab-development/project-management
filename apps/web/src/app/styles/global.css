@@ -87,6 +87,60 @@ button {
   width: min(1100px, 100%);
 }
 
+/** Task 검색(연간 Task 추가) — 넓힌 폭(1000×706), 필터·검색 버튼 한 줄 정렬 유지 */
+[role="dialog"].modal.task-search-modal {
+  width: min(1000px, calc(100vw - 40px));
+  max-width: min(1000px, calc(100vw - 40px));
+  height: min(706px, 90dvh);
+  max-height: min(706px, 90dvh);
+}
+
+[role="dialog"].modal.task-search-modal > [data-slot="app-modal-body"] {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/** 회원정보 수정 — 기획 고정 크기 480×706 */
+[role="dialog"].modal.member-profile-modal {
+  width: min(480px, calc(100vw - 40px));
+  max-width: min(480px, calc(100vw - 40px));
+  height: min(706px, 90dvh);
+  max-height: min(706px, 90dvh);
+  /* 기본 모달 패딩보다 살짝 타이트하게 — 본문이 한 화면에 들어가도록 */
+  padding: 16px 20px;
+  /* 간격 조정으로 보통은 스크롤 없음 — 뷰포트가 매우 낮을 때만 스크롤 */
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+[role="dialog"].modal.member-profile-modal::-webkit-scrollbar {
+  display: none;
+}
+
+/** Admin 로그 — 상세 읽기 전용(섹션·본문 박스 여유) */
+[role="dialog"].modal.admin-log-detail-modal {
+  width: min(640px, calc(100vw - 40px));
+  max-width: min(640px, calc(100vw - 40px));
+}
+
+/** 계정관리 — 소속 생성 */
+[role="dialog"].modal.admin-affiliation-create-modal {
+  width: min(800px, calc(100vw - 40px));
+  max-width: min(800px, calc(100vw - 40px));
+}
+
+[role="dialog"].modal.member-profile-modal > .modal-head {
+  margin-bottom: 10px;
+}
+
+[role="dialog"].modal.member-profile-modal > [data-slot="member-profile-body"] {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 .modal {
   width: min(760px, 100%);
   background: var(--panel);
@@ -289,23 +343,23 @@ button {
   background: var(--sidebar-tree-drag-bg);
 }
 
-.tree-toggle,
-.tree-domain-link,
-.tree-item-link,
-.tree-item-delete {
+.sidebar-tree .tree-toggle,
+.sidebar-tree .tree-domain-link,
+.sidebar-tree .tree-item-link,
+.sidebar-tree .tree-item-delete {
   border: none;
   background: transparent;
   color: inherit;
 }
 
-.tree-toggle {
+.sidebar-tree .tree-toggle {
   width: 28px;
   height: 28px;
   border-radius: 10px;
   color: var(--sidebar-tree-toggle);
 }
 
-.tree-domain-link {
+.sidebar-tree .tree-domain-link {
   text-align: left;
   color: var(--sidebar-text);
   font-weight: 700;
@@ -350,7 +404,7 @@ button {
   border-color: var(--sidebar-tree-active-border);
 }
 
-.tree-item-link {
+.sidebar-tree .tree-item-link {
   display: grid;
   grid-template-columns: auto 1fr;
   align-items: center;
@@ -372,7 +426,7 @@ button {
   white-space: nowrap;
 }
 
-.tree-item-delete {
+.sidebar-tree .tree-item-delete {
   width: 26px;
   height: 26px;
   border-radius: 999px;
@@ -380,7 +434,7 @@ button {
   font-size: 17px;
 }
 
-.tree-item-delete:hover {
+.sidebar-tree .tree-item-delete:hover {
   background: var(--sidebar-delete-hover-bg);
   color: var(--sidebar-delete-hover-text);
 }

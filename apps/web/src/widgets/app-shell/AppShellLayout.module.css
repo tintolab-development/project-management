@@ -15,6 +15,15 @@
   min-width: 0;
   flex: 1 1 auto;
   overflow: auto;
+  /* 스크롤은 유지, 스크롤바만 숨김 — 콘텐츠 높이 변화 시 가로 폭이 스크롤바 유무로 흔들리지 않도록 */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.main::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 @media (max-width: 1100px) {

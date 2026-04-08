@@ -1,24 +1,32 @@
-import { format, startOfDay, startOfMonth } from "date-fns"
+import { format, startOfMonth } from "date-fns"
 import { enUS, ko } from "date-fns/locale"
-import { useMemo, useState, type HTMLAttributes, type ReactNode } from "react"
-import type { CalendarWeek } from "react-day-picker"
+import {
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type HTMLAttributes,
+  type ReactNode,
+} from "react"
+import { createPortal } from "react-dom"
+import { getDefaultClassNames, type CalendarWeek } from "react-day-picker"
 
 import { Calendar } from "@/components/ui/calendar"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/shared/ui/tooltip"
-import { Text } from "@/shared/ui/typography"
+import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
-import { layoutWeekSegments, maxLaneIndex } from "../lib/layout-week-segments"
 import type { EventCalendarItem } from "../model/types"
+
+import { EventCalendarItemDetailPanel } from "./EventCalendarItemDetailPanel"
+import {
+  EventCalendarWeekWithEvents,
+  type EventCalendarBarInteraction,
+} from "./EventCalendarWeekWithEvents"
 
 import styles from "./EventCalendar.module.css"
 
-const LANE_PX = 22
-const LANE_GAP_PX = 6
+const rdp = getDefaultClassNames()
 
 export type EventCalendarProps = {
   month?: Date
@@ -29,159 +37,12 @@ export type EventCalendarProps = {
   className?: string
 }
 
-function EventPreviewBody({ event }: { event: EventCalendarItem }) {
-  const preview = event.preview
-  if (!preview) {
-    return (
-      <div className="w-64 p-3 text-left">
-        <Text variant="small" className="font-semibold">
-          {event.title}
-        </Text>
-      </div>
-    )
-  }
-
-  return (
-    <div className="flex w-72 flex-col gap-3 p-3 text-left">
-      {preview.itemCode ? (
-        <Text variant="detailCode" className="mb-0">
-          {preview.itemCode}
-        </Text>
-      ) : null}
-      {preview.itemName ? (
-        <Text variant="listTitle" className="mb-0 text-base">
-          {preview.itemName}
-        </Text>
-      ) : (
-        <Text variant="listTitle" className="mb-0 text-base">
-          {event.title}
-        </Text>
-      )}
-      {preview.tags && preview.tags.length > 0 ? (
-        <div className="flex flex-wrap gap-1.5">
-          {preview.tags.map((tag, idx) => (
-            <span
-              key={`${tag.label}-${idx}`}
-              className={cn(
-                "rounded-md px-2 py-0.5 text-[11px] font-medium",
-                tag.className ??
-                  "bg-muted text-muted-foreground ring-1 ring-border/60",
-              )}
-            >
-              {tag.label}
-            </span>
-          ))}
-        </div>
-      ) : null}
-      {preview.assignees ? (
-        <Text variant="muted" className="mb-0 text-[13px]">
-          담당자 : {preview.assignees}
-        </Text>
-      ) : null}
-      {preview.dueDate ? (
-        <Text variant="muted" className="mb-0 text-[13px]">
-          완료예정일 : {preview.dueDate}
-        </Text>
-      ) : null}
-    </div>
-  )
-}
-
-type EventCalendarWeekRowProps = {
+type CalendarWeekRowProps = {
   week: CalendarWeek
-  events: EventCalendarItem[]
   className?: string
-  style?: React.CSSProperties
+  style?: CSSProperties
   children?: ReactNode
 } & Omit<HTMLAttributes<HTMLTableRowElement>, "children">
-
-function EventCalendarWeekRow({
-  week,
-  events,
-  className,
-  style,
-  children,
-  ...trProps
-}: EventCalendarWeekRowProps) {
-  const weekDates = useMemo(
-    () => week.days.map((d) => startOfDay(d.date)),
-    [week.days],
-  )
-
-  const segments = useMemo(
-    () => layoutWeekSegments(weekDates, events),
-    [weekDates, events],
-  )
-
-  const maxL = maxLaneIndex(segments)
-  const stripMin =
-    maxL < 0 ? 4 : (maxL + 1) * (LANE_PX + LANE_GAP_PX) + 4
-
-  const weekKey = week.days[0]?.isoDate ?? String(week.weekNumber)
-
-  return (
-    <>
-      <tr className={className} style={style} {...trProps}>
-        {children}
-      </tr>
-      <tr className={styles.eventMetaRow}>
-        <td className={styles.eventMetaCell} colSpan={week.days.length}>
-          <div
-            className={styles.eventStrip}
-            style={{ minHeight: stripMin }}
-          >
-            {segments.map((seg) => {
-              const leftPct = (seg.startCol / 7) * 100
-              const widthPct = (seg.span / 7) * 100
-              const topPx = seg.lane * (LANE_PX + LANE_GAP_PX)
-              const ev = seg.event
-
-              return (
-                <Tooltip
-                  key={`${ev.id}-${weekKey}-${seg.startCol}`}
-                >
-                  <TooltipTrigger
-                    delay={180}
-                    closeOnClick={false}
-                    render={
-                      <button
-                        type="button"
-                        className={styles.eventBar}
-                        style={{
-                          left: `${leftPct}%`,
-                          width: `${widthPct}%`,
-                          top: topPx,
-                        }}
-                      >
-                        <span
-                          className={cn(styles.track, ev.trackClassName)}
-                        />
-                        <span className={cn(styles.face, ev.barClassName)}>
-                          {ev.title}
-                        </span>
-                      </button>
-                    }
-                  />
-                  <TooltipContent
-                    side="top"
-                    sideOffset={10}
-                    align="start"
-                    className={cn(
-                      "z-50 max-w-none border border-border bg-card p-0 text-card-foreground shadow-lg",
-                      "[&>svg]:hidden",
-                    )}
-                  >
-                    <EventPreviewBody event={ev} />
-                  </TooltipContent>
-                </Tooltip>
-              )
-            })}
-          </div>
-        </td>
-      </tr>
-    </>
-  )
-}
 
 export function EventCalendar({
   month: controlledMonth,
@@ -195,6 +56,13 @@ export function EventCalendar({
     startOfMonth(defaultMonth ?? new Date()),
   )
 
+  const [detail, setDetail] = useState<{
+    event: EventCalendarItem
+    anchorRect: DOMRect
+  } | null>(null)
+
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   const viewMonth = controlledMonth
     ? startOfMonth(controlledMonth)
     : innerMonth
@@ -207,18 +75,51 @@ export function EventCalendar({
     }
   }
 
+  const cancelCloseDetail = useCallback(() => {
+    if (closeTimerRef.current != null) {
+      clearTimeout(closeTimerRef.current)
+      closeTimerRef.current = null
+    }
+  }, [])
+
+  const scheduleCloseDetail = useCallback(() => {
+    if (closeTimerRef.current != null) {
+      clearTimeout(closeTimerRef.current)
+    }
+    closeTimerRef.current = setTimeout(() => {
+      setDetail(null)
+      closeTimerRef.current = null
+    }, 180)
+  }, [])
+
+  const openDetail = useCallback(
+    (eventItem: EventCalendarItem, anchorRect: DOMRect) => {
+      cancelCloseDetail()
+      setDetail({ event: eventItem, anchorRect })
+    },
+    [cancelCloseDetail],
+  )
+
+  const barInteraction = useMemo<EventCalendarBarInteraction>(
+    () => ({
+      openDetail,
+      scheduleCloseDetail,
+      cancelCloseDetail,
+    }),
+    [openDetail, scheduleCloseDetail, cancelCloseDetail],
+  )
+
   const components = useMemo(
     () => ({
-      Week: (
-        props: {
-          week: CalendarWeek
-          className?: string
-          style?: React.CSSProperties
-          children?: ReactNode
-        } & Omit<HTMLAttributes<HTMLTableRowElement>, "children">,
-      ) => <EventCalendarWeekRow {...props} events={events} />,
+      Week: (props: CalendarWeekRowProps) => (
+        <EventCalendarWeekWithEvents
+          {...props}
+          events={events}
+          barInteraction={barInteraction}
+        />
+      ),
     }),
-    [events],
+    [events, barInteraction],
   )
 
   return (
@@ -229,25 +130,91 @@ export function EventCalendar({
         weekStartsOn={weekStartsOn}
         locale={enUS}
         showOutsideDays
+        navLayout="around"
         captionLayout="label"
         formatters={{
           formatCaption: (date) => format(date, "M월 yyyy", { locale: ko }),
+          formatWeekdayName: (weekday) =>
+            format(weekday, "EEE", { locale: enUS }),
         }}
         modifiersClassNames={{
-          today:
-            "!bg-primary !text-primary-foreground rounded-full font-medium shadow-none",
+          /* modifiersClassNames 가 있으면 classNames.today 는 무시됨 — 여기에 배경·rdp 클래스 포함 */
+          today: cn(
+            rdp.today,
+            styles.todayDayCell,
+            "font-semibold text-foreground shadow-none !ring-0 ring-offset-0 outline-none",
+            "[&_button]:!bg-transparent [&_button]:text-foreground [&_button]:shadow-none [&_button]:!ring-0 [&_button]:border-0",
+          ),
+          outside:
+            "!bg-white text-muted-foreground opacity-50 aria-selected:opacity-40",
         }}
         components={components}
         className={cn(
-          "w-full min-w-0 rounded-lg border bg-background p-2 shadow-none",
+          "flex h-full min-h-0 w-full min-w-0 flex-1 flex-col rounded-xl border border-border bg-card p-3 shadow-sm",
         )}
         classNames={{
-          root: "w-full min-w-0",
-          months: "w-full",
-          month: "w-full gap-3",
-          month_grid: "w-full table-fixed border-collapse",
+          root: cn(rdp.root, "flex h-full min-h-0 w-full min-w-0 flex-1 flex-col"),
+          months: cn(
+            rdp.months,
+            "relative flex h-full min-h-0 w-full flex-1 flex-col gap-0",
+          ),
+          month: cn(
+            rdp.month,
+            "grid h-full min-h-0 w-full flex-1 self-stretch gap-0",
+            styles.monthShell,
+          ),
+          month_caption: cn(
+            rdp.month_caption,
+            "h-auto w-auto shrink-0 items-center justify-center px-0",
+          ),
+          caption_label: cn(rdp.caption_label, styles.calendarCaptionLabel),
+          button_previous: cn(
+            buttonVariants({ variant: "ghost" }),
+            "select-none aria-disabled:opacity-50",
+            rdp.button_previous,
+            styles.navIconButton,
+          ),
+          button_next: cn(
+            buttonVariants({ variant: "ghost" }),
+            "select-none aria-disabled:opacity-50",
+            rdp.button_next,
+            styles.navIconButton,
+          ),
+          month_grid: cn(rdp.month_grid, styles.monthGrid),
+          weekday: cn(rdp.weekday, styles.weekdayCell),
+          today: cn(
+            rdp.today,
+            styles.todayDayCell,
+            "text-foreground shadow-none ring-0 data-[selected=true]:rounded-none",
+          ),
+          day: cn(
+            rdp.day,
+            "!aspect-auto max-w-none min-w-0 align-top",
+            styles.dayCell,
+          ),
+          day_button: cn(
+            rdp.day_button,
+            "h-full min-h-0 w-full min-w-0 max-w-none rounded-none border-0 shadow-none [&>span]:text-xs [&>span]:opacity-70",
+            styles.dayButton,
+          ),
         }}
       />
+
+      {detail != null
+        ? createPortal(
+            <EventCalendarItemDetailPanel
+              event={detail.event}
+              anchorRect={detail.anchorRect}
+              onRequestClose={() => {
+                cancelCloseDetail()
+                setDetail(null)
+              }}
+              onPointerEnterPanel={cancelCloseDetail}
+              onPointerLeavePanel={scheduleCloseDetail}
+            />,
+            document.body,
+          )
+        : null}
     </div>
   )
 }

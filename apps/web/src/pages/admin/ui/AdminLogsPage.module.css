@@ -1,0 +1,28 @@
+.root {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  margin: 0;
+  padding: var(--space-6);
+}
+
+.stateMessage {
+  margin: 0;
+  padding: var(--space-8);
+  text-align: center;
+  font-size: var(--font-size-base);
+  color: var(--text-muted);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-subtle);
+}
+
+.stateError {
+  color: var(--destructive);
+  border-color: var(--border-pill-danger);
+}

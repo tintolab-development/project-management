@@ -1,0 +1,151 @@
+.modalBody {
+  flex: 1 1 auto;
+  min-height: 0;
+  gap: 0;
+}
+
+.filterRow {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-end;
+  gap: 16px;
+  width: 100%;
+  min-width: 0;
+  flex-shrink: 0;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.filterField {
+  display: flex;
+  flex-direction: column;
+  gap: var(--filter-field-label-input-gap, 8px);
+  min-width: 0;
+}
+
+.filterFieldNarrow {
+  flex: 0 0 auto;
+  width: 140px;
+}
+
+.filterFieldTitleCode {
+  flex: 1 1 0;
+  min-width: 12rem;
+  max-width: 100%;
+}
+
+.filterControl {
+  width: 100%;
+  min-width: 0;
+}
+
+/**
+ * 필터 행 — `TaskParticipantSearchModal`·관리자 목록과 동일 토큰
+ * (`--filter-control-height` = `--field-height-lg` = 44px)
+ */
+.filterSelectTrigger {
+  width: 100%;
+  min-width: 0;
+  height: var(--filter-control-height) !important;
+  min-height: var(--filter-control-height) !important;
+  max-height: var(--filter-control-height) !important;
+  border-radius: var(--filter-control-radius);
+  border-color: var(--filter-control-border);
+  background-color: var(--panel);
+  padding-left: var(--input-field-padding);
+  padding-right: var(--input-field-padding-compact);
+  font-family: var(--font-login-title);
+  font-size: var(--font-size-base);
+}
+
+.searchButtonWrap {
+  flex-shrink: 0;
+}
+
+/**
+ * DS `dimension.fixedMd` 너비에 맞추고, 높이·모서리는 필터 컨트롤 토큰과 동일
+ * (`Input` 기본 `rounded-lg`·`Button` 병합과 무관하게 `--filter-control-radius` 고정)
+ */
+.searchButton {
+  align-self: flex-end;
+  box-sizing: border-box;
+  height: var(--filter-control-height) !important;
+  min-height: var(--filter-control-height) !important;
+  max-height: var(--filter-control-height) !important;
+  width: var(--ds-button-fixed-md-width) !important;
+  min-width: var(--ds-button-fixed-md-width) !important;
+  max-width: var(--ds-button-fixed-md-width) !important;
+  border-radius: var(--filter-control-radius) !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  line-height: calc(var(--filter-control-height) - 2px) !important;
+}
+
+/** 제목/코드 인풋 — 셀렉트 트리거와 동일 10px 반경 */
+.filterRowInput {
+  border-radius: var(--filter-control-radius) !important;
+}
+
+.titleCodeCell {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.titleCodeSep {
+  font-weight: 400;
+}
+
+.tableSection {
+  margin-top: var(--search-result-table-margin-top);
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--filter-control-radius);
+}
+
+.tableSectionPointerBlocked {
+  pointer-events: none;
+}
+
+.tableSection :global(thead) {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--panel);
+}
+
+.tableSection :global(thead tr) {
+  border-bottom: 1px solid var(--line);
+}
+
+.tableSection :global(tbody tr:hover) {
+  background: var(--surface-row-hover, color-mix(in srgb, var(--muted) 35%, transparent));
+}
+
+.rowCheckbox {
+  width: var(--table-checkbox-size);
+  height: var(--table-checkbox-size);
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.footerActions {
+  justify-content: center !important;
+  margin-top: var(--space-6);
+  flex-shrink: 0;
+}
+
+.loadingState,
+.errorState,
+.emptyState {
+  padding: 24px 16px;
+  text-align: center;
+  font-size: var(--font-size-base);
+  color: var(--text-muted);
+}
+
+.errorState {
+  color: var(--danger);
+}

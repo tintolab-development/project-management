@@ -1,0 +1,20 @@
+/**
+ * DS `--modal-compact-input-*` — 소속 생성 모달 전용 크롬(shadcn Input 기본 테두리·radius 덮어씀)
+ */
+.modalCompactInput {
+  border-radius: var(--modal-compact-input-radius) !important;
+  border: var(--modal-compact-input-border) !important;
+  background: var(--modal-compact-input-bg) !important;
+}
+
+.actionsCentered {
+  justify-content: center !important;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+
+.submitError {
+  margin: 0;
+  color: var(--danger);
+  font-size: var(--font-size-sm, 0.875rem);
+}

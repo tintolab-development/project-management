@@ -1,6 +1,6 @@
 import * as Dialog from "@radix-ui/react-dialog"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Plus, X } from "lucide-react"
+import { Check, ChevronDown, Plus, X } from "lucide-react"
 import {
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
@@ -14,6 +14,7 @@ import { Controller, useForm, useWatch } from "react-hook-form"
 import { Navigate, useNavigate, useParams } from "react-router-dom"
 
 import { useAppStore } from "@/app/store/useAppStore"
+import { useProjectRouteSlug } from "@/shared/lib/projectRouteSlug"
 import { useProjectScopedPaths } from "@/shared/lib/projectScopedPaths"
 import { useAuthSessionStore } from "@/features/auth"
 import {
@@ -24,20 +25,24 @@ import { getNextItemCode } from "@/entities/item/lib/nextItemCode"
 import { PRIORITY_VALUES, type ItemType } from "@/entities/item/model/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 import { Textarea } from "@/components/ui/textarea"
 import {
   Select,
   SelectContent,
   SelectItem,
-  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
 import { STATUS_LABELS, STATUS_VALUES, TYPE_LABELS } from "@/shared/constants/labels"
 import { ITEM_TYPE_VALUES } from "@/shared/lib/itemType"
 import { FilterDateField, filterFieldLabelStyles } from "@/shared/ui/filter-field"
-import { AppModalActions, AppModalBody, AppModalField, appModalStyles } from "@/shared/ui/app-modal"
-import { ModalPrimaryButton, ModalSecondaryButton } from "@/shared/ui/modal-dialog-buttons"
+import panelStyles from "@/shared/ui/filter-field/FilterDropdownPanel.module.css"
+import { AppModalBody } from "@/shared/ui/app-modal"
 import { Card } from "@/shared/ui/card"
 import { MarkdownTextEditor } from "@/shared/ui/markdown-text-editor"
 import type { Comment } from "@/entities/comment/model/types"
@@ -45,7 +50,8 @@ import { postItemComment, postTaskDraftComment, syncMockAppStateFromStore } from
 import { appAlert } from "@/shared/lib/appDialog"
 import { formatDateTime } from "@/shared/lib/formatDateTime"
 import { uniqueId } from "@/shared/lib/ids"
-import { FormLabel, Heading, Text, modalCloseIconClassName } from "@/shared/ui/typography"
+import { useHorizontalScrollStrip } from "@/shared/lib/useHorizontalScrollStrip"
+import { Heading, Text, modalCloseIconClassName } from "@/shared/ui/typography"
 import { cn } from "@/lib/utils"
 
 import { getStatusOptionsForItem } from "../lib/itemStatusOptions"
@@ -55,10 +61,11 @@ import {
   type TaskCreateFormValues,
 } from "../lib/taskCreateFormSchema"
 
+import { TaskParticipantSearchModal } from "./TaskParticipantSearchModal"
+import { RelatedTasksSearchModal } from "./RelatedTasksSearchModal"
 import pageStyles from "./TaskCreatePage.module.css"
 
-/** 담당자 Select 전용 — 목록 옵션 값과 충돌하지 않는 내부 토큰 */
-const ASSIGNEE_SELECT_CLEAR_VALUE = "__task_create_assignee_clear__"
+const EMPTY_STRING_ARRAY: string[] = []
 
 const parseAssigneesFromOwner = (owner: string): string[] =>
   owner
@@ -91,6 +98,7 @@ export const TaskCreatePage = () => {
   const { itemId } = useParams<{ itemId: string }>()
   const isEditMode = Boolean(itemId)
   const paths = useProjectScopedPaths()
+  const projectSlug = useProjectRouteSlug()
   const domains = useAppStore((s) => s.domains)
   const items = useAppStore((s) => s.items)
   const comments = useAppStore((s) => s.comments)
@@ -121,11 +129,18 @@ export const TaskCreatePage = () => {
     [domains]
   )
 
+  const relatedTasksChipsScroll = useHorizontalScrollStrip()
   const titleInputRef = useRef<HTMLInputElement | null>(null)
+  const assigneePickerAnchorRef = useRef<HTMLDivElement | null>(null)
+  const assigneeChipsScrollRef = useRef<HTMLDivElement | null>(null)
+  const assigneeChipsDragRef = useRef<{
+    active: boolean
+    pointerId: number | null
+    startX: number
+    scrollLeft: number
+  }>({ active: false, pointerId: null, startX: 0, scrollLeft: 0 })
   const dueDateControlId = useId()
   const assigneeSelectId = useId()
-  const assigneeDialogTitleId = useId()
-  const relatedDialogTitleId = useId()
   const commentDetailDialogTitleId = useId()
 
   const authUser = useAuthSessionStore((s) => s.user)
@@ -149,15 +164,6 @@ export const TaskCreatePage = () => {
     return [...seen].sort((a, b) => a.localeCompare(b, "ko")).map((o) => ({ value: o, label: o }))
   }, [items])
 
-  const assigneeSelectItems = useMemo(
-    () =>
-      Object.fromEntries(ownerSelectOptions.map((o) => [o.value, o.label])) as Record<
-        string,
-        ReactNode
-      >,
-    [ownerSelectOptions]
-  )
-
   /** Base UI Select — `items`가 있어야 트리거에 한글 라벨이 표시됨(값 키 노출 방지) */
   const typeSelectItems = useMemo(
     () =>
@@ -177,12 +183,11 @@ export const TaskCreatePage = () => {
     []
   )
 
-  const [assigneePicker, setAssigneePicker] = useState("")
-  const [assigneeOpen, setAssigneeOpen] = useState(false)
+  const [assigneeMenuOpen, setAssigneeMenuOpen] = useState(false)
+  /** 참여인원 검색으로만 채우는 담당자 필터(드롭다운) 옵션 — 폼 담당자 칩과 별도 */
+  const [assigneeFilterExtras, setAssigneeFilterExtras] = useState<string[]>([])
+  const [participantSearchOpen, setParticipantSearchOpen] = useState(false)
   const [relatedOpen, setRelatedOpen] = useState(false)
-  const [assigneeNameDraft, setAssigneeNameDraft] = useState("")
-  const [assigneeOrgDraft, setAssigneeOrgDraft] = useState("")
-  const [relatedDraft, setRelatedDraft] = useState("")
   const [draftComments, setDraftComments] = useState<TaskDraftComment[]>([])
   const [commentDraftBody, setCommentDraftBody] = useState("")
   const [commentDraftSubmitting, setCommentDraftSubmitting] = useState(false)
@@ -230,6 +235,7 @@ export const TaskCreatePage = () => {
     control,
     handleSubmit,
     setValue,
+    getValues,
     reset,
     formState: { errors },
   } = useForm<TaskCreateFormValues>({
@@ -249,8 +255,23 @@ export const TaskCreatePage = () => {
     },
   })
 
-  const assignees = useWatch({ control, name: "assignees" }) ?? []
-  const relatedLabels = useWatch({ control, name: "relatedLabels" }) ?? []
+  const assignees = useWatch({ control, name: "assignees" }) ?? EMPTY_STRING_ARRAY
+  const relatedLabels = useWatch({ control, name: "relatedLabels" }) ?? EMPTY_STRING_ARRAY
+
+  /** 기존 항목 owner + 참여인원 검색으로 넣은 필터 전용 라벨 */
+  const assigneePoolOptions = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const o of ownerSelectOptions) {
+      map.set(o.value, o.label)
+    }
+    for (const label of assigneeFilterExtras) {
+      const key = label.trim()
+      if (key.length > 0 && !map.has(key)) map.set(key, key)
+    }
+    return [...map.entries()]
+      .sort((a, b) => a[0].localeCompare(b[0], "ko"))
+      .map(([value, label]) => ({ value, label }))
+  }, [ownerSelectOptions, assigneeFilterExtras])
 
   const formLocked =
     isEditMode && editItem ? editItem.status === "확정" || editItem.isLocked : false
@@ -279,6 +300,7 @@ export const TaskCreatePage = () => {
     setDraftComments([])
     setCommentDraftBody("")
     setLocalHistory([])
+    setAssigneeFilterExtras([])
   }, [isEditMode, editItem, reset])
 
   useEffect(() => {
@@ -458,26 +480,25 @@ export const TaskCreatePage = () => {
   }
 
   const handleAssigneePlus = () => {
-    const v = assigneePicker.trim()
-    if (v) {
-      const next = assignees.includes(v) ? assignees : [...assignees, v]
-      setValue("assignees", next, { shouldDirty: true, shouldValidate: true })
-      setAssigneePicker("")
-      return
-    }
-    setAssigneeOpen(true)
+    setParticipantSearchOpen(true)
   }
 
-  const handleAddAssignee = () => {
-    const name = assigneeNameDraft.trim()
-    const org = assigneeOrgDraft.trim()
-    if (!name && !org) return
-    const v = name && org ? `${name} | ${org}` : name || org
-    const next = assignees.includes(v) ? assignees : [...assignees, v]
+  const handleParticipantSearchConfirm = (labels: string[]) => {
+    setAssigneeFilterExtras((prev) => {
+      const next = [...prev]
+      for (const label of labels) {
+        if (!next.includes(label)) next.push(label)
+      }
+      return next
+    })
+  }
+
+  const handleAssigneePoolToggle = (value: string) => {
+    const current = getValues("assignees") ?? []
+    const next = current.includes(value)
+      ? current.filter((x) => x !== value)
+      : [...current, value]
     setValue("assignees", next, { shouldDirty: true, shouldValidate: true })
-    setAssigneeNameDraft("")
-    setAssigneeOrgDraft("")
-    setAssigneeOpen(false)
   }
 
   const handleRemoveAssignee = (index: number) => {
@@ -488,15 +509,58 @@ export const TaskCreatePage = () => {
     )
   }
 
-  const handleAddRelated = () => {
-    const v = relatedDraft.trim()
-    if (!v) return
-    setValue("relatedLabels", [...relatedLabels, v], {
+  const ASSIGNEE_CHIPS_SCROLL_MIN = 5
+
+  const handleAssigneeChipsPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (assignees.length < ASSIGNEE_CHIPS_SCROLL_MIN) return
+    if (e.button !== 0) return
+    const t = e.target as HTMLElement
+    if (t.closest("button")) return
+    const el = assigneeChipsScrollRef.current
+    if (!el) return
+    el.setPointerCapture(e.pointerId)
+    assigneeChipsDragRef.current = {
+      active: true,
+      pointerId: e.pointerId,
+      startX: e.clientX,
+      scrollLeft: el.scrollLeft,
+    }
+  }
+
+  const handleAssigneeChipsPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
+    const d = assigneeChipsDragRef.current
+    if (!d.active || d.pointerId !== e.pointerId) return
+    const el = assigneeChipsScrollRef.current
+    if (!el) return
+    el.scrollLeft = d.scrollLeft - (e.clientX - d.startX)
+  }
+
+  const handleAssigneeChipsPointerUpOrCancel = (e: ReactPointerEvent<HTMLDivElement>) => {
+    const d = assigneeChipsDragRef.current
+    if (!d.active || d.pointerId !== e.pointerId) return
+    const el = assigneeChipsScrollRef.current
+    try {
+      el?.releasePointerCapture(e.pointerId)
+    } catch {
+      /* noop */
+    }
+    assigneeChipsDragRef.current = {
+      active: false,
+      pointerId: null,
+      startX: 0,
+      scrollLeft: 0,
+    }
+  }
+
+  const handleRelatedTasksConfirm = (labels: string[]) => {
+    const merged = [...relatedLabels]
+    for (const label of labels) {
+      if (!merged.includes(label)) merged.push(label)
+    }
+    setValue("relatedLabels", merged, {
       shouldDirty: true,
       shouldValidate: true,
     })
-    setRelatedDraft("")
-    setRelatedOpen(false)
   }
 
   const handleRemoveRelated = (index: number) => {
@@ -740,40 +804,98 @@ export const TaskCreatePage = () => {
                   담당자
                 </p>
                 <div className={pageStyles.assigneePickRow}>
-                  <div className={pageStyles.assigneeSelectField}>
-                    <Select
-                      value={assigneePicker === "" ? null : assigneePicker}
-                      items={assigneeSelectItems}
-                      disabled={formLocked}
-                      onValueChange={(v) => {
-                        if (v === ASSIGNEE_SELECT_CLEAR_VALUE) {
-                          setAssigneePicker("")
-                          return
-                        }
-                        setAssigneePicker(v ?? "")
-                      }}
-                    >
-                      <SelectTrigger
+                  <div ref={assigneePickerAnchorRef} className={pageStyles.assigneeSelectField}>
+                    <Popover open={assigneeMenuOpen} onOpenChange={setAssigneeMenuOpen} modal={false}>
+                      <PopoverTrigger
                         id={assigneeSelectId}
-                        className={pageStyles.metaSelectTrigger}
+                        type="button"
+                        disabled={formLocked}
                         aria-labelledby="task-assignees-label"
+                        aria-haspopup="listbox"
+                        aria-expanded={assigneeMenuOpen}
+                        className={cn(
+                          pageStyles.metaSelectTrigger,
+                          "inline-flex w-full min-w-0 cursor-pointer items-center justify-between gap-2 text-left shadow-none outline-none select-none",
+                          "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
+                          assignees.length === 0 && "text-muted-foreground",
+                        )}
                       >
-                        <SelectValue placeholder="담당자를 선택해 주세요" />
-                      </SelectTrigger>
-                      <SelectContent alignItemWithTrigger={false}>
-                        {ownerSelectOptions.map((o) => (
-                          <SelectItem key={o.value} value={o.value}>
-                            {o.label}
-                          </SelectItem>
-                        ))}
-                        {assigneePicker !== "" ? (
-                          <>
-                            <SelectSeparator />
-                            <SelectItem value={ASSIGNEE_SELECT_CLEAR_VALUE}>선택 해제</SelectItem>
-                          </>
+                        <span className="min-w-0 flex-1 truncate">
+                          {assignees.length === 0
+                            ? "담당자를 선택해 주세요"
+                            : assignees.length === 1
+                              ? assignees[0]
+                              : `${assignees.length}명 선택`}
+                        </span>
+                        <ChevronDown
+                          className={cn(
+                            "size-4 shrink-0 text-muted-foreground opacity-50 transition-transform duration-200",
+                            assigneeMenuOpen && "rotate-180",
+                          )}
+                          aria-hidden
+                        />
+                      </PopoverTrigger>
+                      <PopoverContent
+                        matchTriggerWidth
+                        anchor={assigneePickerAnchorRef}
+                        className="gap-0 border border-border p-0 shadow-md ring-0"
+                        align="start"
+                        side="bottom"
+                        sideOffset={6}
+                      >
+                        <div
+                          className={panelStyles.optionList}
+                          role="listbox"
+                          aria-label="담당자 옵션"
+                          aria-multiselectable="true"
+                        >
+                          {assigneePoolOptions.length === 0 ? (
+                            <p className="px-3 py-2 text-sm text-muted-foreground">
+                              목록에 담당자가 없습니다. + 버튼으로 참여인원 검색에서 추가할 수 있습니다.
+                            </p>
+                          ) : (
+                            assigneePoolOptions.map((opt) => {
+                              const isOn = assignees.includes(opt.value)
+                              return (
+                                <button
+                                  key={opt.value}
+                                  type="button"
+                                  role="option"
+                                  aria-selected={isOn}
+                                  aria-checked={isOn}
+                                  className={panelStyles.optionRow}
+                                  onClick={() => handleAssigneePoolToggle(opt.value)}
+                                >
+                                  <span className={panelStyles.optionLabel}>{opt.label}</span>
+                                  <span className={panelStyles.optionIndicator} aria-hidden>
+                                    {isOn ? <Check className="size-4" strokeWidth={2.5} /> : null}
+                                  </span>
+                                </button>
+                              )
+                            })
+                          )}
+                        </div>
+                        {assignees.length > 0 ? (
+                          <div className={panelStyles.popoverFooter}>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="w-full"
+                              onClick={() => {
+                                setValue("assignees", [], {
+                                  shouldDirty: true,
+                                  shouldValidate: true,
+                                })
+                                setAssigneeMenuOpen(false)
+                              }}
+                            >
+                              담당자 전체 해제
+                            </Button>
+                          </div>
                         ) : null}
-                      </SelectContent>
-                    </Select>
+                      </PopoverContent>
+                    </Popover>
                   </div>
                   <div className={pageStyles.assigneePlusAndChips}>
                     <Button
@@ -781,16 +903,28 @@ export const TaskCreatePage = () => {
                       variant="outline"
                       size="icon"
                       className={pageStyles.assigneePlusBtn}
-                      aria-label="선택한 담당자 추가. 목록이 비어 있으면 직접 입력"
+                      aria-label="참여인원 검색"
                       disabled={formLocked}
                       onClick={handleAssigneePlus}
                     >
                       <Plus className="size-5" strokeWidth={1.75} aria-hidden />
                     </Button>
                     <div
-                      className={pageStyles.badgeList}
+                      ref={assigneeChipsScrollRef}
+                      className={cn(
+                        pageStyles.badgeList,
+                        assignees.length >= ASSIGNEE_CHIPS_SCROLL_MIN && pageStyles.assigneeChipsScroll,
+                      )}
                       role="list"
                       aria-labelledby="task-assignees-label"
+                      onPointerDown={handleAssigneeChipsPointerDown}
+                      onPointerMove={handleAssigneeChipsPointerMove}
+                      onPointerUp={handleAssigneeChipsPointerUpOrCancel}
+                      onPointerCancel={handleAssigneeChipsPointerUpOrCancel}
+                      onPointerLeave={(e) => {
+                        if (!assigneeChipsDragRef.current.active) return
+                        if (e.buttons === 0) handleAssigneeChipsPointerUpOrCancel(e)
+                      }}
                     >
                       {assignees.map((label, index) => (
                         <div
@@ -842,9 +976,15 @@ export const TaskCreatePage = () => {
               연관 태스크
             </p>
             <div
+              ref={relatedTasksChipsScroll.ref}
               className={cn(pageStyles.sectionBarChips, pageStyles.relatedTasksChips)}
               role="list"
               aria-label="연관 태스크"
+              onPointerDown={relatedTasksChipsScroll.onPointerDown}
+              onPointerMove={relatedTasksChipsScroll.onPointerMove}
+              onPointerUp={relatedTasksChipsScroll.onPointerUp}
+              onPointerLeave={relatedTasksChipsScroll.onPointerLeave}
+              onPointerCancel={relatedTasksChipsScroll.onPointerCancel}
             >
               {relatedLabels.map((label, index) => (
                 <div key={`${label}-${index}`} className={pageStyles.relatedTaskChip} role="listitem">
@@ -870,7 +1010,7 @@ export const TaskCreatePage = () => {
             onClick={() => setRelatedOpen(true)}
             aria-haspopup="dialog"
           >
-            연관 프로젝트 추가
+            연간 Task 추가
           </Button>
         </div>
         {errors.relatedLabels ? (
@@ -1154,143 +1294,19 @@ export const TaskCreatePage = () => {
         </div>
       </div>
 
-      <Dialog.Root open={assigneeOpen} onOpenChange={setAssigneeOpen}>
-        <Dialog.Portal>
-          <Dialog.Overlay className="modal-overlay" />
-          <Dialog.Content
-            className="modal"
-            aria-labelledby={assigneeDialogTitleId}
-            aria-describedby={undefined}
-          >
-            <div className="modal-head">
-              <Dialog.Title asChild>
-                <Heading as="h3" variant="modal" id={assigneeDialogTitleId}>
-                  담당자 추가
-                </Heading>
-              </Dialog.Title>
-              <Dialog.Close asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-lg"
-                  className={modalCloseIconClassName}
-                  aria-label="닫기"
-                >
-                  ×
-                </Button>
-              </Dialog.Close>
-            </div>
-            <AppModalBody>
-              <AppModalField>
-                <div className={pageStyles.assigneeModalInputsRow}>
-                  <div className={pageStyles.assigneeModalInputCell}>
-                    <FormLabel htmlFor="assignee-name">이름</FormLabel>
-                    <Input
-                      id="assignee-name"
-                      className={cn(pageStyles.filterFormControl, appModalStyles.singleLineField)}
-                      value={assigneeNameDraft}
-                      onChange={(e) => setAssigneeNameDraft(e.target.value)}
-                      placeholder="예: 홍길동"
-                      autoComplete="name"
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault()
-                          handleAddAssignee()
-                        }
-                      }}
-                    />
-                  </div>
-                  <div className={pageStyles.assigneeModalInputCell}>
-                    <FormLabel htmlFor="assignee-org">소속</FormLabel>
-                    <Input
-                      id="assignee-org"
-                      className={cn(pageStyles.filterFormControl, appModalStyles.singleLineField)}
-                      value={assigneeOrgDraft}
-                      onChange={(e) => setAssigneeOrgDraft(e.target.value)}
-                      placeholder="예: 고객사"
-                      autoComplete="organization"
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault()
-                          handleAddAssignee()
-                        }
-                      }}
-                    />
-                  </div>
-                </div>
-              </AppModalField>
-              <AppModalActions>
-                <Dialog.Close asChild>
-                  <ModalSecondaryButton actionSize="fixedMd" type="button">
-                    취소
-                  </ModalSecondaryButton>
-                </Dialog.Close>
-                <ModalPrimaryButton type="button" actionSize="fixedMd" onClick={handleAddAssignee}>
-                  추가
-                </ModalPrimaryButton>
-              </AppModalActions>
-            </AppModalBody>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
+      <TaskParticipantSearchModal
+        open={participantSearchOpen}
+        onOpenChange={setParticipantSearchOpen}
+        projectSlug={projectSlug}
+        onConfirm={handleParticipantSearchConfirm}
+        disabled={formLocked}
+      />
 
-      <Dialog.Root open={relatedOpen} onOpenChange={setRelatedOpen}>
-        <Dialog.Portal>
-          <Dialog.Overlay className="modal-overlay" />
-          <Dialog.Content
-            className="modal"
-            aria-labelledby={relatedDialogTitleId}
-            aria-describedby={undefined}
-          >
-            <div className="modal-head">
-              <Dialog.Title asChild>
-                <Heading as="h3" variant="modal" id={relatedDialogTitleId}>
-                  연관 프로젝트 추가
-                </Heading>
-              </Dialog.Title>
-              <Dialog.Close asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-lg"
-                  className={modalCloseIconClassName}
-                  aria-label="닫기"
-                >
-                  ×
-                </Button>
-              </Dialog.Close>
-            </div>
-            <AppModalBody>
-              <AppModalField>
-                <FormLabel htmlFor="related-draft">표시 이름</FormLabel>
-                <Input
-                  id="related-draft"
-                  className={cn(pageStyles.filterFormControl, appModalStyles.singleLineField)}
-                  value={relatedDraft}
-                  onChange={(e) => setRelatedDraft(e.target.value)}
-                  placeholder="연관 항목 이름"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault()
-                      handleAddRelated()
-                    }
-                  }}
-                />
-              </AppModalField>
-              <AppModalActions>
-                <Dialog.Close asChild>
-                  <ModalSecondaryButton actionSize="fixedMd" type="button">
-                    취소
-                  </ModalSecondaryButton>
-                </Dialog.Close>
-                <ModalPrimaryButton type="button" actionSize="fixedMd" onClick={handleAddRelated}>
-                  추가
-                </ModalPrimaryButton>
-              </AppModalActions>
-            </AppModalBody>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
+      <RelatedTasksSearchModal
+        open={relatedOpen}
+        onOpenChange={setRelatedOpen}
+        onConfirm={handleRelatedTasksConfirm}
+      />
     </section>
   )
 }

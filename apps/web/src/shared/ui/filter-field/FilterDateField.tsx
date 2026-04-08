@@ -30,6 +30,7 @@ export type FilterDateFieldProps = {
   /** 그리드 열 등에서 `max-width: 280px` 제한 해제 */
   fullWidth?: boolean
   labelClassName?: string
+  portalContainer?: HTMLElement | null
 }
 
 function parseFilterDate(raw: string): Date | undefined {
@@ -48,6 +49,7 @@ export function FilterDateField({
   className,
   fullWidth,
   labelClassName,
+  portalContainer,
 }: FilterDateFieldProps) {
   const [open, setOpen] = useState(false)
   const clearId = useId()
@@ -82,7 +84,7 @@ export function FilterDateField({
           data-empty={selected ? undefined : true}
           className={cn(
             buttonVariants({ variant: "outline", size: "default" }),
-            "h-[var(--filter-control-height)] min-h-[var(--filter-control-height)] max-h-[var(--filter-control-height)] w-full min-w-0 justify-start gap-2 px-4 text-left text-sm font-normal",
+            "h-[var(--filter-control-height)] min-h-[var(--filter-control-height)] max-h-[var(--filter-control-height)] w-full min-w-0 justify-start gap-2 px-4 text-left text-[length:var(--admin-list-filter-input-font-size)] font-normal leading-normal [font-family:var(--font-login-title)]",
             "rounded-[var(--filter-control-radius)] border-[var(--filter-control-border)] bg-[var(--panel)] shadow-none",
             "data-[empty]:text-muted-foreground aria-expanded:bg-[var(--panel)]",
             !selected && "text-muted-foreground",
@@ -95,8 +97,8 @@ export function FilterDateField({
           align="start"
           sideOffset={6}
           anchor={shellBodyRef}
-          matchTriggerWidth
-          className="min-w-0 gap-0 overflow-hidden p-0"
+          portalContainer={portalContainer}
+          className="gap-0 p-0"
         >
           <Calendar
             mode="single"

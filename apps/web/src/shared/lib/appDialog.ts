@@ -1,8 +1,22 @@
 import { create } from "zustand"
 
+/** `appConfirm` 옵션 — 삭제 등 위험 동작은 `intent: "destructive"` 권장 */
+export type AppConfirmOptions = {
+  title?: string
+  confirmLabel?: string
+  intent?: "default" | "destructive"
+}
+
 type Active =
   | { kind: "alert"; message: string; resolve: () => void }
-  | { kind: "confirm"; message: string; resolve: (v: boolean) => void }
+  | {
+      kind: "confirm"
+      message: string
+      title?: string
+      confirmLabel?: string
+      intent: "default" | "destructive"
+      resolve: (v: boolean) => void
+    }
   | {
       kind: "prompt"
       message: string
@@ -26,9 +40,19 @@ export const appAlert = (message: string): Promise<void> =>
     sync()
   })
 
-export const appConfirm = (message: string): Promise<boolean> =>
+export const appConfirm = (
+  message: string,
+  options?: AppConfirmOptions,
+): Promise<boolean> =>
   new Promise((resolve) => {
-    queue.push({ kind: "confirm", message, resolve })
+    queue.push({
+      kind: "confirm",
+      message,
+      title: options?.title,
+      confirmLabel: options?.confirmLabel,
+      intent: options?.intent ?? "default",
+      resolve,
+    })
     sync()
   })
 

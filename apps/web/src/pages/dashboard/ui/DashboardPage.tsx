@@ -134,40 +134,44 @@ export const DashboardPage = () => {
       </div>
 
       <div className={styles.panelGridSingle}>
-        <Card variant="panel">
-          <div className={panelHeadStyles.panelHead}>
+        <Card variant="panel" className={styles.panelCardCapped}>
+          <div
+            className={cn(panelHeadStyles.panelHead, styles.panelHeadStatic)}
+          >
             <Heading as="h3" variant="dashboardSection">
               최근 변경 이력
             </Heading>
           </div>
-          <div className={styles.historyList}>
-            {[...history]
-              .sort(
-                (a, b) =>
-                  new Date(b.createdAt).getTime() -
-                  new Date(a.createdAt).getTime(),
-              )
-              .slice(0, 8)
-              .map((h) => (
-                <Card key={h.id} variant="history">
-                  <div>
-                    <Text as="div" variant="dashboardTitle" className="mb-1">
-                      {h.summary}
+          <div className={styles.panelBodyScroll}>
+            <div className={styles.historyList}>
+              {[...history]
+                .sort(
+                  (a, b) =>
+                    new Date(b.createdAt).getTime() -
+                    new Date(a.createdAt).getTime(),
+                )
+                .slice(0, 8)
+                .map((h) => (
+                  <Card key={h.id} variant="history">
+                    <div>
+                      <Text as="div" variant="dashboardTitle" className="mb-1">
+                        {h.summary}
+                      </Text>
+                    </div>
+                    <Text as="div" variant="dashboardDesc">
+                      {h.actor}
                     </Text>
-                  </div>
-                  <Text as="div" variant="dashboardDesc">
-                    {h.actor}
-                  </Text>
-                  <Text as="div" variant="dashboardCaption" className="mt-1">
-                    {formatDateTime(h.createdAt)}
-                  </Text>
-                </Card>
-              ))}
-            {history.length === 0 ? (
-              <Text variant="dashboardEmpty" as="div">
-                이력이 없습니다.
-              </Text>
-            ) : null}
+                    <Text as="div" variant="dashboardCaption" className="mt-1">
+                      {formatDateTime(h.createdAt)}
+                    </Text>
+                  </Card>
+                ))}
+              {history.length === 0 ? (
+                <Text variant="dashboardEmpty" as="div">
+                  이력이 없습니다.
+                </Text>
+              ) : null}
+            </div>
           </div>
         </Card>
       </div>

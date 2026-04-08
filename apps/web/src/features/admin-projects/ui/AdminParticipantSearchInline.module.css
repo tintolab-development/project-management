@@ -1,0 +1,176 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.heading {
+  margin: 0;
+  color: #000;
+  font-family: var(--font-login-title);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.required {
+  color: var(--destructive);
+  margin-left: 2px;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.actionButton {
+  min-width: 104px;
+}
+
+.table {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.checkboxCell {
+  width: 44px;
+  text-align: center;
+}
+
+.checkboxInput {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: var(--primary);
+}
+
+.tableScroll {
+  overflow-x: hidden;
+}
+
+.tableScroll :global(table) {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.tableHeaderRow {
+  background: var(--surface-subtle);
+}
+
+.tableScroll :global(th),
+.tableScroll :global(td) {
+  vertical-align: middle;
+}
+
+.tableScroll :global(th:nth-child(2)),
+.tableScroll :global(td:nth-child(2)) {
+  width: 45%;
+}
+
+.tableScroll :global(th:nth-child(3)),
+.tableScroll :global(td:nth-child(3)),
+.tableScroll :global(th:nth-child(4)),
+.tableScroll :global(td:nth-child(4)) {
+  width: 27.5%;
+}
+
+.alignCenter {
+  text-align: center;
+}
+
+.emptyMessage {
+  margin: 0;
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.state {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.stateError {
+  color: var(--destructive);
+}
+
+.searchResults {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+  background: var(--surface-subtle);
+}
+
+.resultTitle {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.resultsList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 220px;
+  overflow: auto;
+}
+
+.resultItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.resultMeta {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 100px 100px;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+}
+
+@media (max-width: 768px) {
+  .headerRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .actions {
+    width: 100%;
+  }
+
+  .actionButton {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .tableScroll :global(th),
+  .tableScroll :global(td) {
+    font-size: 12px;
+  }
+
+  .resultMeta {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+}

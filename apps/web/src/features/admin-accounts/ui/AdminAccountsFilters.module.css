@@ -1,0 +1,97 @@
+.form {
+  --font-size-base: var(--admin-list-filter-input-font-size);
+  --filter-control-height: var(--admin-list-filter-control-height);
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: var(--space-8);
+}
+
+.grid {
+  display: grid;
+  width: 100%;
+  box-sizing: border-box;
+  gap: var(--space-6);
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) auto;
+  align-items: end;
+}
+
+.grid > * {
+  min-width: 0;
+}
+
+.searchField {
+  width: 100%;
+  max-width: none;
+}
+
+.inputShellBody {
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  align-items: stretch;
+}
+
+.searchInput {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: var(--filter-control-height);
+  min-height: var(--filter-control-height);
+  max-height: var(--filter-control-height);
+  border-radius: var(--filter-control-radius);
+  border: 1px solid var(--filter-control-border);
+  background: var(--panel);
+  padding: 0 var(--input-field-padding);
+  font-size: var(--admin-list-filter-input-font-size);
+  font-family: var(--font-login-title);
+  color: var(--text);
+}
+
+.searchInput::placeholder {
+  color: var(--input-placeholder-fg);
+  opacity: var(--input-placeholder-opacity);
+}
+
+.searchInput:focus-visible {
+  outline: none;
+  border-color: var(--filter-control-border);
+  box-shadow: none;
+}
+
+.searchActions {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.searchButton {
+  width: var(--admin-list-filter-search-button-min-width);
+  min-width: var(--admin-list-filter-search-button-min-width);
+  max-width: var(--admin-list-filter-search-button-min-width);
+  box-sizing: border-box;
+  height: var(--filter-control-height);
+  min-height: var(--filter-control-height);
+  font-size: var(--admin-list-filter-input-font-size) !important;
+  font-weight: 600 !important;
+}
+
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .searchActions {
+    justify-content: stretch;
+  }
+
+  .searchButton {
+    width: 100%;
+    max-width: none;
+  }
+}

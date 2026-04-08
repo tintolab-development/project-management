@@ -1,0 +1,7 @@
+.track {
+  background: var(--admin-schedule-bar-track) !important;
+}
+
+.face {
+  background: var(--admin-schedule-bar-face) !important;
+}

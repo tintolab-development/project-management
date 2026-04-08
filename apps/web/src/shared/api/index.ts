@@ -20,3 +20,12 @@ export {
   type CreateRestCrudHooksConfig,
   type RestCrudHooks,
 } from "./restCrudHooks"
+export {
+  fetchProjectParticipants,
+  participantToAssigneeLabel,
+  projectParticipantSchema,
+  projectParticipantsQueryKeys,
+  useProjectParticipantsQuery,
+  type ProjectParticipant,
+  type ProjectParticipantsListParams,
+} from "./projectParticipants"

@@ -1,7 +1,11 @@
 /* shadcn Calendar(DayPicker)가 월 그리드를 담당 — 셸만 전폭 */
 .calendarShell {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
   width: 100%;
   min-width: 0;
+  min-height: 0;
   box-sizing: border-box;
 }
 
@@ -9,72 +13,352 @@
   max-width: 100%;
 }
 
-.eventMetaCell {
-  padding: 0;
-  border-bottom: 1px solid var(--line);
-  vertical-align: top;
-  background: var(--panel);
+/**
+ * navLayout="around": 자식 순서 [이전][캡션][다음][테이블].
+ * flex-wrap 대신 grid: 1행은 네비, 2행은 남은 높이 전부 → 그리드만 overflow 스크롤(셀 높이는 표 내부 토큰으로만 고정).
+ */
+.monthShell {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  grid-template-rows: auto minmax(0, 1fr);
+  column-gap: var(--calendar-nav-caption-gap);
+  row-gap: 32px;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  flex: 1 1 auto;
+  align-self: stretch;
+  box-sizing: border-box;
 }
 
-.eventStrip {
-  position: relative;
-  box-sizing: border-box;
-  padding: 0.2rem 0 0.45rem;
+.monthShell :global(.rdp-button_previous) {
+  grid-column: 1;
+  grid-row: 1;
+  justify-self: end;
+  align-self: center;
 }
 
-.eventBar {
-  position: absolute;
+.monthShell :global(.rdp-month_caption) {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  width: auto;
+  min-width: var(--calendar-caption-min-width);
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  justify-self: center;
+  min-height: max(
+    var(--cell-size, 2rem),
+    calc(var(--calendar-caption-font-size) * var(--calendar-caption-line-height))
+  );
+  padding-inline: 0;
+}
+
+.monthShell :global(.rdp-button_next) {
+  grid-column: 3;
+  grid-row: 1;
+  justify-self: start;
+  align-self: center;
+}
+
+/* 이전/다음: 토큰 크기, 캡션과의 가로 간격은 .monthShell column-gap */
+.navIconButton {
   box-sizing: border-box;
-  height: 1.375rem;
+  display: inline-flex;
+  width: var(--calendar-nav-button-size) !important;
+  height: var(--calendar-nav-button-size) !important;
+  min-width: var(--calendar-nav-button-size) !important;
+  min-height: var(--calendar-nav-button-size) !important;
+  max-width: var(--calendar-nav-button-size) !important;
+  max-height: var(--calendar-nav-button-size) !important;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  padding: 0 !important;
+}
+
+.navIconButton :global(svg) {
+  width: var(--calendar-nav-icon-size) !important;
+  height: var(--calendar-nav-icon-size) !important;
+}
+
+.calendarCaptionLabel {
+  box-sizing: border-box;
   margin: 0;
+  min-width: var(--calendar-caption-min-width);
+  color: var(--calendar-caption-fg);
+  font-family: var(--calendar-caption-font-family);
+  font-size: var(--calendar-caption-font-size);
+  font-style: normal;
+  font-weight: var(--calendar-caption-font-weight);
+  line-height: var(--calendar-caption-line-height);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.monthShell :global(.rdp-month_grid) {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  max-width: 100%;
+  /* 1fr 행이 남는 높이만큼 표를 늘리면, 주 수가 적은 달에서 여백이 첫 tbody 행으로 몰려 높이가 비정상적으로 커짐 */
+  max-height: 100%;
+  align-self: start;
+  box-sizing: border-box;
+  padding-bottom: var(--calendar-grid-scroll-padding);
+  overflow-x: auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* 스크롤은 유지, 스크롤바만 숨김 — 나타날 때 레이아웃 폭이 줄어드는 현상 제거 */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.monthShell :global(.rdp-month_grid)::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* 월 그리드: 고정 7열 + tbody 행 고정 높이(토큰) — collapse 로 행 사이 빈틈 없이 일반 달력처럼 */
+.monthGrid {
+  --event-calendar-bars-top: 30px;
+  --event-calendar-bar-height: 22px;
+  --event-calendar-bar-lane-gap: 4px;
+
+  display: table !important;
+  width: 100%;
+  max-width: 100%;
+  height: fit-content;
+  table-layout: fixed;
+  border-collapse: collapse;
+  border-spacing: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 8px);
+  /* 멀티데이 바가 옆 셀로 살짝 넘칠 수 있음 — hidden 이면 가로로 잘림 */
+  overflow: visible;
+  background: #fff;
+}
+
+/* 다른 스타일이 tr/td 를 block·flex 로 바꾸면 열이 붕괴됨 — 표 모델 고정 */
+.monthGrid :global(thead) {
+  display: table-header-group !important;
+}
+
+.monthGrid :global(tbody) {
+  display: table-row-group !important;
+}
+
+.monthGrid :global(tr) {
+  display: table-row !important;
+}
+
+.monthGrid :global(thead th),
+.monthGrid :global(tbody td) {
+  display: table-cell !important;
+  margin: 0;
+  padding: var(--calendar-cell-padding, 10px);
+  border: 1px solid var(--border);
+  box-sizing: border-box;
+  background: #fff;
+}
+
+.monthGrid :global(thead tr) {
+  height: var(--calendar-weekday-row-height);
+}
+
+.monthGrid :global(thead th) {
+  width: calc(100% / 7);
+  vertical-align: middle;
+}
+
+.monthGrid :global(tbody td) {
+  vertical-align: top;
+}
+
+/* 주당 1행, 고정 높이 — 이벤트 바는 셀 안 absolute 레이어 */
+.monthGrid :global(tbody > tr.rdp-week) {
+  margin: 0;
+  box-sizing: border-box;
+  height: var(--calendar-body-row-height);
+  min-height: var(--calendar-body-row-height);
+  max-height: var(--calendar-body-row-height);
+}
+
+.monthGrid :global(tbody tr.rdp-week > td) {
+  width: calc(100% / 7);
+  height: 100%;
+}
+
+.weekdayCell {
+  vertical-align: middle;
+}
+
+/* 날짜 칸: table-cell + 내부 버튼만 flex (td 에 flex 금지) */
+.dayCell {
+  display: table-cell !important;
+  vertical-align: top;
+  background: #fff;
+  height: 100%;
+}
+
+/* 오늘: 셀 전체 옅은 회색 배경 (.monthGrid tbody td 배경보다 우선) */
+.todayDayCell {
+  background: color-mix(in srgb, var(--muted) 42%, var(--card)) !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.monthGrid :global(tbody td).todayDayCell {
+  background: color-mix(in srgb, var(--muted) 42%, var(--card)) !important;
+  border-color: transparent !important;
+}
+
+.dayButton {
+  box-sizing: border-box;
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
   padding: 0;
+}
+
+/* 일자 버튼이 셀 전체를 덮으면 그 아래 이벤트 바가 클릭되지 않음 — 상단만 차지 */
+.monthGrid :global(tbody tr.rdp-week button.rdp-day_button) {
+  height: auto !important;
+  min-height: 0 !important;
+  flex: 0 0 auto;
+  align-self: flex-start;
+}
+
+.eventCalendarWeekRow {
+  background: transparent;
+}
+
+/* 이벤트 바 오버레이 — 문서 흐름 높이에 영향 없음 */
+.dayCellWithBars {
+  position: relative;
+  overflow: visible;
+}
+
+.eventBarsLayer {
+  position: absolute;
+  z-index: 2;
+  inset-inline: 0;
+  top: var(--event-calendar-bars-top);
+  bottom: 6px;
+  pointer-events: none;
+  overflow-x: visible;
+  overflow-y: hidden;
+}
+
+.eventBarAnchor {
+  position: absolute;
+  left: 0;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: var(--event-calendar-bar-height);
+  min-height: var(--event-calendar-bar-height);
+  max-height: var(--event-calendar-bar-height);
+  pointer-events: auto;
+}
+
+/* 셀 경계선에서 끊김 보정 — 이전 열과 1px 겹침 */
+.eventBarAnchorContinuation {
+  margin-left: -1px;
+  width: calc(100% + 1px);
+  max-width: none;
+}
+
+.eventBarTrack {
+  box-sizing: border-box;
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  align-items: stretch;
+}
+
+.eventBarTrackPill {
+  border-radius: 999px;
+}
+
+.eventBarTrackSegStart {
+  border-radius: 999px 0 0 999px;
+}
+
+.eventBarTrackSegMiddle {
+  border-radius: 0;
+}
+
+.eventBarTrackSegEnd {
+  border-radius: 0 999px 999px 0;
+}
+
+.eventBarFace {
+  box-sizing: border-box;
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  min-height: 0;
+  align-items: center;
+  justify-content: flex-start;
+  margin: 0;
+  padding: 2px 8px 2px 10px;
   border: none;
   background: transparent;
-  cursor: default;
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.25;
   text-align: left;
+  color: inherit;
+}
+
+.eventBarFacePill {
+  border-radius: 999px;
+}
+
+.eventBarFaceSegStart {
+  border-radius: 999px 0 0 999px;
+}
+
+.eventBarFaceSegMiddle {
+  border-radius: 0;
+}
+
+.eventBarFaceSegEnd {
+  border-radius: 0 999px 999px 0;
+}
+
+.eventBarFaceContinuation {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  cursor: pointer;
+}
+
+.eventBarFace:focus {
   outline: none;
 }
 
-.eventBar:focus-visible {
-  box-shadow:
-    0 0 0 2px hsl(var(--background)),
-    0 0 0 4px hsl(var(--ring));
-  border-radius: 6px;
+.eventBarFace:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
 }
 
-.track {
-  position: absolute;
-  left: 3px;
-  right: 3px;
-  top: 4px;
-  bottom: -3px;
-  border-radius: 6px;
-  z-index: 0;
-  pointer-events: none;
-}
-
-.face {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  height: 100%;
-  align-items: center;
-  border-radius: 5px;
-  padding: 0 0.4rem;
-  font-size: 0.6875rem;
-  font-weight: 500;
-  line-height: 1.2;
-  color: var(--text);
+.eventBarTitle {
   overflow: hidden;
+  flex: 1 1 auto;
+  min-width: 0;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.track {
-  background: var(--danger-soft);
-}
-
-.face {
-  background: color-mix(in srgb, var(--danger-soft) 70%, var(--danger) 30%);
-  color: var(--text);
 }

@@ -126,7 +126,8 @@
   min-height: var(--filter-control-height) !important;
   max-height: var(--filter-control-height) !important;
   border-radius: var(--filter-control-radius);
-  border-color: var(--filter-control-border);
+  /** `PopoverTrigger`(담당자)는 Select와 달리 기본 `border` 클래스가 없어 색만 주면 선이 안 보임 */
+  border: 1px solid var(--filter-control-border);
   background-color: var(--panel);
   padding-left: 16px;
   padding-right: 12px;
@@ -225,6 +226,39 @@
   min-width: 0;
 }
 
+/**
+ * 담당자 칩 5명 이상: 한 줄 + 가로 스크롤(스크롤바 숨김), 드래그로 스크롤
+ * 대략 4~5칩 분량까지 보이고 나머지는 스크롤
+ */
+.assigneeChipsScroll {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: min(100%, 36rem);
+  flex: 1 1 auto;
+  min-width: 0;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  cursor: grab;
+  touch-action: pan-x;
+  -webkit-overflow-scrolling: touch;
+  user-select: none;
+}
+
+.assigneeChipsScroll:active {
+  cursor: grabbing;
+}
+
+.assigneeChipsScroll::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.assigneeChipsScroll .relatedTaskChip {
+  flex-shrink: 0;
+}
+
 .sectionBar {
   display: flex;
   flex-wrap: wrap;
@@ -263,10 +297,7 @@
 
 .relatedTasksChips {
   flex: 1 1 auto;
-  flex-wrap: nowrap;
   min-width: 0;
-  overflow-x: auto;
-  scrollbar-width: thin;
 }
 
 .sectionBarLeft {
@@ -287,6 +318,44 @@
   gap: var(--space-2);
   align-items: center;
   min-width: 0;
+}
+
+/**
+ * 연관 태스크 칩 줄 — `.sectionBarChips`보다 뒤에 두어 `flex-wrap: wrap` 덮음.
+ * 한 줄 유지 + 가로 스크롤(스크롤바는 숨김). 우측 버튼과 간격을 위해 폭을 살짝 줄임.
+ */
+.relatedTasksChips.sectionBarChips {
+  flex: 1 1 auto;
+  flex-wrap: nowrap;
+  min-width: 0;
+  /** 칩 스크롤 영역을 라벨·버튼 사이에서 살짝 줄여 마지막 칩이 버튼에 붙어 보이지 않게 함 */
+  margin-inline-end: var(--space-3);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+  cursor: grab;
+}
+
+.relatedTasksChips.sectionBarChips::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+  background: transparent;
+}
+
+.relatedTasksChips.sectionBarChips[data-panning="true"] {
+  cursor: grabbing;
+  user-select: none;
+}
+
+.relatedTasksChips.sectionBarChips :global(button) {
+  cursor: pointer;
+}
+
+.relatedTasksChips.sectionBarChips .relatedTaskChip {
+  max-width: none;
 }
 
 /** 연관 태스크 추가 칩 — DS: inline-flex, padding 10px, pill, 1px #000, 텍스트↔X gap 10px */

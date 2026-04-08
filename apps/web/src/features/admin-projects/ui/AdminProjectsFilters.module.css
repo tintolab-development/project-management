@@ -1,0 +1,126 @@
+.form {
+  --font-size-base: var(--admin-list-filter-input-font-size);
+  --filter-control-height: var(--admin-list-filter-control-height);
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: var(--space-8);
+}
+
+.grid {
+  display: grid;
+  width: 100%;
+  box-sizing: border-box;
+  gap: var(--space-4);
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  align-items: end;
+}
+
+.grid > * {
+  min-width: 0;
+}
+
+.searchField {
+  width: 100%;
+  max-width: none;
+}
+
+.categoryField {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+}
+
+.inputShellBody {
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  align-items: stretch;
+}
+
+.searchInput {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: var(--filter-control-height);
+  min-height: var(--filter-control-height);
+  max-height: var(--filter-control-height);
+  border-radius: var(--filter-control-radius);
+  border: 1px solid var(--filter-control-border);
+  background: var(--panel);
+  padding: 0 var(--input-field-padding);
+  font-size: var(--admin-list-filter-input-font-size);
+  font-family: var(--font-login-title);
+  color: var(--text);
+}
+
+.searchInput::placeholder {
+  color: var(--input-placeholder-fg);
+  opacity: var(--input-placeholder-opacity);
+}
+
+.searchInput:focus-visible {
+  outline: none;
+  border-color: var(--filter-control-border);
+  box-shadow: none;
+}
+
+.dateInput {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: var(--filter-control-height);
+  border-radius: var(--filter-control-radius);
+  border: 1px solid var(--filter-control-border);
+  background: var(--panel);
+  padding: 0 var(--input-field-padding);
+  font-size: var(--admin-list-filter-input-font-size);
+  font-family: var(--font-login-title);
+  color: var(--text);
+}
+
+.dateInput:focus-visible {
+  outline: none;
+  border-color: var(--filter-control-border);
+  box-shadow: none;
+}
+
+.searchActions {
+  display: flex;
+  align-items: flex-end;
+  justify-content: stretch;
+  min-width: 0;
+}
+
+.searchButton {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  box-sizing: border-box;
+  height: var(--filter-control-height);
+  min-height: var(--filter-control-height);
+  font-size: var(--admin-list-filter-input-font-size) !important;
+  font-weight: 600 !important;
+}
+
+@media (max-width: 1200px) {
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

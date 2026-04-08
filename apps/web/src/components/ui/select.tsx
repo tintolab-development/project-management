@@ -61,6 +61,7 @@ function SelectContent({
   sideOffset = 6,
   align = "center",
   alignOffset = 0,
+  portal = true,
   /** `false`: 트리거 아래에 고정 간격으로 붙는 패널(shadcn `position="popper"`에 가깝게). 필터 툴바와 동일 UX */
   alignItemWithTrigger = false,
   ...props
@@ -68,9 +69,10 @@ function SelectContent({
   Pick<
     SelectPrimitive.Positioner.Props,
     "align" | "alignOffset" | "side" | "sideOffset" | "alignItemWithTrigger"
-  >) {
-  return (
-    <SelectPrimitive.Portal>
+  > & {
+    portal?: boolean
+  }) {
+  const content = (
       <SelectPrimitive.Positioner
         side={side}
         sideOffset={sideOffset}
@@ -100,8 +102,13 @@ function SelectContent({
           <SelectScrollDownButton />
         </SelectPrimitive.Popup>
       </SelectPrimitive.Positioner>
-    </SelectPrimitive.Portal>
   )
+
+  if (!portal) {
+    return content
+  }
+
+  return <SelectPrimitive.Portal>{content}</SelectPrimitive.Portal>
 }
 
 function SelectLabel({

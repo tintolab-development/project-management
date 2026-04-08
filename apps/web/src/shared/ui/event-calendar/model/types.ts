@@ -15,7 +15,10 @@ export type EventCalendarItem = {
     itemName?: string
     tags?: EventCalendarPreviewTag[]
     assignees?: string
+    /** 단일·기간 표시(예: 완료예정일 또는 일정 구간) */
     dueDate?: string
+    categoryLabel?: string
+    description?: string
   }
   /** 페이지에서 필터링할 때만 사용(렌더링에 영향 없음) */
   calendarFilter?: {
@@ -23,6 +26,9 @@ export type EventCalendarItem = {
     domainId: string
     priority: string
     owner: string
+    /** 관리자 일정(프로젝트 id, 소속) */
+    projectId?: string
+    affiliation?: string
   }
 }
 

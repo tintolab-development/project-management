@@ -9,6 +9,10 @@ export {
   type LoginFormValues,
 } from "./model/authForms"
 export {
+  memberProfileFormSchema,
+  type MemberProfileFormValues,
+} from "./model/memberProfileFormSchema"
+export {
   useAuthSessionStore,
   type AssignedProject,
   type AuthUser,
@@ -19,5 +23,9 @@ export { normalizeAuthUser } from "./lib/normalizeAuthUser"
 export { resolvePostLoginPath } from "./lib/resolvePostLoginPath"
 export {
   canAccessProjectSlug,
+  hasAdminLogsAccess,
   hasAdminPortalAccess,
+  hasAdminWorkspaceAccess,
+  isTintolabMasterAdmin,
 } from "./lib/projectAccess"
+export { MemberProfileEditModal } from "./ui/MemberProfileEditModal"

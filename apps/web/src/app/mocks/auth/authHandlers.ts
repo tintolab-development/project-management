@@ -1,7 +1,8 @@
 import { http, HttpResponse } from "msw"
 
 import { apiBasePath } from "@/shared/config/apiBase"
-import { createMockAccessToken, parseMockAccessToken } from "./mockJwt"
+import { resolveMockUserFromRequest } from "../lib/resolveMockUser"
+import { createMockAccessToken } from "./mockJwt"
 import type { MockUserRecord } from "./mockUsersStore"
 import { mockUsersStore } from "./mockUsersStore"
 
@@ -18,11 +19,22 @@ function userPayload(u: MockUserRecord) {
     id: u.id,
     email: u.email,
     displayName: u.displayName,
+    loginId: u.loginId,
+    phone: u.phone,
     organization: u.organization,
     roles: u.roles,
     assignedProjects: u.assignedProjects,
     accessibleProjectIds: u.accessibleProjectIds,
     defaultProjectSlug: u.defaultProjectSlug,
+  }
+}
+
+function profileResponse(u: MockUserRecord) {
+  return {
+    displayName: u.displayName,
+    loginId: u.loginId,
+    phone: u.phone,
+    email: u.email,
   }
 }
 
@@ -54,18 +66,55 @@ export const authHandlers = [
   }),
 
   http.get(url("/auth/me"), ({ request }) => {
-    const auth = request.headers.get("Authorization")
-    const token =
-      auth?.startsWith("Bearer ") ? auth.slice("Bearer ".length).trim() : ""
-    if (!token) return unauthorized()
+    const user = resolveMockUserFromRequest(request)
+    if (!user) return unauthorized()
+    return HttpResponse.json(userPayload(user))
+  }),
 
-    const parsed = parseMockAccessToken(token)
-    if (!parsed) return unauthorized()
+  http.get(url("/auth/profile"), ({ request }) => {
+    const user = resolveMockUserFromRequest(request)
+    if (!user) return unauthorized()
+    return HttpResponse.json(profileResponse(user))
+  }),
 
-    const user = mockUsersStore.findById(parsed.sub)
+  http.patch(url("/auth/profile"), async ({ request }) => {
+    const user = resolveMockUserFromRequest(request)
     if (!user) return unauthorized()
 
-    return HttpResponse.json(userPayload(user))
+    let body: unknown
+    try {
+      body = await request.json()
+    } catch {
+      return HttpResponse.json({ error: "Invalid JSON" }, { status: 400 })
+    }
+    const row = body as {
+      displayName?: unknown
+      loginId?: unknown
+      phone?: unknown
+      email?: unknown
+      password?: unknown
+    }
+    const displayName =
+      typeof row.displayName === "string" ? row.displayName : ""
+    const loginId = typeof row.loginId === "string" ? row.loginId : ""
+    const phone = typeof row.phone === "string" ? row.phone : ""
+    const email = typeof row.email === "string" ? row.email : ""
+    const password = typeof row.password === "string" ? row.password : ""
+
+    const result = mockUsersStore.updateProfile(user.id, {
+      displayName,
+      loginId,
+      phone,
+      email,
+      password,
+    })
+    if (!result.ok) {
+      return HttpResponse.json({ error: result.error }, { status: result.status })
+    }
+
+    return HttpResponse.json({
+      user: userPayload(result.user),
+    })
   }),
 
   http.post(url("/auth/logout"), () => new HttpResponse(null, { status: 204 })),

@@ -1,0 +1,78 @@
+.tableWrap {
+  min-width: 0;
+  /**
+   * `pageSize`와 동기화 (서버 limit) — 본문 슬롯 `min-height` 행 수
+   * 마지막 페이지처럼 행이 적어도 영역을 유지해 페이지네이션 세로 시프트 완화
+   */
+  --admin-logs-table-page-size: 20;
+  /**
+   * 본문 1행 높이: `tbody td`의 세로 padding(space-3×2) + 한 줄 텍스트
+   * 전역 `--data-table-body-row-height`(52px)는 이 테이블보다 커서 사용하지 않음
+   */
+  --admin-logs-data-row-height: calc(var(--space-3) * 2 + var(--font-size-base) * 1.35);
+}
+
+/** 헤더(h-10) + `pageSize`만큼의 본문 행 슬롯 */
+.tableSlotStable {
+  min-height: calc(
+    var(--data-table-header-row-height) + var(--admin-logs-table-page-size) *
+      var(--admin-logs-data-row-height)
+  );
+}
+
+.table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  border: none;
+  font-family: var(--font-login-title);
+  font-size: var(--font-size-base);
+}
+
+/* 8열 균등 분배 */
+.table thead th,
+.table tbody td {
+  width: 12.5%;
+  box-sizing: border-box;
+  padding: var(--space-3) var(--space-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.table thead tr {
+  background: transparent !important;
+  border-bottom: 1px solid var(--admin-account-table-border) !important;
+}
+
+.table thead tr:hover {
+  background: transparent !important;
+}
+
+.table thead th {
+  text-align: center !important;
+  vertical-align: middle;
+  background: #333 !important;
+  border: none;
+  color: #fff;
+  font-family: var(--font-login-title);
+  font-size: var(--font-size-base);
+  font-style: normal;
+  font-weight: 600;
+  line-height: normal;
+}
+
+.table tbody tr {
+  border: none !important;
+  border-bottom: 1px solid var(--admin-account-table-border) !important;
+}
+
+.table tbody td {
+  text-align: center !important;
+  vertical-align: middle;
+  border: none;
+  color: var(--text);
+  font-family: var(--font-login-title);
+  font-size: var(--font-size-base);
+  line-height: normal;
+}

@@ -1,0 +1,197 @@
+/**
+ * 전역 `.modal`의 `min(760px)` 등을 덮어 기획 크기(800×706)에 맞춤
+ */
+.participantSearchModal {
+  width: min(800px, calc(100vw - 40px)) !important;
+  max-width: min(800px, calc(100vw - 40px)) !important;
+  min-height: min(706px, 90dvh) !important;
+  max-height: min(706px, 90dvh) !important;
+}
+
+.body {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+}
+
+.filterRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-6);
+  width: 100%;
+  min-width: 0;
+  flex: 0 0 auto;
+}
+
+/**
+ * 필터 행 — 셀렉트·텍스트 인풋을 `--filter-control-height`(44px)로 통일
+ * (`SelectTrigger` 기본 `h-8`, `Input` 래퍼 높이 보정)
+ */
+.filterRow :global([data-slot="select-trigger"]) {
+  height: var(--filter-control-height) !important;
+  min-height: var(--filter-control-height) !important;
+  max-height: var(--filter-control-height) !important;
+  box-sizing: border-box;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.filterRow :global(.input-field-cq) {
+  display: block;
+  box-sizing: border-box;
+  height: var(--filter-control-height);
+  min-height: var(--filter-control-height);
+  max-height: var(--filter-control-height);
+  overflow: hidden;
+}
+
+.filterRow :global(.input-field-cq) :global([data-slot="input"]) {
+  box-sizing: border-box !important;
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  line-height: calc(var(--filter-control-height) - 2px) !important;
+}
+
+.filterField {
+  display: flex;
+  flex-direction: column;
+  gap: var(--filter-field-label-input-gap, 8px);
+  min-width: 0;
+}
+
+.affiliationField {
+  flex: 0 0 auto;
+  width: 160px;
+}
+
+.nameField {
+  flex: 1 1 200px;
+  min-width: 160px;
+}
+
+.searchButtonWrap {
+  flex: 0 0 auto;
+}
+
+.filterControl {
+  width: 100%;
+}
+
+.filterSelectTrigger {
+  width: 100%;
+  min-width: 0;
+  height: var(--filter-control-height) !important;
+  min-height: var(--filter-control-height) !important;
+  max-height: var(--filter-control-height) !important;
+  border-radius: var(--filter-control-radius);
+  border-color: var(--filter-control-border);
+  background-color: var(--panel);
+  padding-left: var(--input-field-padding);
+  padding-right: var(--input-field-padding-compact);
+  font-family: var(--font-login-title);
+  font-size: var(--font-size-base);
+}
+
+.tableSection {
+  margin-top: var(--search-result-table-margin-top);
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  width: 100%;
+}
+
+.tableSectionPointerBlocked {
+  pointer-events: none;
+}
+
+.tableScroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid var(--border);
+}
+
+/**
+ * shadcn `Table`이 감싸는 `div.relative.overflow-x-auto`가 가로 스크롤바를 노출해
+ * 헤더·본문 너비가 어긋날 수 있음 — 가로는 숨기고 세로만 스크롤, 셀은 줄바꿈으로 맞춤
+ */
+.tableScroll :global(> div) {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.tableScroll :global(table) {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.tableScroll :global(thead th),
+.tableScroll :global(tbody td) {
+  vertical-align: middle;
+}
+
+.tableScroll :global(th:first-child),
+.tableScroll :global(td:first-child) {
+  width: 44px;
+}
+
+.tableScroll :global(thead th:nth-child(n + 2)),
+.tableScroll :global(tbody td:nth-child(n + 2)) {
+  min-width: 0;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.tableHeaderRow {
+  background: var(--muted) !important;
+}
+
+.tableHeaderRow:hover {
+  background: var(--muted) !important;
+}
+
+.checkboxCell {
+  width: 44px;
+  text-align: center;
+}
+
+.checkboxInput {
+  width: var(--table-checkbox-size);
+  height: var(--table-checkbox-size);
+  cursor: pointer;
+  accent-color: var(--primary);
+}
+
+.actionsCentered {
+  justify-content: center !important;
+  margin-top: auto;
+  padding-top: var(--space-3, 12px);
+}
+
+.emptyCell {
+  text-align: center;
+  color: var(--text-muted);
+  padding: var(--space-6, 24px) var(--space-3, 12px);
+}
+
+.errorText {
+  color: var(--destructive);
+  font-size: var(--font-size-sm, 14px);
+  margin: 0;
+}
+
+.loadingText {
+  color: var(--text-muted);
+  margin: 0;
+  padding: var(--space-4, 16px);
+}

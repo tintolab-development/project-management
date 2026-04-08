@@ -37,6 +37,14 @@ Follow these rules when you write code:
 - Use consts instead of functions, for example, “const toggle = () =>”. Also, define a type if possible.
 - Don't use semicolons.
 
+### Forms (react-hook-form + zod)
+- By default, wire **form surfaces** (multi-field flows, modals/sheets with inputs, create/edit flows) with **react-hook-form** for state and submission.
+- Use **zod** as the validation source of truth and connect it via **`@hookform/resolvers/zod`** (`zodResolver`); infer TypeScript types from the schema where practical.
+- Trivial single-control UI (e.g. one search field, a lone toggle) may use local state instead when a full form stack adds no benefit.
+
+### API mocking (MSW)
+- Any feature or surface that involves **CRUD** (create, read, update, delete) against HTTP APIs **must** be exercised through **MSW (Mock Service Worker)** in development: register handlers, in-memory stores or fixtures, and realistic request/response shapes so UI and data layers stay aligned without ad-hoc mocks scattered in components.
+
 ### Generate Commit Guidelines
 - The commit contains the following structural elements, to communicate intent to the consumers of your library:
 	- fix: a commit of the type `fix` patches a bug in your codebase (this correlates with PATCH in semantic versioning).
