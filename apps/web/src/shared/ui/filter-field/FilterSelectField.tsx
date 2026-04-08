@@ -52,6 +52,8 @@ function triggerLabel(
 ): string {
   if (value === "") {
     if (showAllOption) return allLabel
+    const emptyInList = options.find((o) => o.value === "")
+    if (emptyInList) return emptyInList.label
     return placeholder
   }
   const opt = options.find((o) => o.value === value)
@@ -115,7 +117,7 @@ export function FilterSelectField({
           aria-expanded={open}
           aria-controls={open ? listboxId : undefined}
           className={cn(
-            "inline-flex w-full min-w-0 flex-1 items-center justify-between gap-2 border-0 bg-transparent p-0 text-left text-[length:var(--font-size-base)] font-normal leading-normal shadow-none outline-none transition-colors [font-family:var(--font-login-title)]",
+            "inline-flex w-full min-w-0 flex-1 items-center justify-between gap-2 border-0 bg-transparent p-0 text-left text-[length:var(--admin-list-filter-input-font-size)] font-normal leading-normal shadow-none outline-none transition-colors [font-family:var(--font-login-title)]",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
             "disabled:cursor-not-allowed disabled:opacity-50",
             showMutedPlaceholder && "text-muted-foreground",

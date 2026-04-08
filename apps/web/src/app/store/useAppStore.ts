@@ -420,7 +420,12 @@ export const useAppStore = create<AppStore>()(
         const item = get().items.find((i) => i.id === itemId)
         if (!item) return
         const ok = await appConfirm(
-          `[${item.code}] ${item.title} 항목을 삭제하시겠습니까?\n관련 코멘트와 이력도 함께 제거됩니다.`,
+          `[${item.code}] ${item.title}\n\n이 항목을 삭제하면 관련 코멘트와 이력도 함께 제거됩니다. 이 작업은 되돌릴 수 없습니다.`,
+          {
+            intent: "destructive",
+            title: "항목 삭제",
+            confirmLabel: "삭제",
+          },
         )
         if (!ok) return
 
@@ -678,7 +683,12 @@ export const useAppStore = create<AppStore>()(
           : "-"
 
         const ok = await appConfirm(
-          `정말로 [${domain.name}] 도메인을 삭제하시겠습니까?\n\n직속 하위 도메인은 상위 레벨로 승격되며, 직속 아이템 ${directItems.length}개는 [${fallbackLabel}]로 이동됩니다.`,
+          `「${domain.name}」 도메인을 삭제하시겠습니까?\n\n직속 하위 도메인은 상위 레벨로 올라가며, 직속 아이템 ${directItems.length}개는 「${fallbackLabel}」로 이동합니다. 이 작업은 되돌릴 수 없습니다.`,
+          {
+            intent: "destructive",
+            title: "도메인 삭제",
+            confirmLabel: "삭제",
+          },
         )
         if (!ok) return
 
@@ -840,7 +850,14 @@ export const useAppStore = create<AppStore>()(
         ),
 
       resetToSample: async () => {
-        const ok = await appConfirm("샘플데이터를 초기화하시겠습니까?")
+        const ok = await appConfirm(
+          "현재 데이터가 모두 사라지고 샘플 데이터로 바뀝니다. 되돌릴 수 없습니다.",
+          {
+            intent: "destructive",
+            title: "샘플 데이터로 초기화",
+            confirmLabel: "초기화",
+          },
+        )
         if (!ok) return
         set(normalizeAppState(createSeedData()))
       },

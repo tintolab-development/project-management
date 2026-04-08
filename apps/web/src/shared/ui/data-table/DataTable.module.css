@@ -1,0 +1,23 @@
+/**
+ * 테이블 영역(헤더+본문)
+ * 필요 시 `tableSlotClassName`으로 `min-height` 등을 덧씌워 페이지네이션 위치를 안정화
+ */
+.tableSlot {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+}
+
+/**
+ * 페이지네이션이 없거나 로딩 후 나타날 때도 동일한 최소 높이를 유지해 CLS 방지
+ */
+.paginationSlot {
+  box-sizing: border-box;
+  display: flex;
+  width: 100%;
+  min-height: var(--data-table-pagination-slot-min-height);
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: var(--data-table-pagination-padding-top);
+}

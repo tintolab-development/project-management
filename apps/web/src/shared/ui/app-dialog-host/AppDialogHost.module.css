@@ -1,0 +1,76 @@
+/**
+ * 앱 전역 확인·알림 다이얼로그 — 기준 너비 600px 고정, 뷰포트가 더 좁으면 좌우 20px 여백 안에서만 축소
+ */
+.dialogNarrow {
+  width: 600px;
+  max-width: calc(100vw - 40px);
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.bodyStack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  min-width: 0;
+  width: 100%;
+}
+
+.message {
+  margin: 0;
+  min-width: 0;
+  max-width: 100%;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+  font-size: 0.875rem;
+  line-height: 1.65;
+  color: var(--text-muted);
+}
+
+/** 확인 모달 내 「동적 라벨」 — 본문 대비 강조 */
+.messageEmphasis {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.head {
+  margin-bottom: var(--space-5);
+  min-width: 0;
+}
+
+.title {
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-8);
+  width: 100%;
+  min-width: 0;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+@media (min-width: 480px) {
+  .actions {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+  }
+}
+
+.actionButton {
+  width: 100%;
+}
+
+@media (min-width: 480px) {
+  .actionButton {
+    width: auto;
+    min-width: 5.75rem;
+  }
+}

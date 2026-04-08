@@ -26,6 +26,9 @@ export type EventCalendarItem = {
     domainId: string
     priority: string
     owner: string
+    /** 관리자 일정(프로젝트 id, 소속) */
+    projectId?: string
+    affiliation?: string
   }
 }
 

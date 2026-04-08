@@ -26,13 +26,14 @@ export function DataTablePagination<TData>({
   className,
 }: DataTablePaginationProps<TData>) {
   const pageCount = table.getPageCount()
-  if (pageCount <= 1) return null
+  /** 0페이지(데이터 없음 등)만 숨김 — 1페이지여도 이전/다음·현재 페이지 표시 */
+  if (pageCount < 1) return null
 
   const pageIndex = table.getState().pagination.pageIndex
   const items = getVisiblePageIndices(pageIndex, pageCount, maxNumericButtons)
 
   return (
-    <Pagination className={cn("pt-4", className)}>
+    <Pagination className={cn(className)}>
       <PaginationContent>
         <PaginationItem>
           <PaginationPrevious
