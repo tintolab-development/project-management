@@ -334,7 +334,7 @@ export const AdminAccountRegisterSheet = ({
                     >
                       <SelectValue placeholder="권한을 선택하세요" />
                     </SelectTrigger>
-                    <SelectContent alignItemWithTrigger={false}>
+                    <SelectContent alignItemWithTrigger={false} portal={false}>
                       <SelectItem value="뷰어">일반</SelectItem>
                       <SelectItem value="편집자">편집자</SelectItem>
                       <SelectItem value="관리자">관리자</SelectItem>

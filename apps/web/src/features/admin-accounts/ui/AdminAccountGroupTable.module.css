@@ -43,6 +43,26 @@
 
 .tableWrap {
   min-width: 0;
+  /**
+   * 계정관리 기본 pageSize(10)와 동기화 — 마지막 페이지 행 수가 적어도
+   * 테이블 슬롯 높이를 유지해 페이지네이션 세로 시프트 방지
+   */
+  --admin-accounts-table-page-size: 10;
+  /**
+   * 본문 1행 높이: `tbody td`의 세로 padding(space-3×2) + 한 줄 텍스트
+   */
+  --admin-accounts-data-row-height: max(
+    var(--data-table-body-row-height),
+    calc(var(--space-3) * 2 + var(--font-size-base) * 1.35)
+  );
+}
+
+/** 헤더(h-10) + `pageSize`만큼의 본문 행 슬롯 */
+.tableSlotStable {
+  min-height: calc(
+    var(--data-table-header-row-height) + var(--admin-accounts-table-page-size) *
+      var(--admin-accounts-data-row-height) + var(--space-2)
+  );
 }
 
 /**

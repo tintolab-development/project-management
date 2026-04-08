@@ -12,7 +12,7 @@ export type AdminAccountsListState = AdminAccountsListFilters & {
   groupPages: Record<string, number>
 }
 
-export const DEFAULT_ADMIN_ACCOUNTS_LIMIT = 20
+export const DEFAULT_ADMIN_ACCOUNTS_LIMIT = 10
 
 export const EMPTY_ADMIN_ACCOUNTS_FILTERS: AdminAccountsListFilters = {
   q: "",

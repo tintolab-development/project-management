@@ -173,6 +173,7 @@ export const AdminAccountGroupTable = ({
           onPaginationChange={handlePaginationChange}
           getRowId={(row) => row.id}
           emptyMessage="표시할 계정이 없습니다."
+          tableSlotClassName={styles.tableSlotStable}
           tableClassName={styles.table}
         />
       </div>

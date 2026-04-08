@@ -16,7 +16,7 @@ export const AdminAccountsToolbar = ({
     <Button
       type="button"
       appearance="fill"
-      dimension="hug"
+      dimension="fixedLg"
       className={styles.createButton}
       onClick={onCreateOrganizationClick}
     >

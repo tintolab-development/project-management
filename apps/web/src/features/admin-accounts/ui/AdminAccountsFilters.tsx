@@ -6,6 +6,7 @@ import { Button } from "@/shared/ui/button"
 import { FilterFieldShell } from "@/shared/ui/filter-field"
 import { FilterSelectField } from "@/shared/ui/filter-field/FilterSelectField"
 import { filterFieldLabelDomId } from "@/shared/ui/filter-field/filterFieldLabelDomId"
+import { cn } from "@/lib/utils"
 
 import {
   mergeAdminAccountsFiltersIntoParams,
@@ -60,7 +61,7 @@ export const AdminAccountsFilters = ({ projectOptions }: Props) => {
             id={qId}
             type="search"
             name="q"
-            className={styles.searchInput}
+            className={cn(styles.searchInput, "focus-visible:ring-0")}
             placeholder="이름으로 검색"
             value={draft.q}
             onChange={(e) => setDraft((d) => ({ ...d, q: e.target.value }))}

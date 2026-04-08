@@ -16,27 +16,13 @@
   font-family: var(--font-login-title);
 }
 
-/* 필터 행 입력·조회 버튼과 동일 높이 (`--field-height-lg` / 44px) */
 .createButton {
-  display: flex !important;
-  box-sizing: border-box;
-  width: 160px !important;
-  min-width: 160px !important;
-  max-width: 160px !important;
-  min-height: var(--admin-list-filter-control-height) !important;
+  flex-shrink: 0;
+  width: var(--admin-list-filter-search-button-min-width) !important;
+  min-width: var(--admin-list-filter-search-button-min-width) !important;
+  max-width: var(--admin-list-filter-search-button-min-width) !important;
   height: var(--admin-list-filter-control-height) !important;
-  padding: 0 var(--space-8) !important;
-  align-items: center !important;
-  justify-content: center !important;
-  border-radius: 10px !important;
-  background: #000 !important;
-  border-color: transparent !important;
-  color: #fff !important;
+  min-height: var(--admin-list-filter-control-height) !important;
   font-size: var(--admin-list-toolbar-action-font-size) !important;
   font-weight: 600 !important;
-}
-
-.createButton:hover {
-  background: #171717 !important;
-  color: #fff !important;
 }
