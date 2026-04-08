@@ -36,20 +36,6 @@
   align-items: center;
 }
 
-/* 툴바 인풋 높이 = DS Button `dimension="hug"`(h-10 / 40px) 과 동일 */
-.item-tree-toolbar .tree-toolbar-search .input-field-cq,
-.item-tree-toolbar .tree-toolbar-create .input-field-cq {
-  min-height: 2.5rem;
-  height: 2.5rem;
-}
-
-.item-tree-toolbar .tree-toolbar-input-control {
-  height: 100%;
-  min-height: 0;
-  max-height: 2.5rem;
-  padding-block: 0.5rem;
-}
-
 .tree-master-bar {
   display: flex;
   align-items: center;

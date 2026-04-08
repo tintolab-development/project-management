@@ -231,7 +231,6 @@ export const TreePage = () => {
         <div className="tree-toolbar-search">
           <Input
             type="search"
-            className="tree-toolbar-input-control"
             placeholder="이슈 검색"
             aria-label="트리에서 이슈 검색"
             value={searchDraft}
@@ -243,7 +242,6 @@ export const TreePage = () => {
             <Input
               ref={newDomainInputRef}
               type="text"
-              className="tree-toolbar-input-control"
               placeholder="도메인(트리) 추가"
               aria-label="새 도메인 이름"
               onKeyDown={(e) => {
