@@ -107,6 +107,19 @@
    * 관리자 드로어 폼 — 필드 블록·섹션 디바이더(`<hr>`) 사이 세로 간격 (24px)
    */
   --admin-drawer-form-stack-gap: var(--space-8);
+  /** 관리자 드로어 공통 패딩(헤더·본문·푸터) */
+  --admin-drawer-padding: 30px;
+  /** 관리자 드로어 타이틀 폰트 크기 */
+  --admin-drawer-title-font-size: 20px;
+  /** 관리자 드로어 입력 폰트 크기 */
+  --admin-drawer-input-font-size: 14px;
+  /** 관리자 드로어 타입 칩 높이/반경 */
+  --admin-drawer-type-chip-height: 36px;
+  --admin-drawer-type-chip-radius: 999px;
+  /** 관리자 드로어 날짜 범위 구분자 크기 */
+  --admin-drawer-date-separator-font-size: 16px;
+  /** 관리자 드로어 멀티라인 입력 최소 높이 */
+  --admin-drawer-textarea-min-height: var(--textarea-min-height-md);
 
   /** DataTable 하단 페이지네이션 슬롯 — 표시/비표시·페이지 수 변화 시 레이아웃 시프트 완화 */
   --data-table-pagination-slot-min-height: 48px;
@@ -120,6 +133,8 @@
   --data-table-body-row-height: 52px;
   /** 테이블 행 선택 등 네이티브 `input[type="checkbox"]` 가로·세로 */
   --table-checkbox-size: 18px;
+  /** 검색 결과 모달 테이블 상단 여백 */
+  --search-result-table-margin-top: 20px;
   /** `FilterFieldShell`·태스크 필터 검색/조회 등 공통 필터 가로 */
   --filter-field-max-width: 280px;
   /** 트리거(필터 박스)와 드롭다운 패널 사이 세로 간격 — Popover·Select sideOffset과 동기 */
