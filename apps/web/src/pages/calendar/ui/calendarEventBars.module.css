@@ -1,0 +1,40 @@
+/* 우선순위별 이벤트 바 — 토큰 기반, 과한 채도는 피함 */
+.trackP0 {
+  background: color-mix(in srgb, var(--destructive) 18%, transparent);
+}
+
+.faceP0 {
+  background: color-mix(in srgb, var(--destructive) 22%, var(--panel) 78%);
+  color: var(--foreground);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--foreground) 6%, transparent);
+}
+
+.trackP1 {
+  background: color-mix(in srgb, var(--warn) 20%, transparent);
+}
+
+.faceP1 {
+  background: color-mix(in srgb, var(--warn) 24%, var(--panel) 76%);
+  color: var(--foreground);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--foreground) 6%, transparent);
+}
+
+.trackP2 {
+  background: color-mix(in srgb, var(--primary) 14%, transparent);
+}
+
+.faceP2 {
+  background: color-mix(in srgb, var(--primary-soft) 85%, var(--panel) 15%);
+  color: var(--foreground);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--foreground) 5%, transparent);
+}
+
+.trackP3 {
+  background: color-mix(in srgb, var(--muted-foreground) 12%, transparent);
+}
+
+.faceP3 {
+  background: color-mix(in srgb, var(--muted) 55%, var(--panel) 45%);
+  color: var(--foreground);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--foreground) 4%, transparent);
+}
