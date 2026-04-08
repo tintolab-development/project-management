@@ -6,6 +6,10 @@
   --primary: var(--palette-primary);
   --primary-soft: #f4f4f5;
   --text-on-primary: #ffffff;
+  /** 관리자 일정 바(캘린더) — 연한 핑크 계열 */
+  --palette-schedule-pink: #ec4899;
+  --admin-schedule-bar-track: color-mix(in srgb, var(--palette-schedule-pink) 18%, transparent);
+  --admin-schedule-bar-face: color-mix(in srgb, var(--palette-schedule-pink) 22%, var(--panel) 78%);
 
   /* Text */
   --text: #09090b;
@@ -28,6 +32,20 @@
   --input-placeholder-weight: 400;
   --input-placeholder-line-height: normal;
   --input-placeholder-opacity: 0.3;
+
+  /**
+   * 폼 컨트롤 높이 — Input·필터·버튼 정렬용 3단계 (S/M/L)
+   * `--filter-control-height`는 L과 동일
+   */
+  --field-height-sm: 32px;
+  --field-height-md: 40px;
+  --field-height-lg: 44px;
+  /** `Input` size=sm — 좁은 필드 */
+  --input-field-padding-compact: 12px;
+  /** `Textarea` 세로 최소 — 짧은 메모 / 일반 / 긴 본문 */
+  --textarea-min-height-sm: 64px;
+  --textarea-min-height-md: 120px;
+  --textarea-min-height-lg: 160px;
 
   /* Surfaces — no cool/warm tint (zinc-scale neutrals) */
   --bg: #fafafa;
@@ -59,10 +77,49 @@
   --border-pill-warn: #f3dc9f;
   --border-pill-danger: #f5c3be;
 
-  /* Filter controls (list toolbar) */
-  --filter-control-height: 49px;
+  /* Filter controls (list toolbar) — 필터 트리거·관리자 목록 필터 — L 티어와 동일 */
+  --filter-control-height: var(--field-height-lg);
   --filter-control-border: #c0c0c0;
   --filter-control-radius: 10px;
+  /**
+   * 관리자 계정·프로젝트·로그 필터 — `--filter-control-height`와 동일(레거시 별칭)
+   */
+  --admin-list-filter-control-height: var(--field-height-lg);
+  --admin-list-filter-input-font-size: 16px;
+  --admin-list-filter-search-button-min-width: 172px;
+  --admin-list-toolbar-count-font-size: 16px;
+  --admin-list-toolbar-action-font-size: 16px;
+  --admin-list-toolbar-action-min-height: 52px;
+  /** 계정 관리 그룹 테이블 */
+  --admin-account-table-header-bg: #f0f0f0;
+  --admin-account-table-border: var(--line-strong);
+  /**
+   * 계정 등록 드로어 — 아이디「중복확인」버튼
+   * (높이 44px·가로 160px·radius 10px·검정 배경; 좌우 패딩은 인풋과 동일 16px)
+   */
+  --admin-account-login-dup-check-width: 160px;
+  --admin-account-login-dup-check-height: var(--field-height-lg);
+  --admin-account-login-dup-check-padding-x: var(--input-field-padding);
+  --admin-account-login-dup-check-radius: var(--filter-control-radius);
+  --admin-account-login-dup-check-bg: var(--palette-primary);
+  --admin-account-login-dup-check-fg: var(--text-on-primary);
+  /**
+   * 관리자 드로어 폼 — 필드 블록·섹션 디바이더(`<hr>`) 사이 세로 간격 (24px)
+   */
+  --admin-drawer-form-stack-gap: var(--space-8);
+
+  /** DataTable 하단 페이지네이션 슬롯 — 표시/비표시·페이지 수 변화 시 레이아웃 시프트 완화 */
+  --data-table-pagination-slot-min-height: 48px;
+  /** 테이블 본문과 페이지네이션 사이 간격 (과대 시 뷰포트를 넘기기 쉬움) */
+  --data-table-pagination-padding-top: var(--space-3);
+  /**
+   * DataTable 본문 최소 높이 — 헤더(`TableHead` h-10) + 페이지당 행 수 × 행 높이
+   * 행이 `pageSize`보다 적을 때도 영역 높이를 맞춰 하단(페이지네이션) 시프트 방지
+   */
+  --data-table-header-row-height: 40px;
+  --data-table-body-row-height: 52px;
+  /** 테이블 행 선택 등 네이티브 `input[type="checkbox"]` 가로·세로 */
+  --table-checkbox-size: 18px;
   /** `FilterFieldShell`·태스크 필터 검색/조회 등 공통 필터 가로 */
   --filter-field-max-width: 280px;
   /** 트리거(필터 박스)와 드롭다운 패널 사이 세로 간격 — Popover·Select sideOffset과 동기 */
@@ -122,7 +179,7 @@
   --task-create-title-divider-gap-after: 25px;
   /**
    * DS 텍스트 버튼 고정 크기 — `dsButtonVariants` `dimension.fixedMd`와 동기
-   * (연간 Task 추가·해당 모달 액션 등)
+   * (연간 Task 추가·해당 모달 액션 등). 필터 트리거(`--filter-control-height` 44px)와 별도 계열.
    */
   --ds-button-fixed-md-width: 160px;
   --ds-button-fixed-md-height: 40px;
@@ -185,6 +242,13 @@
   --modal-max-height: min(90vh, 960px);
   /** Radix `Dialog` + `.modal` 본문(필드 ↔ 액션) 세로 간격 */
   --modal-body-section-gap: var(--task-create-section-gap);
+  /**
+   * 관리자 다이얼로그 단일행 텍스트 인풋 — 계정관리「소속 생성」등.
+   * 필터 L티어와 동일 크롬: radius 10px, 1px 테두리, 흰 배경. 색·반경은 하위 토큰만 참조.
+   */
+  --modal-compact-input-radius: var(--filter-control-radius);
+  --modal-compact-input-border: 1px solid var(--filter-control-border);
+  --modal-compact-input-bg: var(--panel);
   --shadow-focus-ring: 0 0 0 3px rgba(24, 24, 27, 0.12);
   --shadow-tree-row: 0 6px 20px rgba(0, 0, 0, 0.06);
   --shadow-outline-primary-inset: inset 0 0 0 1px rgba(24, 24, 27, 0.08);
@@ -213,6 +277,9 @@
    */
   --pad-widget-y: var(--space-8);
   --pad-widget-x: var(--space-7);
+
+  /** App 셸: TopBar(레이아웃 헤더)와 그 아래 본문(필터·페이지 영역) 사이 세로 간격 */
+  --shell-header-content-gap: 40px;
 
   /* UI copy (Pretendard stack; login title, 폼 라벨·플레이스홀더 등) */
   --font-login-title: Pretendard, "Segoe UI", "Malgun Gothic", sans-serif;
