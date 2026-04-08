@@ -1,0 +1,197 @@
+/**
+ * 계정 등록 드로어 — 레이아웃·타이포는 AdminProjectCreateSheet와 동일 계열
+ */
+.scroll {
+  display: flex;
+  flex-direction: column;
+  gap: var(--admin-drawer-form-stack-gap);
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 30px 30px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2, 8px);
+  margin-bottom: 0;
+}
+
+.fieldLabel {
+  margin: 0;
+  color: #000;
+  font-family: var(--font-login-title);
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: normal;
+}
+
+:global(label).fieldLabel {
+  margin-bottom: 0;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: normal;
+  color: #000;
+}
+
+.required {
+  color: var(--destructive);
+  margin-left: 2px;
+}
+
+.errorText {
+  font-size: var(--font-size-xs, 12px);
+  color: var(--destructive);
+  margin: 0;
+}
+
+.textInput {
+  border-radius: 10px;
+  border: 1px solid #c0c0c0;
+  background: #fff;
+}
+
+.textInput[aria-invalid="true"] {
+  border-color: var(--destructive);
+}
+
+.idRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2, 8px);
+}
+
+.idInputWrap {
+  flex: 1 1 120px;
+  min-width: 0;
+}
+
+/**
+ * 중복확인 버튼과 동일 높이(`--filter-control-height` = `--field-height-lg` = 44px) · 수직 정렬
+ */
+.idRowInput {
+  box-sizing: border-box !important;
+  height: var(--filter-control-height) !important;
+  min-height: var(--filter-control-height) !important;
+  max-height: var(--filter-control-height) !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  line-height: calc(var(--filter-control-height) - 2px) !important;
+}
+
+.idInputWrap :global(.input-field-cq):has(.idRowInput[data-slot="input"]) {
+  display: block;
+  box-sizing: border-box;
+  height: var(--filter-control-height);
+  min-height: var(--filter-control-height);
+  max-height: var(--filter-control-height);
+  overflow: hidden;
+}
+
+.idInputWrap
+  :global(.input-field-cq):has(.idRowInput[data-slot="input"])
+  :global([data-slot="input"]) {
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  height: 100% !important;
+  min-height: 0 !important;
+  max-height: none !important;
+}
+
+/**
+ * DS `--admin-account-login-dup-check-*`
+ * 스펙: flex · 160×44 · 가운데 정렬 · radius 10px · 배경 #000 (`--palette-primary`)
+ * (원안 `padding: 16px` 전방향은 44px 높이와 충돌 → 좌우 16px만 적용)
+ * `gap: 230px`는 160px 너비와 모순되어 인풋–버튼 간격은 `.idRow`의 gap으로 둠.
+ */
+.duplicateCheckBtn {
+  box-sizing: border-box;
+  display: flex !important;
+  flex-shrink: 0;
+  width: var(--admin-account-login-dup-check-width) !important;
+  min-width: var(--admin-account-login-dup-check-width) !important;
+  height: var(--admin-account-login-dup-check-height) !important;
+  min-height: var(--admin-account-login-dup-check-height) !important;
+  max-height: var(--admin-account-login-dup-check-height) !important;
+  padding-left: var(--admin-account-login-dup-check-padding-x) !important;
+  padding-right: var(--admin-account-login-dup-check-padding-x) !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  justify-content: center !important;
+  align-items: center !important;
+  border-radius: var(--admin-account-login-dup-check-radius) !important;
+  border-color: transparent !important;
+  background: var(--admin-account-login-dup-check-bg) !important;
+  color: var(--admin-account-login-dup-check-fg) !important;
+}
+
+.duplicateCheckBtn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--admin-account-login-dup-check-bg) 88%, var(--WT)) !important;
+  color: var(--admin-account-login-dup-check-fg) !important;
+}
+
+.duplicateHintOk {
+  font-size: var(--font-size-xs, 12px);
+  margin: 0;
+  color: var(--success);
+}
+
+.duplicateHintBad {
+  font-size: var(--font-size-xs, 12px);
+  margin: 0;
+  color: var(--destructive);
+}
+
+.sectionDivider {
+  flex-shrink: 0;
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 0;
+}
+
+.selectTrigger {
+  width: 100%;
+  min-width: 0;
+  min-height: var(--field-height-lg);
+  height: auto;
+}
+
+.footer {
+  flex-shrink: 0;
+  padding: 30px;
+  display: flex;
+  gap: var(--space-2, 8px);
+}
+
+.footerBtn {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.header {
+  padding-top: 30px;
+  padding-left: 30px;
+  padding-right: calc(30px + 2.5rem);
+  padding-bottom: 0;
+}
+
+.header .drawerTitle {
+  margin: 0;
+  color: var(--input-placeholder-fg);
+  font-family: var(--font-login-title);
+  font-size: 20px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: normal;
+}
+
+.sheetBody {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}

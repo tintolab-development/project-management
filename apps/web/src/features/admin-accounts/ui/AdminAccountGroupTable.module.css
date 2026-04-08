@@ -1,0 +1,108 @@
+.card {
+  box-sizing: border-box;
+  min-width: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--panel);
+  padding: var(--space-5);
+}
+
+.cardHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+  min-width: 0;
+}
+
+.cardTitle {
+  margin: 0;
+  color: #000;
+  font-family: var(--font-login-title);
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: normal;
+}
+
+.cardHeaderActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.rowActions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+}
+
+.tableWrap {
+  min-width: 0;
+}
+
+/**
+ * `DataTable` → shadcn `Table`의 `<table>` — 고정 레이아웃으로 열 균등·가운데 정렬
+ */
+.table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  border: none;
+  font-family: var(--font-login-title);
+  font-size: var(--font-size-base);
+}
+
+.table thead tr {
+  background: transparent !important;
+  /* DataTable 헤더 `border-b-0`보다 우선 — 헤더·본문 사이 가로선만 유지 */
+  border-bottom: 1px solid var(--admin-account-table-border) !important;
+}
+
+.table thead tr:hover {
+  background: transparent !important;
+}
+
+.table thead th {
+  text-align: center !important;
+  vertical-align: middle;
+  background: var(--admin-account-table-header-bg) !important;
+  border: none;
+  color: #000;
+  font-family: var(--font-login-title);
+  font-size: var(--font-size-base);
+  font-style: normal;
+  font-weight: 600;
+  line-height: normal;
+}
+
+.table tbody tr {
+  border: none !important;
+  border-bottom: 1px solid var(--admin-account-table-border) !important;
+}
+
+.table tbody td {
+  text-align: center !important;
+  vertical-align: middle;
+  border: none;
+  color: var(--text);
+  font-family: var(--font-login-title);
+  font-size: var(--font-size-base);
+  line-height: normal;
+}
+
+@media (max-width: 640px) {
+  .cardHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .cardHeaderActions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
