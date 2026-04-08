@@ -82,7 +82,7 @@ export const LoginPage = () => {
                 autoComplete="email"
                 placeholder="이메일을 입력하세요"
                 aria-invalid={Boolean(errors.email)}
-                className={styles.fieldInput}
+                className={cn(styles.fieldInput, "focus-visible:ring-0")}
                 {...register("email")}
               />
               {errors.email ? (
@@ -99,7 +99,7 @@ export const LoginPage = () => {
                 autoComplete="current-password"
                 placeholder="패스워드를 입력하세요"
                 aria-invalid={Boolean(errors.password)}
-                className={styles.fieldInput}
+                className={cn(styles.fieldInput, "focus-visible:ring-0")}
                 {...register("password")}
               />
               {errors.password ? (
