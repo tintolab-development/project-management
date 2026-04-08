@@ -15,6 +15,10 @@ export type AuthUser = {
   id: string
   email: string
   displayName: string
+  /** 로그인 아이디(목·API에서만 채워질 수 있음) */
+  loginId?: string
+  /** 휴대폰(목·API에서만 채워질 수 있음) */
+  phone?: string
   /** 회사·팀 등 표시용 소속 (구버전 세션에는 없을 수 있음) */
   organization?: string
   roles: AuthRole[]

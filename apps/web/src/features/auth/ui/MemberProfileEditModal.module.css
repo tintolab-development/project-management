@@ -1,0 +1,174 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  /* 706px 고정 안에서 세로 스크롤 없이 맞추기 위해 필드 간 간격 축소 */
+  gap: 12px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: visible;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.fieldInput {
+  width: 100%;
+}
+
+/**
+ * 인풋 스펙 마이그레이션
+ * display: flex; padding: 16px; justify-content: space-between; align-items: center;
+ * align-self: stretch; border-radius: 10px; border: 1px solid #C0C0C0; background: #FFF
+ * → 토큰: --filter-control-border, --filter-control-radius, --panel, --input-field-padding
+ */
+.profileInput {
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: var(--input-field-padding);
+  justify-content: space-between;
+  border-radius: var(--filter-control-radius);
+  border: 1px solid var(--filter-control-border);
+  background: var(--panel);
+  min-height: var(--filter-control-height);
+}
+
+.profileInput:focus-visible {
+  outline: none;
+  border-color: var(--ring);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 35%, transparent);
+}
+
+.profileInput[aria-invalid="true"] {
+  border-color: var(--destructive, #dc2626);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--destructive, #dc2626) 25%, transparent);
+}
+
+.profileInput:disabled {
+  cursor: not-allowed;
+  background: var(--surface-disabled);
+  opacity: 0.85;
+}
+
+/** 비밀번호: 동일 스펙을 셸에 적용하고 인풋은 테두리 없음 + space-between 으로 아이콘 배치 */
+.passwordShell {
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: var(--input-field-padding);
+  justify-content: space-between;
+  gap: 8px;
+  border-radius: var(--filter-control-radius);
+  border: 1px solid var(--filter-control-border);
+  background: var(--panel);
+  min-height: var(--filter-control-height);
+}
+
+.passwordShell:focus-within {
+  border-color: var(--ring);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 35%, transparent);
+}
+
+.passwordShell:has([aria-invalid="true"]) {
+  border-color: var(--destructive, #dc2626);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--destructive, #dc2626) 25%, transparent);
+}
+
+.passwordShell:has(input:disabled) {
+  cursor: not-allowed;
+  background: var(--surface-disabled);
+  opacity: 0.85;
+}
+
+.passwordShell :global(.input-field-cq) {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  align-self: stretch;
+  min-width: 0;
+}
+
+.passwordInnerInput {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  outline: none !important;
+}
+
+.passwordInnerInput:focus-visible {
+  box-shadow: none !important;
+}
+
+.togglePassword {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.togglePassword:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.togglePasswordIcon {
+  width: 20px;
+  height: 20px;
+}
+
+.actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 10px;
+  margin-top: 8px;
+  padding-top: 0;
+}
+
+.actions > * {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.muted {
+  color: var(--text-muted, #71717a);
+}
+
+.fieldError {
+  color: var(--destructive, #dc2626);
+}
+
+.rootError {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--destructive, #dc2626);
+}

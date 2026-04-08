@@ -53,10 +53,17 @@ export const normalizeAuthUser = (raw: AuthUser | Record<string, unknown>): Auth
       : null
   if (defaultProjectSlug === "main") defaultProjectSlug = "demo"
 
+  const loginId =
+    typeof r.loginId === "string" && r.loginId.trim() ? r.loginId.trim() : undefined
+  const phone =
+    typeof r.phone === "string" && r.phone.trim() ? r.phone.trim() : undefined
+
   return {
     id: r.id,
     email: r.email,
     displayName: r.displayName,
+    loginId,
+    phone,
     organization: r.organization,
     roles,
     assignedProjects: migratedProjects,
