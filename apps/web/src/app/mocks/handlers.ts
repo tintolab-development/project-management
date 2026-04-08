@@ -1,14 +1,32 @@
 import { http, HttpResponse } from "msw"
 
+import {
+  buildRelatedTaskSearchRows,
+  relatedSearchParamsFromUrl,
+} from "@/entities/item/lib/relatedTasksSearchModel"
 import { apiBasePath } from "@/shared/config/apiBase"
 import { uniqueId } from "@/shared/lib/ids"
 import { authHandlers } from "./auth/authHandlers"
+import { PROJECT_PARTICIPANTS_SEED } from "@/shared/lib/projectParticipantsSeed"
 import { mockAppStateStore } from "./seedStore"
 
 const url = (path: string) => {
   const p = path.startsWith("/") ? path : `/${path}`
   return `${apiBasePath}${p}`
 }
+
+const sortParticipantsKo = <
+  T extends { affiliation: string; name: string; jobTitle: string },
+>(
+  rows: T[],
+): T[] =>
+  [...rows].sort((a, b) => {
+    const c0 = a.affiliation.localeCompare(b.affiliation, "ko")
+    if (c0 !== 0) return c0
+    const c1 = a.name.localeCompare(b.name, "ko")
+    if (c1 !== 0) return c1
+    return a.jobTitle.localeCompare(b.jobTitle, "ko")
+  })
 
 export const handlers = [
   ...authHandlers,
@@ -40,6 +58,13 @@ export const handlers = [
     HttpResponse.json(mockAppStateStore.getSnapshot().items),
   ),
 
+  http.get(url("/tasks/related-search"), ({ request }) => {
+    const snap = mockAppStateStore.getSnapshot()
+    const params = relatedSearchParamsFromUrl(request.url)
+    const rows = buildRelatedTaskSearchRows(snap.items, snap.domains, params)
+    return HttpResponse.json(rows)
+  }),
+
   http.get(url("/items/:itemId/history"), ({ params }) => {
     const itemId = String(params.itemId ?? "")
     const list = mockAppStateStore
@@ -59,6 +84,22 @@ export const handlers = [
   http.get(url("/project"), () =>
     HttpResponse.json(mockAppStateStore.getSnapshot().project),
   ),
+
+  http.get(url("/projects/:projectSlug/participants"), ({ request }) => {
+    const u = new URL(request.url)
+    const affiliation = u.searchParams.get("affiliation")?.trim() ?? ""
+    const name = u.searchParams.get("name")?.trim() ?? ""
+
+    let list = structuredClone(PROJECT_PARTICIPANTS_SEED)
+    if (affiliation.length > 0) {
+      list = list.filter((p) => p.affiliation === affiliation)
+    }
+    if (name.length > 0) {
+      list = list.filter((p) => p.name.includes(name))
+    }
+    list = sortParticipantsKo(list)
+    return HttpResponse.json(list)
+  }),
 
   http.post(url("/task-drafts/comments"), async ({ request }) => {
     let body: unknown
