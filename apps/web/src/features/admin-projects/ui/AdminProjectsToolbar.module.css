@@ -1,0 +1,29 @@
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.count {
+  margin: 0;
+  color: #000;
+  font-family: Pretendard;
+  font-size: 20px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: normal;
+}
+
+.createButton {
+  flex-shrink: 0;
+  width: var(--admin-list-filter-search-button-min-width) !important;
+  min-width: var(--admin-list-filter-search-button-min-width) !important;
+  max-width: var(--admin-list-filter-search-button-min-width) !important;
+  height: var(--admin-list-filter-control-height) !important;
+  min-height: var(--admin-list-filter-control-height) !important;
+  font-size: var(--admin-list-toolbar-action-font-size) !important;
+  font-weight: 600 !important;
+}

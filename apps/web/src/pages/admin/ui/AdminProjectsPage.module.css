@@ -1,0 +1,28 @@
+.root {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  padding: var(--space-6);
+}
+
+.cardGrid {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  box-sizing: border-box;
+  gap: var(--space-4);
+  align-items: stretch;
+}
+
+.stateMessage {
+  margin: var(--space-4) 0 0;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.stateError {
+  color: var(--destructive);
+}
