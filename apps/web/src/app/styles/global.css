@@ -87,6 +87,19 @@ button {
   width: min(1100px, 100%);
 }
 
+/** Task 검색(연간 Task 추가) — 넓힌 폭(1000×706), 필터·검색 버튼 한 줄 정렬 유지 */
+[role="dialog"].modal.task-search-modal {
+  width: min(1000px, calc(100vw - 40px));
+  max-width: min(1000px, calc(100vw - 40px));
+  height: min(706px, 90dvh);
+  max-height: min(706px, 90dvh);
+}
+
+[role="dialog"].modal.task-search-modal > [data-slot="app-modal-body"] {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
 .modal {
   width: min(760px, 100%);
   background: var(--panel);
