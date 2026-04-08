@@ -55,6 +55,7 @@ export type TaskParticipantSearchModalProps = {
   onOpenChange: (open: boolean) => void
   projectSlug: string
   onConfirm: (assigneeLabels: string[]) => void
+  onConfirmParticipants?: (participants: ProjectParticipant[]) => void
   disabled?: boolean
 }
 
@@ -65,6 +66,7 @@ export const TaskParticipantSearchModal = ({
   onOpenChange,
   projectSlug,
   onConfirm,
+  onConfirmParticipants,
   disabled = false,
 }: TaskParticipantSearchModalProps) => {
   const titleId = useId()
@@ -76,6 +78,7 @@ export const TaskParticipantSearchModal = ({
   const [appliedAffiliation, setAppliedAffiliation] = useState("")
   const [appliedName, setAppliedName] = useState("")
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
+  const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false)
 
   const listParams = useMemo(
     () => ({ affiliation: appliedAffiliation, name: appliedName }),
@@ -97,6 +100,7 @@ export const TaskParticipantSearchModal = ({
     setAppliedAffiliation("")
     setAppliedName("")
     setRowSelection({})
+    setIsFilterDropdownOpen(false)
   }, [open])
 
   /** 검색(적용 파라미터) 변경 시에만 선택 초기화 — `data` 참조는 매 요청마다 바뀔 수 있음 */
@@ -169,10 +173,14 @@ export const TaskParticipantSearchModal = ({
   }
 
   const handleConfirm = () => {
-    const labels = table
+    const selectedParticipants = table
       .getSelectedRowModel()
-      .rows.map((r) => participantToAssigneeLabel(r.original))
+      .rows.map((r) => r.original)
+    const labels = selectedParticipants.map((participant) =>
+      participantToAssigneeLabel(participant),
+    )
     onConfirm(labels)
+    onConfirmParticipants?.(selectedParticipants)
     setRowSelection({})
     onOpenChange(false)
   }
@@ -222,6 +230,7 @@ export const TaskParticipantSearchModal = ({
                   value={draftAffiliation}
                   items={affiliationSelectItems}
                   disabled={disabled}
+                  onOpenChange={setIsFilterDropdownOpen}
                   onValueChange={(v) => setDraftAffiliation(v ?? AFFILIATION_ALL)}
                 >
                   <SelectTrigger
@@ -231,7 +240,7 @@ export const TaskParticipantSearchModal = ({
                   >
                     <SelectValue placeholder="전체" />
                   </SelectTrigger>
-                  <SelectContent alignItemWithTrigger={false}>
+                  <SelectContent alignItemWithTrigger={false} portal={false}>
                     <SelectItem value={AFFILIATION_ALL}>전체</SelectItem>
                     {PROJECT_PARTICIPANT_AFFILIATION_OPTIONS.map((a) => (
                       <SelectItem key={a} value={a}>
@@ -266,6 +275,7 @@ export const TaskParticipantSearchModal = ({
                   type="button"
                   appearance="fill"
                   dimension="fixedMd"
+                  className={styles.searchButton}
                   disabled={disabled}
                   onClick={handleSearchClick}
                 >
@@ -274,7 +284,12 @@ export const TaskParticipantSearchModal = ({
               </div>
             </div>
 
-            <div className={styles.tableSection}>
+            <div
+              className={cn(
+                styles.tableSection,
+                isFilterDropdownOpen && styles.tableSectionPointerBlocked,
+              )}
+            >
               {isError ? (
                 <div className={styles.errorText} role="alert">
                   <span>{error?.message ?? "참여 인원을 불러오지 못했습니다."}</span>{" "}

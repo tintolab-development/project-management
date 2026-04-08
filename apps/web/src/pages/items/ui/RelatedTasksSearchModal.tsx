@@ -48,7 +48,11 @@ import {
 import { PRIORITY_VALUES } from "@/entities/item/model/types"
 import { TYPE_LABELS } from "@/shared/constants/labels"
 import { ITEM_TYPE_VALUES } from "@/shared/lib/itemType"
-import { AppModalActions, AppModalBody } from "@/shared/ui/app-modal"
+import {
+  AppModalActions,
+  AppModalBody,
+  appModalStyles,
+} from "@/shared/ui/app-modal"
 import { ModalPrimaryButton, ModalSecondaryButton } from "@/shared/ui/modal-dialog-buttons"
 import { Heading, modalCloseIconClassName } from "@/shared/ui/typography"
 import { filterFieldLabelStyles } from "@/shared/ui/filter-field"
@@ -144,6 +148,7 @@ export const RelatedTasksSearchModal = ({
   const [draftCategory, setDraftCategory] = useState(FILTER_ALL)
   const [draftPriority, setDraftPriority] = useState(FILTER_ALL)
   const [draftQ, setDraftQ] = useState("")
+  const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false)
 
   const [committed, setCommitted] = useState<RelatedTaskSearchParams>(emptyCommitted)
 
@@ -157,6 +162,7 @@ export const RelatedTasksSearchModal = ({
     setDraftQ("")
     setCommitted({ ...emptyCommitted })
     setRowSelection({})
+    setIsFilterDropdownOpen(false)
   }, [open])
 
   useEffect(() => {
@@ -304,15 +310,19 @@ export const RelatedTasksSearchModal = ({
                 <Select
                   value={draftType}
                   items={typeSelectItems}
+                  onOpenChange={setIsFilterDropdownOpen}
                   onValueChange={(v) => setDraftType(v ?? FILTER_ALL)}
                 >
                   <SelectTrigger
                     id="related-search-type"
-                    className={styles.filterSelectTrigger}
+                    className={cn(
+                      styles.filterSelectTrigger,
+                      styles.filterControl,
+                    )}
                   >
                     <SelectValue placeholder="전체" />
                   </SelectTrigger>
-                  <SelectContent alignItemWithTrigger={false}>
+                  <SelectContent alignItemWithTrigger={false} portal={false}>
                     <SelectItem value={FILTER_ALL}>전체</SelectItem>
                     {ITEM_TYPE_VALUES.map((t) => (
                       <SelectItem key={t} value={t}>
@@ -330,15 +340,19 @@ export const RelatedTasksSearchModal = ({
                 <Select
                   value={draftCategory}
                   items={categorySelectItems}
+                  onOpenChange={setIsFilterDropdownOpen}
                   onValueChange={(v) => setDraftCategory(v ?? FILTER_ALL)}
                 >
                   <SelectTrigger
                     id="related-search-category"
-                    className={styles.filterSelectTrigger}
+                    className={cn(
+                      styles.filterSelectTrigger,
+                      styles.filterControl,
+                    )}
                   >
                     <SelectValue placeholder="전체" />
                   </SelectTrigger>
-                  <SelectContent alignItemWithTrigger={false}>
+                  <SelectContent alignItemWithTrigger={false} portal={false}>
                     <SelectItem value={FILTER_ALL}>전체</SelectItem>
                     {domainOptions.map((d) => (
                       <SelectItem key={d.id} value={d.id}>
@@ -356,15 +370,19 @@ export const RelatedTasksSearchModal = ({
                 <Select
                   value={draftPriority}
                   items={prioritySelectItems}
+                  onOpenChange={setIsFilterDropdownOpen}
                   onValueChange={(v) => setDraftPriority(v ?? FILTER_ALL)}
                 >
                   <SelectTrigger
                     id="related-search-priority"
-                    className={styles.filterSelectTrigger}
+                    className={cn(
+                      styles.filterSelectTrigger,
+                      styles.filterControl,
+                    )}
                   >
                     <SelectValue placeholder="전체" />
                   </SelectTrigger>
-                  <SelectContent alignItemWithTrigger={false}>
+                  <SelectContent alignItemWithTrigger={false} portal={false}>
                     <SelectItem value={FILTER_ALL}>전체</SelectItem>
                     {PRIORITY_VALUES.map((p) => (
                       <SelectItem key={p} value={p}>
@@ -384,7 +402,11 @@ export const RelatedTasksSearchModal = ({
                   value={draftQ}
                   onChange={(e) => setDraftQ(e.target.value)}
                   placeholder="제목/코드를 입력해 주세요"
-                  className={styles.filterTextInput}
+                  className={cn(
+                    styles.filterControl,
+                    appModalStyles.singleLineField,
+                    styles.filterRowInput,
+                  )}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       e.preventDefault()
@@ -394,12 +416,25 @@ export const RelatedTasksSearchModal = ({
                 />
               </div>
 
-              <Button type="button" className={styles.searchButton} onClick={handleSearch}>
-                검색
-              </Button>
+              <div className={styles.searchButtonWrap}>
+                <Button
+                  type="button"
+                  appearance="fill"
+                  dimension="fixedMd"
+                  className={styles.searchButton}
+                  onClick={handleSearch}
+                >
+                  검색
+                </Button>
+              </div>
             </div>
 
-            <div className={styles.tableSection}>
+            <div
+              className={cn(
+                styles.tableSection,
+                isFilterDropdownOpen && styles.tableSectionPointerBlocked,
+              )}
+            >
               {isPending ? (
                 <p className={styles.loadingState}>불러오는 중…</p>
               ) : isError ? (

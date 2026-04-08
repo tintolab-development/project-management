@@ -16,7 +16,7 @@
 }
 
 .searchFieldDividerColumn > .field {
-  padding-bottom: var(--tasks-filter-first-second-gap, 18px);
+  padding-bottom: var(--tasks-filter-first-second-gap);
   box-sizing: border-box;
 }
 
@@ -34,7 +34,7 @@
   flex-direction: column;
   gap: var(--space-5);
   /** 구분선과 우선순위 블록 사이 여백 (검색↔구분선 간격과 동일 토큰) */
-  margin-top: var(--tasks-filter-first-second-gap, 18px);
+  margin-top: var(--tasks-filter-first-second-gap);
   width: 100%;
   min-width: 0;
 }
@@ -70,18 +70,13 @@
   gap: var(--space-3);
 }
 
-.badgeBtn {
+.filterBadgeButton {
   cursor: pointer;
-  border: none;
-  background: none;
-  padding: 0;
-  font: inherit;
+  border-radius: var(--task-related-chip-radius);
 }
 
-.badgeBtn:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 3px;
-  border-radius: 9999px;
+.filterBadgeButton:focus-visible {
+  outline: none;
 }
 
 .submitBtn {

@@ -34,41 +34,56 @@
   max-width: 100%;
 }
 
+.filterControl {
+  width: 100%;
+  min-width: 0;
+}
+
+/**
+ * 필터 행 — `TaskParticipantSearchModal`·관리자 목록과 동일 토큰
+ * (`--filter-control-height` = `--field-height-lg` = 44px)
+ */
 .filterSelectTrigger {
   width: 100%;
   min-width: 0;
-  height: 52px !important;
-  min-height: 52px !important;
-  max-height: 52px !important;
+  height: var(--filter-control-height) !important;
+  min-height: var(--filter-control-height) !important;
+  max-height: var(--filter-control-height) !important;
   border-radius: var(--filter-control-radius);
   border-color: var(--filter-control-border);
   background-color: var(--panel);
-  padding-left: 16px;
-  padding-right: 12px;
+  padding-left: var(--input-field-padding);
+  padding-right: var(--input-field-padding-compact);
   font-family: var(--font-login-title);
   font-size: var(--font-size-base);
 }
 
-.searchButton {
+.searchButtonWrap {
   flex-shrink: 0;
-  box-sizing: border-box;
-  width: 120px !important;
-  min-width: 120px !important;
-  height: 52px !important;
-  min-height: 52px !important;
-  max-height: 52px !important;
-  align-self: flex-end;
-  padding-left: 0 !important;
-  padding-right: 0 !important;
 }
 
-.filterTextInput {
-  width: 100%;
-  min-width: 0;
-  height: 52px !important;
-  min-height: 52px !important;
-  max-height: 52px !important;
-  border-radius: var(--filter-control-radius);
+/**
+ * DS `dimension.fixedMd` 너비에 맞추고, 높이·모서리는 필터 컨트롤 토큰과 동일
+ * (`Input` 기본 `rounded-lg`·`Button` 병합과 무관하게 `--filter-control-radius` 고정)
+ */
+.searchButton {
+  align-self: flex-end;
+  box-sizing: border-box;
+  height: var(--filter-control-height) !important;
+  min-height: var(--filter-control-height) !important;
+  max-height: var(--filter-control-height) !important;
+  width: var(--ds-button-fixed-md-width) !important;
+  min-width: var(--ds-button-fixed-md-width) !important;
+  max-width: var(--ds-button-fixed-md-width) !important;
+  border-radius: var(--filter-control-radius) !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  line-height: calc(var(--filter-control-height) - 2px) !important;
+}
+
+/** 제목/코드 인풋 — 셀렉트 트리거와 동일 10px 반경 */
+.filterRowInput {
+  border-radius: var(--filter-control-radius) !important;
 }
 
 .titleCodeCell {
@@ -81,13 +96,17 @@
 }
 
 .tableSection {
-  margin-top: 20px;
+  margin-top: var(--search-result-table-margin-top);
   flex: 1 1 auto;
   min-height: 0;
   overflow: auto;
   width: 100%;
   border: 1px solid var(--line);
   border-radius: var(--filter-control-radius);
+}
+
+.tableSectionPointerBlocked {
+  pointer-events: none;
 }
 
 .tableSection :global(thead) {
@@ -106,15 +125,15 @@
 }
 
 .rowCheckbox {
-  width: 1rem;
-  height: 1rem;
+  width: var(--table-checkbox-size);
+  height: var(--table-checkbox-size);
   accent-color: var(--primary);
   cursor: pointer;
 }
 
 .footerActions {
   justify-content: center !important;
-  margin-top: 16px;
+  margin-top: var(--space-6);
   flex-shrink: 0;
 }
 

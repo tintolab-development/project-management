@@ -211,32 +211,40 @@ export const TasksFilterPanel = ({ domains, onFiltersApplied }: TasksFilterPanel
             role="group"
             aria-labelledby={`${searchId}-priority-label`}
           >
-            <button
-              type="button"
-              className={styles.badgeBtn}
-              aria-label={
-                draftPriorities.length === 0
-                  ? "우선순위 전체(필터 없음), 선택됨"
-                  : "우선순위 전체(필터 없음), 선택 해제됨"
+            <Badge
+              render={
+                <button
+                  type="button"
+                  aria-label={
+                    draftPriorities.length === 0
+                      ? "우선순위 전체(필터 없음), 선택됨"
+                      : "우선순위 전체(필터 없음), 선택 해제됨"
+                  }
+                  onClick={handleClearPriorities}
+                />
               }
-              onClick={handleClearPriorities}
+              variant={draftPriorities.length === 0 ? "itemListActive" : "itemListInactive"}
+              className={styles.filterBadgeButton}
             >
-              <Badge variant={draftPriorities.length === 0 ? "itemListActive" : "itemListInactive"}>
-                전체
-              </Badge>
-            </button>
+              전체
+            </Badge>
             {PRIORITY_OPTIONS.map((p) => {
               const on = draftPriorities.includes(p)
               return (
-                <button
+                <Badge
                   key={p}
-                  type="button"
-                  className={styles.badgeBtn}
-                  aria-label={`우선순위 ${p}, ${on ? "선택됨" : "선택 안 함"}`}
-                  onClick={() => handleTogglePriority(p)}
+                  render={
+                    <button
+                      type="button"
+                      aria-label={`우선순위 ${p}, ${on ? "선택됨" : "선택 안 함"}`}
+                      onClick={() => handleTogglePriority(p)}
+                    />
+                  }
+                  variant={on ? "itemListActive" : "itemListInactive"}
+                  className={styles.filterBadgeButton}
                 >
-                  <Badge variant={on ? "itemListActive" : "itemListInactive"}>{p}</Badge>
-                </button>
+                  {p}
+                </Badge>
               )
             })}
           </div>
@@ -247,34 +255,40 @@ export const TasksFilterPanel = ({ domains, onFiltersApplied }: TasksFilterPanel
             유형
           </div>
           <div className={styles.badgeRow} role="group" aria-labelledby={`${searchId}-type-label`}>
-            <button
-              type="button"
-              className={styles.badgeBtn}
-              aria-label={
-                draftTypes.length === 0
-                  ? "유형 전체(필터 없음), 선택됨"
-                  : "유형 전체(필터 없음), 선택 해제됨"
+            <Badge
+              render={
+                <button
+                  type="button"
+                  aria-label={
+                    draftTypes.length === 0
+                      ? "유형 전체(필터 없음), 선택됨"
+                      : "유형 전체(필터 없음), 선택 해제됨"
+                  }
+                  onClick={handleClearTypes}
+                />
               }
-              onClick={handleClearTypes}
+              variant={draftTypes.length === 0 ? "itemListActive" : "itemListInactive"}
+              className={styles.filterBadgeButton}
             >
-              <Badge variant={draftTypes.length === 0 ? "itemListActive" : "itemListInactive"}>
-                전체
-              </Badge>
-            </button>
+              전체
+            </Badge>
             {ITEM_TYPE_VALUES.map((t) => {
               const on = draftTypes.includes(t)
               return (
-                <button
+                <Badge
                   key={t}
-                  type="button"
-                  className={styles.badgeBtn}
-                  aria-label={`유형 ${TYPE_LABELS[t]}, ${on ? "선택됨" : "선택 안 함"}`}
-                  onClick={() => handleToggleType(t)}
+                  render={
+                    <button
+                      type="button"
+                      aria-label={`유형 ${TYPE_LABELS[t]}, ${on ? "선택됨" : "선택 안 함"}`}
+                      onClick={() => handleToggleType(t)}
+                    />
+                  }
+                  variant={on ? "itemListActive" : "itemListInactive"}
+                  className={styles.filterBadgeButton}
                 >
-                  <Badge variant={on ? "itemListActive" : "itemListInactive"}>
-                    {TYPE_LABELS[t]}
-                  </Badge>
-                </button>
+                  {TYPE_LABELS[t]}
+                </Badge>
               )
             })}
           </div>
