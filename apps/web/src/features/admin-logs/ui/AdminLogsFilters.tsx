@@ -6,6 +6,7 @@ import { Button } from "@/shared/ui/button"
 import { FilterFieldShell } from "@/shared/ui/filter-field"
 import { FilterSelectField } from "@/shared/ui/filter-field/FilterSelectField"
 import { filterFieldLabelDomId } from "@/shared/ui/filter-field/filterFieldLabelDomId"
+import { cn } from "@/lib/utils"
 
 import { ADMIN_LOG_AFFILIATION_FILTER_OPTIONS } from "../lib/adminLogAffiliationOptions"
 import {
@@ -83,7 +84,7 @@ export const AdminLogsFilters = ({ projectOptions }: Props) => {
             id={qId}
             type="search"
             name="q"
-            className={styles.searchInput}
+            className={cn(styles.searchInput, "focus-visible:ring-0")}
             placeholder="수정자/아이템을 입력해 주세요"
             value={draft.q}
             onChange={(e) =>
