@@ -30,6 +30,7 @@ export type FilterDateFieldProps = {
   /** 그리드 열 등에서 `max-width: 280px` 제한 해제 */
   fullWidth?: boolean
   labelClassName?: string
+  portalContainer?: HTMLElement | null
 }
 
 function parseFilterDate(raw: string): Date | undefined {
@@ -48,6 +49,7 @@ export function FilterDateField({
   className,
   fullWidth,
   labelClassName,
+  portalContainer,
 }: FilterDateFieldProps) {
   const [open, setOpen] = useState(false)
   const clearId = useId()
@@ -95,6 +97,7 @@ export function FilterDateField({
           align="start"
           sideOffset={6}
           anchor={shellBodyRef}
+          portalContainer={portalContainer}
           className="gap-0 p-0"
         >
           <Calendar
