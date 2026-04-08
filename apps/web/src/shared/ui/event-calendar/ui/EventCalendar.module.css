@@ -104,6 +104,9 @@
   min-width: 0;
   min-height: 0;
   max-width: 100%;
+  /* 1fr 행이 남는 높이만큼 표를 늘리면, 주 수가 적은 달에서 여백이 첫 tbody 행으로 몰려 높이가 비정상적으로 커짐 */
+  max-height: 100%;
+  align-self: start;
   box-sizing: border-box;
   padding-bottom: var(--calendar-grid-scroll-padding);
   overflow-x: auto;
@@ -122,16 +125,21 @@
 
 /* 월 그리드: 고정 7열 + tbody 행 고정 높이(토큰) — collapse 로 행 사이 빈틈 없이 일반 달력처럼 */
 .monthGrid {
+  --event-calendar-bars-top: 30px;
+  --event-calendar-bar-height: 22px;
+  --event-calendar-bar-lane-gap: 4px;
+
   display: table !important;
   width: 100%;
   max-width: 100%;
-  height: auto;
+  height: fit-content;
   table-layout: fixed;
   border-collapse: collapse;
   border-spacing: 0;
   border: 1px solid var(--border);
   border-radius: var(--radius-md, 8px);
-  overflow: hidden;
+  /* 멀티데이 바가 옆 셀로 살짝 넘칠 수 있음 — hidden 이면 가로로 잘림 */
+  overflow: visible;
   background: #fff;
 }
 
@@ -171,7 +179,8 @@
   vertical-align: top;
 }
 
-.monthGrid :global(tbody > tr) {
+/* 주당 1행, 고정 높이 — 이벤트 바는 셀 안 absolute 레이어 */
+.monthGrid :global(tbody > tr.rdp-week) {
   margin: 0;
   box-sizing: border-box;
   height: var(--calendar-body-row-height);
@@ -196,6 +205,18 @@
   height: 100%;
 }
 
+/* 오늘: 셀 전체 옅은 회색 배경 (.monthGrid tbody td 배경보다 우선) */
+.todayDayCell {
+  background: color-mix(in srgb, var(--muted) 42%, var(--card)) !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.monthGrid :global(tbody td).todayDayCell {
+  background: color-mix(in srgb, var(--muted) 42%, var(--card)) !important;
+  border-color: transparent !important;
+}
+
 .dayButton {
   box-sizing: border-box;
   display: flex;
@@ -205,4 +226,139 @@
   align-items: center;
   justify-content: flex-start;
   padding: 0;
+}
+
+/* 일자 버튼이 셀 전체를 덮으면 그 아래 이벤트 바가 클릭되지 않음 — 상단만 차지 */
+.monthGrid :global(tbody tr.rdp-week button.rdp-day_button) {
+  height: auto !important;
+  min-height: 0 !important;
+  flex: 0 0 auto;
+  align-self: flex-start;
+}
+
+.eventCalendarWeekRow {
+  background: transparent;
+}
+
+/* 이벤트 바 오버레이 — 문서 흐름 높이에 영향 없음 */
+.dayCellWithBars {
+  position: relative;
+  overflow: visible;
+}
+
+.eventBarsLayer {
+  position: absolute;
+  z-index: 2;
+  inset-inline: 0;
+  top: var(--event-calendar-bars-top);
+  bottom: 6px;
+  pointer-events: none;
+  overflow-x: visible;
+  overflow-y: hidden;
+}
+
+.eventBarAnchor {
+  position: absolute;
+  left: 0;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: var(--event-calendar-bar-height);
+  min-height: var(--event-calendar-bar-height);
+  max-height: var(--event-calendar-bar-height);
+  pointer-events: auto;
+}
+
+/* 셀 경계선에서 끊김 보정 — 이전 열과 1px 겹침 */
+.eventBarAnchorContinuation {
+  margin-left: -1px;
+  width: calc(100% + 1px);
+  max-width: none;
+}
+
+.eventBarTrack {
+  box-sizing: border-box;
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  align-items: stretch;
+}
+
+.eventBarTrackPill {
+  border-radius: 999px;
+}
+
+.eventBarTrackSegStart {
+  border-radius: 999px 0 0 999px;
+}
+
+.eventBarTrackSegMiddle {
+  border-radius: 0;
+}
+
+.eventBarTrackSegEnd {
+  border-radius: 0 999px 999px 0;
+}
+
+.eventBarFace {
+  box-sizing: border-box;
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  min-height: 0;
+  align-items: center;
+  justify-content: flex-start;
+  margin: 0;
+  padding: 2px 8px 2px 10px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.25;
+  text-align: left;
+  color: inherit;
+}
+
+.eventBarFacePill {
+  border-radius: 999px;
+}
+
+.eventBarFaceSegStart {
+  border-radius: 999px 0 0 999px;
+}
+
+.eventBarFaceSegMiddle {
+  border-radius: 0;
+}
+
+.eventBarFaceSegEnd {
+  border-radius: 0 999px 999px 0;
+}
+
+.eventBarFaceContinuation {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  cursor: pointer;
+}
+
+.eventBarFace:focus {
+  outline: none;
+}
+
+.eventBarFace:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.eventBarTitle {
+  overflow: hidden;
+  flex: 1 1 auto;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

@@ -1,12 +1,15 @@
 import { format, startOfMonth } from "date-fns"
 import { enUS, ko } from "date-fns/locale"
 import {
+  useCallback,
   useMemo,
+  useRef,
   useState,
   type CSSProperties,
   type HTMLAttributes,
   type ReactNode,
 } from "react"
+import { createPortal } from "react-dom"
 import { getDefaultClassNames, type CalendarWeek } from "react-day-picker"
 
 import { Calendar } from "@/components/ui/calendar"
@@ -14,6 +17,12 @@ import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 import type { EventCalendarItem } from "../model/types"
+
+import { EventCalendarItemDetailPanel } from "./EventCalendarItemDetailPanel"
+import {
+  EventCalendarWeekWithEvents,
+  type EventCalendarBarInteraction,
+} from "./EventCalendarWeekWithEvents"
 
 import styles from "./EventCalendar.module.css"
 
@@ -28,28 +37,12 @@ export type EventCalendarProps = {
   className?: string
 }
 
-type EventCalendarWeekRowProps = {
+type CalendarWeekRowProps = {
   week: CalendarWeek
   className?: string
   style?: CSSProperties
   children?: ReactNode
 } & Omit<HTMLAttributes<HTMLTableRowElement>, "children">
-
-function EventCalendarWeekRow({
-  week,
-  className,
-  style,
-  children,
-  ...trProps
-}: EventCalendarWeekRowProps) {
-  void week
-
-  return (
-    <tr className={className} style={style} {...trProps}>
-      {children}
-    </tr>
-  )
-}
 
 export function EventCalendar({
   month: controlledMonth,
@@ -63,6 +56,13 @@ export function EventCalendar({
     startOfMonth(defaultMonth ?? new Date()),
   )
 
+  const [detail, setDetail] = useState<{
+    event: EventCalendarItem
+    anchorRect: DOMRect
+  } | null>(null)
+
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   const viewMonth = controlledMonth
     ? startOfMonth(controlledMonth)
     : innerMonth
@@ -75,21 +75,52 @@ export function EventCalendar({
     }
   }
 
-  const components = useMemo(
-    () => ({
-      Week: (
-        props: {
-          week: CalendarWeek
-          className?: string
-          style?: CSSProperties
-          children?: ReactNode
-        } & Omit<HTMLAttributes<HTMLTableRowElement>, "children">,
-      ) => <EventCalendarWeekRow {...props} />,
-    }),
-    [],
+  const cancelCloseDetail = useCallback(() => {
+    if (closeTimerRef.current != null) {
+      clearTimeout(closeTimerRef.current)
+      closeTimerRef.current = null
+    }
+  }, [])
+
+  const scheduleCloseDetail = useCallback(() => {
+    if (closeTimerRef.current != null) {
+      clearTimeout(closeTimerRef.current)
+    }
+    closeTimerRef.current = setTimeout(() => {
+      setDetail(null)
+      closeTimerRef.current = null
+    }, 180)
+  }, [])
+
+  const openDetail = useCallback(
+    (eventItem: EventCalendarItem, anchorRect: DOMRect) => {
+      cancelCloseDetail()
+      setDetail({ event: eventItem, anchorRect })
+    },
+    [cancelCloseDetail],
   )
 
-  void events
+  const barInteraction = useMemo<EventCalendarBarInteraction>(
+    () => ({
+      openDetail,
+      scheduleCloseDetail,
+      cancelCloseDetail,
+    }),
+    [openDetail, scheduleCloseDetail, cancelCloseDetail],
+  )
+
+  const components = useMemo(
+    () => ({
+      Week: (props: CalendarWeekRowProps) => (
+        <EventCalendarWeekWithEvents
+          {...props}
+          events={events}
+          barInteraction={barInteraction}
+        />
+      ),
+    }),
+    [events, barInteraction],
+  )
 
   return (
     <div className={cn(styles.calendarShell, className)}>
@@ -103,10 +134,17 @@ export function EventCalendar({
         captionLayout="label"
         formatters={{
           formatCaption: (date) => format(date, "M월 yyyy", { locale: ko }),
+          formatWeekdayName: (weekday) =>
+            format(weekday, "EEE", { locale: enUS }),
         }}
         modifiersClassNames={{
-          today:
-            "!bg-white font-semibold text-foreground shadow-none ring-2 ring-inset ring-primary z-[1] [&_button]:!bg-white [&_button]:text-foreground [&_button]:shadow-none data-[selected=true]:!bg-white data-[selected=true]:[&_button]:!bg-white",
+          /* modifiersClassNames 가 있으면 classNames.today 는 무시됨 — 여기에 배경·rdp 클래스 포함 */
+          today: cn(
+            rdp.today,
+            styles.todayDayCell,
+            "font-semibold text-foreground shadow-none !ring-0 ring-offset-0 outline-none",
+            "[&_button]:!bg-transparent [&_button]:text-foreground [&_button]:shadow-none [&_button]:!ring-0 [&_button]:border-0",
+          ),
           outside:
             "!bg-white text-muted-foreground opacity-50 aria-selected:opacity-40",
         }}
@@ -146,7 +184,8 @@ export function EventCalendar({
           weekday: cn(rdp.weekday, styles.weekdayCell),
           today: cn(
             rdp.today,
-            "!bg-white text-foreground shadow-none ring-0 data-[selected=true]:!bg-white",
+            styles.todayDayCell,
+            "text-foreground shadow-none ring-0 data-[selected=true]:rounded-none",
           ),
           day: cn(
             rdp.day,
@@ -160,6 +199,22 @@ export function EventCalendar({
           ),
         }}
       />
+
+      {detail != null
+        ? createPortal(
+            <EventCalendarItemDetailPanel
+              event={detail.event}
+              anchorRect={detail.anchorRect}
+              onRequestClose={() => {
+                cancelCloseDetail()
+                setDetail(null)
+              }}
+              onPointerEnterPanel={cancelCloseDetail}
+              onPointerLeavePanel={scheduleCloseDetail}
+            />,
+            document.body,
+          )
+        : null}
     </div>
   )
 }

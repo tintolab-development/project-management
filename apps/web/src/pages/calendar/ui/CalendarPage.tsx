@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
-import { startOfMonth } from "date-fns"
+import { getMonth, getYear, startOfMonth } from "date-fns"
 import { useSearchParams } from "react-router-dom"
 
 import { useAppStore } from "@/app/store/useAppStore"
@@ -9,6 +9,7 @@ import {
   type EventCalendarItem,
 } from "@/shared/ui/event-calendar"
 
+import { getAprilMockCalendarEvents } from "../lib/calendarAprilMockEvents"
 import {
   CALENDAR_MONTH_QUERY_KEY,
   formatCalendarMonthQuery,
@@ -95,8 +96,11 @@ export const CalendarPage = () => {
       const ev = itemToCalendarEvent(item, domains)
       if (ev) list.push(ev)
     }
+    if (getMonth(viewMonth) === 3) {
+      list.push(...getAprilMockCalendarEvents(getYear(viewMonth)))
+    }
     return list
-  }, [items, domains])
+  }, [items, domains, viewMonth])
 
   const events = useMemo(
     () =>
