@@ -14,11 +14,11 @@ import {
   CALENDAR_MONTH_QUERY_KEY,
   formatCalendarMonthQuery,
   parseCalendarMonthQuery,
-} from "../lib/calendarMonthQuery"
+} from "@/shared/lib/calendarMonthQuery"
+import { CalendarBoardShell } from "@/widgets/calendar-board"
 import { itemToCalendarEvent } from "../lib/itemToCalendarEvent"
 import { CalendarFiltersPanel } from "./CalendarFiltersPanel"
 
-import styles from "./CalendarPage.module.css"
 
 const filterEvents = (
   events: EventCalendarItem[],
@@ -115,27 +115,29 @@ export const CalendarPage = () => {
   )
 
   return (
-    <div className={styles.root}>
-      <CalendarFiltersPanel
-        domains={domains}
-        items={items}
-        typeFilter={typeFilter}
-        onTypeFilterChange={setTypeFilter}
-        priorityFilter={priorityFilter}
-        onPriorityFilterChange={setPriorityFilter}
-        domainFilter={domainFilter}
-        onDomainFilterChange={setDomainFilter}
-        ownerFilter={ownerFilter}
-        onOwnerFilterChange={setOwnerFilter}
-      />
-      <div className={styles.calendarSection}>
+    <CalendarBoardShell
+      filters={
+        <CalendarFiltersPanel
+          domains={domains}
+          items={items}
+          typeFilter={typeFilter}
+          onTypeFilterChange={setTypeFilter}
+          priorityFilter={priorityFilter}
+          onPriorityFilterChange={setPriorityFilter}
+          domainFilter={domainFilter}
+          onDomainFilterChange={setDomainFilter}
+          ownerFilter={ownerFilter}
+          onOwnerFilterChange={setOwnerFilter}
+        />
+      }
+      calendar={
         <EventCalendar
           month={viewMonth}
           onMonthChange={handleMonthChange}
           events={events}
           weekStartsOn={0}
         />
-      </div>
-    </div>
+      }
+    />
   )
 }
